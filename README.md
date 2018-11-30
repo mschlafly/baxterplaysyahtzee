@@ -1,5 +1,5 @@
 # baxterplaysyahtzee
-##ME495 Final Project: Baxter Robot Plays Yahtzee
+# ME495 Final Project: Baxter Robot Plays Yahtzee
 
 ## Setup
 
