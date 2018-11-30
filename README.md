@@ -22,7 +22,12 @@ rosrun baxter_interface joint_trajectory_action_server.py
 
 #### Robot
 ##### Connect via Ethernet
-~/baxterws/baxter.sh
+
+```
+cd ~/baxterws/
+gedit baxter.sh
+```
+baxter.sh
 ```
 # Specify Baxter's hostname
 baxter_hostname="baxter.local"
@@ -32,12 +37,11 @@ baxter_hostname="baxter.local"
 your_ip="10.42.0.1"
 ```
 
-shell
 ```
+cd ~/baxterws/
 source devel/setup.sh
 source baxter.sh sim
 ```
-
 
 ##### Camera Calibration
 ```
