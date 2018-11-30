@@ -26,5 +26,10 @@ python src/detect_checkerboard.py
 #### Robot
 Connect via Ethernet
 ```
-roscore
+# Specify Baxter's hostname
+baxter_hostname="baxter.local"
+
+# Set *Either* your computers ip address or hostname. Please note if using
+# your_hostname that this must be resolvable to Baxter.
+your_ip="10.42.0.1"
 ```
