@@ -20,7 +20,7 @@ rosrun baxter_interface joint_trajectory_action_server.py
 
 #### Robot Camera Calibration
 ```
-src/detect_checkerboard.py
+python src/detect_checkerboard.py
 ```
 
 #### Robot
