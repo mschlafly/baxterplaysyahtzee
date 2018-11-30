@@ -23,7 +23,7 @@ rosrun baxter_interface joint_trajectory_action_server.py
 ```
 
 ### Baxter
-```
 Connect via Ethernet
 ```
-.roscore
+roscore
+```
