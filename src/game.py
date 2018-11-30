@@ -71,6 +71,7 @@ class yahtzee:
             FIVE_OF_KIND:0,
             CHANCE:0}
         for i in range(GAMES):
+            self.points = 0
             self.play()
 
     def play(self):
