@@ -8,7 +8,6 @@
 rosrun baxter_interface joint_trajectory_action_server.py
 rosrun baxter_interface gripper_action_server.py
 ```
-
 #### Simulator
 ```
 roscore
@@ -18,13 +17,8 @@ rosrun baxter_tools enable_robot.py -e
 rosrun baxter_interface joint_trajectory_action_server.py 
 ```
 
-#### Robot Camera Calibration
-```
-python src/detect_checkerboard.py
-```
-
 #### Robot
-Connect via Ethernet
+##### Connect via Ethernet
 ```
 # Specify Baxter's hostname
 baxter_hostname="baxter.local"
@@ -32,4 +26,9 @@ baxter_hostname="baxter.local"
 # Set *Either* your computers ip address or hostname. Please note if using
 # your_hostname that this must be resolvable to Baxter.
 your_ip="10.42.0.1"
+```
+
+##### Camera Calibration
+```
+python src/detect_checkerboard.py
 ```
