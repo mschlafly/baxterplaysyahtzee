@@ -15,6 +15,12 @@ import cv2
 from matplotlib import pyplot as plt
 from std_msgs.msg import String
 
+cameras = ["left_hand_camera", "head_camera"]
+
+SKIP = 20
+CAMERA = cameras[0]
+CAMERA_TOPIC = "/cameras/"+CAMERA+"/image"
+
 class BaxterCamera:
     def __init__(self):
         print("Initialing class BaxterCamera")
@@ -23,35 +29,31 @@ class BaxterCamera:
         # params
         self.cnt=0 #count images
 
-        # selet camera
-
-        image_topic = "/cameras/"+camera+"/image"
+        # select camera
 
         # set a subscriber
-        self.sub = rospy.Subscriber(image_topic, Image, self.image_callback)
+        self.sub = rospy.Subscriber(CAMERA_TOPIC, Image, self.image_callback)
 
     def image_callback(self, msg):
 
-        self.cnt+=1
+        self.cnt += 1
 
         # Convert your ROS Image message to OpenCV2
-        I = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        print("reading the {}th image".format(self.cnt))
+        img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+        rospy.loginfo("reading the {}th image".format(self.cnt))
 
         # image processing
-        # row,col,_ = I.shape
-        # hsv_I = cv2.cvtColor(I, cv2.COLOR_BGR2HSV)
+        # row,col,_ = img.shape
+        # hsv_img= cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     
         # show image
-        cv2.imshow('I',I)
+        cv2.imshow('img',img)
         cv2.waitKey(1)
 
-        if self.cnt%10==0:
-            cv2.imwrite('src/me495_group3/images/baxter_image_'+str(self.cnt)+'.jpg',I)
-
+        if self.cnt % SKIP== 0:
+            cv2.imwrite('images/baxter_image_'+str(self.cnt)+'.jpg', img)
 
 def main():
-
 	rospy.init_node('open_camera')
 	baxter_camera = BaxterCamera()
  	
