@@ -13,7 +13,7 @@ rosrun baxter_interface joint_trajectory_action_server.py
 rosrun baxter_interface gripper_action_server.py
 ```
 
-### Baxter Simulator
+#### Simulator
 ```
 roscore
 roslaunch baxter_gazebo baxter_world.launch
@@ -22,7 +22,7 @@ rosrun baxter_tools enable_robot.py -e
 rosrun baxter_interface joint_trajectory_action_server.py 
 ```
 
-### Baxter
+#### Robot
 Connect via Ethernet
 ```
 roscore
