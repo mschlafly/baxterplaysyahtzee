@@ -64,6 +64,9 @@ class BaxterCamera_LeftHand(object):
         
         self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
 
+"""
+not implemented
+"""
 class BaxterCamera_RightHand(object):
     def __init__(self):
         pass
@@ -71,4 +74,3 @@ class BaxterCamera_RightHand(object):
         # width: 640
         # distortion_model: "plumb_bob"
         # D: [0.02909140543965944, -0.08374659479659467, -0.001087175176238868
-

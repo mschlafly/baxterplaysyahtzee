@@ -1,0 +1,10 @@
+<launch>
+
+  <node name="enable_robot" pkg="baxter_tools" type="enable_robot.py"/>
+      <param name="e"/>
+  </node>
+  <include file="$(baxter_gazebo)/launch/baxter_world.launch">
+  <node name="yahtzee_baxter_sim" pkg="baxterplaysyahtzee" type="yahtzee_baxter_sim.py" />
+  <node name="joint_trajectory_server" pkg="baxter_interface" type="joint_trajectory_server.py" />
+  <rosparam param="source_list">["baxterplaysyahtzee/robot/joint_states"]</rosparam>
+</launch>
