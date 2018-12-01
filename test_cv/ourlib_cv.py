@@ -108,13 +108,16 @@ class ChessboardLocator(object):
             )
             # Add text
             font = cv2.FONT_HERSHEY_SIMPLEX
-            sss = ["x=", "y=", "z="]
-            for i in range(3):
-                s = "{:.2f}".format(p[i, 0])
-                TEST_ROWS = 200+i*30
-                TEST_COLS = 30
+            sss = ["chessboard pose wrt to camera","x=", "y=", "z="]
+            for i in range(-1,3):
+                if i!=-1:
+                    s = "{:.2f}".format(p[i, 0])
+                else:
+                    s=""
+                TEST_ROWS = 50+i*30
+                TEST_COLS = 50
                 img = cv2.putText(
-                    img, sss[i]+s, (TEST_COLS, TEST_ROWS), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+                    img, sss[i+1]+s, (TEST_COLS, TEST_ROWS), font, 0.7, (0, 0, 255), 2, cv2.LINE_AA)
 
             # show
             if SHOW:

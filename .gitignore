@@ -1,3 +1,7 @@
 **.pyc
 **/calib_*.jpg
 **/.vscode/**
+
+**.xcf
+**res_**.png
+**out_**.jpg
