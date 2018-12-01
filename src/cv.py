@@ -27,7 +27,7 @@ DONTMOVE = -2
 Vision = True 
 VIZ_ONLY = True
 SKIP = 15
-DOT_DETECTION = False
+DOT_DETECTION = True
 frames = 0
 
 RATE = 5
@@ -43,8 +43,9 @@ QSIZE = 10
 POS = 255
 NEG = 0
 SHOW_NEG = False
-MAX_SIZE_FILTER = 200# pixel count of blob to filter
-MIN_SIZE_FILTER = 10# pixel count of blob to filter
+DOT_MAX_SIZE_FILTER = 1200# pixel count of blob to filter
+DOT_MIN_SIZE_FILTER = 500# pixel count of blob to filter
+DOT_COLOR_THRESHHOLD = 80 
 DEBUG_SIZE = 1000
 
 ##
@@ -312,13 +313,13 @@ def dots(img):
 
     lc = print_label_count(img_l)
 
-    if(MIN_SIZE_FILTER > 0):
+    if(DOT_MIN_SIZE_FILTER > 0):
         filter_rest(lc, img_l)
         print_label_count(img_l)
 
     #print img_l
 
-    if(MIN_SIZE_FILTER > 0):
+    if(DOT_MIN_SIZE_FILTER > 0):
         filter_rest(lc, img_l)
         print_label_count(img_l)
 
@@ -349,7 +350,7 @@ def print_label_count(img_l):
 def filter_rest(lc, img_l):
     sorted_lc = sorted(lc.items(), key=operator.itemgetter(1))
     #print "remove <", SIZE_FILTER, "from:", len(sorted_lc[:-1]), len(sorted_lc[:-1]), sorted_lc[:-1]
-    #rospy.loginfo("keep SIZE %d - %d ", MIN_SIZE_FILTER,MAX_SIZE_FILTER)
+    #rospy.loginfo("keep SIZE %d - %d ", DOT_MIN_SIZE_FILTER, DOT_MAX_SIZE_FILTER)
 
     for i in range (0, len(img_l)):
         for j in range(0, len(img_l[i])):
@@ -358,7 +359,7 @@ def filter_rest(lc, img_l):
                 #print "filter: check cl"
                 e = equiv(cl)
                 for l in sorted_lc:
-                    if(l[1] > MIN_SIZE_FILTER and l[1] < MAX_SIZE_FILTER):
+                    if(l[1] > DOT_MIN_SIZE_FILTER and l[1] < DOT_MAX_SIZE_FILTER):
                         #print "for l", l, "keep e: ", e, "of size", l[1]
                         continue
                     #print "for l", l, "remove e: ", e
@@ -472,7 +473,7 @@ def ap(arr, i, j, rgb):
     return arr[i-1][j]
 
 def color2bw(val):
-    if(val < 100):
+    if(val < DOT_COLOR_THRESHHOLD):
         return POS
     else:
         return NEG

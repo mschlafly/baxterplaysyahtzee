@@ -52,6 +52,8 @@ source baxter.sh sim
 roscore
 rosrun usb_cam usb_cam_node _video_device:=/dev/video0 _pixel_format:=yuyv _camera_name:=tracker_camera
 rosrun baxterplaysyahtzee cv.py
+or
+python cv.py
 ```
 
 ##### Camera Calibration
