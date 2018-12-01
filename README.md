@@ -94,3 +94,9 @@ python src/detect_checkerboard.py
 ```
 rqt --standalone rqt_mypkg
 ```
+
+#### Game
+```
+cd baxterplays/yahtzee/src
+python game.py
+```
