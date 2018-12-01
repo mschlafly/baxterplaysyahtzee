@@ -15,9 +15,13 @@ rosrun baxter_interface gripper_action_server.py
 #### Simulator
 ```
 roslaunch baxter_gazebo baxter_world.launch
-rosrun baxter_examples xdisplay_image -f jarvis.jpg
 rosrun baxter_tools enable_robot.py -e
+rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
 rosrun baxter_interface joint_trajectory_action_server.py 
+```
+##### Reset World
+```
+Ctrl+R
 ```
 
 #### Robot
@@ -46,4 +50,8 @@ source baxter.sh sim
 ##### Camera Calibration
 ```
 python src/detect_checkerboard.py
+```
+#### UI 
+```
+rqt --standalone rqt_mypkg
 ```

@@ -97,10 +97,10 @@ def main():
     current_angles = [limb_interface.joint_angle(joint) for joint in limb_interface.joint_names()]
     traj.add_point(current_angles, 0.0)
 
-    p1 = positions[limb]
+    p1 = positions['left']
+    p2 = positions['right']
     traj.add_point(p1, 7.0)
-    #traj.add_point([x * 0.75 for x in p1], 9.0)
-    #traj.add_point([x * 1.25 for x in p1], 12.0)
+    traj.add_point(p2, 7.0)
 
     traj.start()
     traj.wait(15.0)
