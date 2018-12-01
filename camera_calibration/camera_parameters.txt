@@ -1,0 +1,15 @@
+
+
+# Baxter's Head Camera
+
+projection_error=2.1841066616
+
+camera_intrinsics=np.array([
+         [410.84409982,   0,         629.02144102],
+         [  0,         410.77681442, 468.79624491],
+         [  0,           0,           1        ]
+         ])
+
+camera_distortion_coefs=np.array([ 0.02039285, -0.04876712, -0.00017574, -0.00083992,  0.01135468])
+
+
