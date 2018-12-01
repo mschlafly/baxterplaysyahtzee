@@ -27,6 +27,7 @@ DONTMOVE = -2
 Vision = True 
 VIZ_ONLY = True
 SKIP = 15
+DOT_DETECTION = False
 frames = 0
 
 RATE = 5
@@ -74,11 +75,13 @@ def image_raw_callback(image):
 
     frames += 1
 
-    if(frames % SKIP != 0):
+    if(DOT_DETECTION and frames % SKIP != 0):
         return
 
-    #obj_x, obj_y, mr = coords_for_object(image, cv_image)
-    dots(cv_image)
+    obj_x, obj_y, mr = coords_for_object(image, cv_image)
+
+    if(DOT_DETECTION):
+        dots(cv_image)
 
     if(VIZ_ONLY):
         #cv2.imshow("images", cv_image)
