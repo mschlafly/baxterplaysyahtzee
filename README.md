@@ -37,6 +37,8 @@ cd ~/baxterws/
 gedit baxter.sh
 ```
 baxter.sh
+
+Robot 
 ```
 # Specify Baxter's hostname
 baxter_hostname="baxter.local"
@@ -44,6 +46,18 @@ baxter_hostname="baxter.local"
 # Set *Either* your computers ip address or hostname. Please note if using
 # your_hostname that this must be resolvable to Baxter.
 your_ip="10.42.0.1"
+```
+
+Simulator
+```
+# Specify Baxter's hostname
+#baxter_hostname="baxter.local"
+baxter_hostname="localhost"
+
+# Set *Either* your computers ip address or hostname. Please note if using
+# your_hostname that this must be resolvable to Baxter.
+#your_ip="10.42.0.1"
+your_hostname="my_computer.local"
 ```
 
 ```
