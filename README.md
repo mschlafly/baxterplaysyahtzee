@@ -17,6 +17,17 @@ roscore
 rosrun baxter_interface joint_trajectory_action_server.py
 rosrun baxter_interface gripper_action_server.py
 ```
+
+demo trajectory
+```
+rosrun baxterplaysyahtzee src/joint_trajectory_client.py
+
+# or
+python src/joint_trajectory_client.py
+
+# or
+rosrun baxter_examples src/joint_trajectory_client.py
+```
 #### Simulator
 ```
 roslaunch baxter_gazebo baxter_world.launch
@@ -26,7 +37,7 @@ rosrun baxter_interface joint_trajectory_action_server.py
 ```
 ##### Reset World
 ```
-Ctrl+R
+Ctrl+r
 ```
 
 #### Robot
