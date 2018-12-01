@@ -26,18 +26,21 @@ class BaxterCamera_Head(object):
         # K: [410.0, 0.0, 640.0, 0.0, 410.0, 400.0, 0.0, 0.0, 1.0]
         # R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         # P: [-410.0, -0.0, 639.0, 0.0, 0.0, -410.0, 399.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+
         self.height=800
         self.width=1280
-        self.distortion=[0.0, 0.0, 0.0, 0.0, 0.0] 
-        
-        # !!! This distoration params are definitly wrong.
-        # !!! Collect data again, it should have distortion
-        
-        self.distortion=np.array(self.distortion)
-        self.intrinsic_matrix_array_form=[410.0, 0.0, 640.0, 0.0, 410.0, 400.0, 0.0, 0.0, 1.0]
-        self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
 
-        None
+        self.distortion=[ 0.02039285, -0.04876712, -0.00017574, -0.00083992,  0.01135468]
+        self.distortion=np.array(self.distortion)
+
+        # self.intrinsic_matrix_array_form=[410.0, 0.0, 640.0, 0.0, 410.0, 400.0, 0.0, 0.0, 1.0]
+        # self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
+
+        self.intrinsic_matrix=np.array([
+                [410.84409982,   0,         629.02144102],
+                [  0,         410.77681442, 468.79624491],
+                [  0,           0,           1        ]
+                ])
 
 class BaxterCamera_LeftHand(object):
     def __init__(self):
@@ -48,20 +51,16 @@ class BaxterCamera_LeftHand(object):
         # K: [403.1498765559809, 0.0, 651.3100088479307, 0.0, 403.9409358133219, 405.82095914289783, 0.0, 0.0, 1.0]
         # R: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
         # P: [403.1498765559809, 0.0, 331.3100088479307, 0.0, 0.0, 403.9409358133219, 205.82095914289783, 0.0, 0.0, 0.0, 1.0, 0.0]
+        
         self.height=400
         self.width=640
+
         self.distortion=[0.02909140543965944,-0.08374659479659467, -0.0010871751762388689, 0.002550696113092468, 0.03253240050176302]
         self.distortion=np.array(self.distortion)    
 
         self.intrinsic_matrix_array_form=[403.1498765559809, 0.0, 651.3100088479307/2,
                 0.0, 403.9409358133219, 405.82095914289783/2,
                 0.0, 0.0, 1.0]
-        # self.intrinsic_matrix_array_form=[403.1498765559809, 0.0, 651.3100088479307, 0.0, 403.9409358133219, 405.82095914289783, 0.0, 0.0, 1.0]
-        
-        # !!! The intrinsic matrix parameters are wrong. 
-        # !!! The above "/2" in "intrinsic_matrix_array_form" was manually added by me, not its original data.
-        # !!! I should collect this info again.
-        
         self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
 
 """
