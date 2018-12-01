@@ -11,7 +11,7 @@ roscore
 ### Baxter
 
 
-# Installation
+#### Installation
 
 Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
 
