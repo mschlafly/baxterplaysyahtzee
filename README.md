@@ -9,6 +9,13 @@
 roscore
 ```
 ### Baxter
+
+
+# Installation
+
+Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
+
+#### Servers
 ```
 rosrun baxter_interface joint_trajectory_action_server.py
 rosrun baxter_interface gripper_action_server.py
