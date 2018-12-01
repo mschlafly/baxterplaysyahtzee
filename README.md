@@ -1,10 +1,15 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
+This package consists of 
+-/camera_calibration for getting the camera parameters for distortion
+-/test_cv for locating the table  
+
 ## Setup
 
 ### ROS
 ```
+*Make sure to source your environment with source devel/setup.bash *
 roscore
 ```
 ### Baxter
