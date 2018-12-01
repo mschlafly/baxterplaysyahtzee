@@ -1,15 +1,11 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
-This package consists of 
--/camera_calibration for getting the camera parameters for distortion
--/test_cv for locating the table  
-
 ## Setup
 
 ### ROS
-```
 *Make sure to source your environment with source devel/setup.bash *
+```
 roscore
 ```
 ### Baxter
@@ -82,13 +78,19 @@ source baxter.sh sim
 roscore
 rosrun usb_cam usb_cam_node _video_device:=/dev/video0 _pixel_format:=yuyv _camera_name:=tracker_camera
 rosrun baxterplaysyahtzee cv.py
-or
+# or
 python cv.py
 ```
 
 ##### Camera Calibration
 ```
-python src/detect_checkerboard.py
+cd test_cv
+./detect_chessboard.py
+./locate_object_3d_pose.py
+
+cd camera_calibration
+./calibrate_camerap.py
+./undistort_all_images.py
 ```
 #### UI 
 ```
