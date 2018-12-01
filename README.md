@@ -4,7 +4,6 @@
 ## Setup
 
 ### ROS
-*Make sure to source your environment with source devel/setup.bash *
 ```
 roscore
 ```
@@ -13,7 +12,9 @@ roscore
 
 #### Installation
 
-Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
+##### Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
+
+##### Make sure to source your environment with source devel/setup.bash
 
 #### Servers
 ```
