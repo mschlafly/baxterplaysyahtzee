@@ -5,6 +5,7 @@
 
 ### ROS
 ```
+*Make sure to source your environment with source devel/setup.bash *
 roscore
 ```
 ### Baxter
