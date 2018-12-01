@@ -24,13 +24,14 @@ rosrun baxter_interface gripper_action_server.py
 
 demo trajectory
 ```
-rosrun baxterplaysyahtzee src/joint_trajectory_client.py
+rosrun baxterplaysyahtzee joint_trajectory_client.py -l left
 
 # or
-python src/joint_trajectory_client.py
+cd src/
+python src/joint_trajectory_client.py -l left
 
 # or
-rosrun baxter_examples src/joint_trajectory_client.py
+rosrun baxter_examples joint_trajectory_client.py -l left
 ```
 #### Simulator
 ```
@@ -81,6 +82,11 @@ source devel/setup.sh
 source baxter.sh sim
 ```
 
+##### Trajectory
+http://sdk.rethinkrobotics.com/wiki/Baxter_PyKDL
+
+"A class is provided in this package, baxter_kinematics, which reads from the parameter server of the robot you are connected to pulling the URDF. It then parses that URDF into the expected Orocos kinematic description, a kdl tree. It then, based on the limb specified creates a kinematic chain (base -> gripper frames) on which we will conduct our analysis."
+
 ##### Computer Vision
 ```
 roscore
@@ -101,7 +107,11 @@ cd camera_calibration
 ./undistort_all_images.py
 ```
 #### UI 
+
 ```
+src/rqt_mypkg/resource/MyPlugin.ui # UI description
+/src/rqt_mypkg/src/rqt_mypkg # plugin source
+
 rqt --standalone rqt_mypkg
 ```
 
