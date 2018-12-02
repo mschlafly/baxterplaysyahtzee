@@ -27,7 +27,7 @@ DONTMOVE = -2
 Vision = True 
 VIZ_ONLY = True
 SKIP = 15
-DOT_DETECTION = True
+DOT_DETECTION = False
 frames = 0
 
 RATE = 5

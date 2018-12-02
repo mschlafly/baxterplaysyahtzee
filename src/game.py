@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 #
 # Vikas Gupta
@@ -89,18 +90,30 @@ class yahtzee:
  
     def roll(self):
         for i in range(len(self.dice)):
-            self.dice[i] = random.randint(0, SIDES)
+            self.dice[i] = random.randint(1, SIDES)
         return self.score()
 
     def chance_slot(self):
        return sum(self.dice)
     
     def score(self):
+        dice = [0]*7
+        dice[0] = "🎲"
+        dice[1] = "⚀"
+        dice[2] = "⚁"
+        dice[3] = "⚂"
+        dice[4] = "⚃"
+        dice[5] = "⚄"
+        dice[6] = "⚅"
+
         points = 0
         self.dice.sort()
         counted = Counter(self.dice)
         #print(self.dice)
         print(counted)
+        dice_str = ""
+        for x in counted:
+            print dice[x]
 
         if(len(counted) == 1 and self.combination == FIVE_OF_KIND):
             print "YAHTZEE"
