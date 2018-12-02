@@ -1,0 +1,6 @@
+float32 low_bound0
+float32 low_bound1
+float32 low_bound2
+float32 high_bound0
+float32 high_bound1
+float32 high_bound2

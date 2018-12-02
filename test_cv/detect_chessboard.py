@@ -63,8 +63,6 @@ def main():
             OUTPUT_FOLDER = OUTPUT_FOLDER,
             OUTPUT_IMAGE_FILENAME=IMAGE_FILENAME
         )
-        # print R
-        # print p
 
 if __name__=="__main__":
     main()

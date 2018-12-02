@@ -59,7 +59,7 @@ class ChessboardLocator(object):
         return objpoint
 
     def locate_chessboard(self, img,
-            SHOW=False, SHOW_TIME_MS=5, SAVE=True, PRINT=True,
+            SHOW=False, SHOW_TIME_MS=5, SAVE=False, PRINT=True,
             OUTPUT_FOLDER = "/",
             OUTPUT_IMAGE_FILENAME="image_from_ChessboardLocator.jpg",
         ):
@@ -128,21 +128,21 @@ class ChessboardLocator(object):
                 OUTPUT_INDEX_STR = "{:04d}".format(OUTPUT_INDEX)
                 cv2.imwrite(PROJECT_PATH+OUTPUT_FOLDER+OUTPUT_IMAGE_FILENAME +
                             "_" + OUTPUT_INDEX_STR + '.png', img)
-            img_anotated = img
-        else:
+            img_for_display = img
+        else: # flag_find_chessboard == False
             if PRINT:    
                 print("chessboard not found, img = {}.".format(OUTPUT_IMAGE_FILENAME))
             if SHOW:
                 cv2.imshow('img', img)
             R = None
             p = None
-            img_anotated = None
+            img_for_display = img
 
         if SHOW:
             cv2.waitKey(int(SHOW_TIME_MS))
             cv2.destroyAllWindows()
 
-        return flag_find_chessboard, R, p, img_anotated
+        return flag_find_chessboard, R, p, img_for_display
 
 class Object3DPoseLocator(object):
     # After we know
@@ -259,3 +259,84 @@ class Object3DPoseLocator(object):
         self.T_cam_table=T
         self.locate_object(xi=500, yi=500, PRINT=True)
 
+class myTrackbar(object):
+
+    def __init__(self, window_name):
+        cv2.namedWindow(window_name)
+        # create trackbars for color change
+        LB=(35, 43, 46)
+        UB=(77, 255, 255)
+        self.window_name=window_name
+        self.create_bar()
+        self.set_bar(LB,UB)
+
+    def nothing(self, x):
+        return
+
+    def create_bar(self):
+        cv2.createTrackbar('h_low',self.window_name,0,255,self.nothing)
+        cv2.createTrackbar('h_high',self.window_name,0,255,self.nothing)
+        cv2.createTrackbar('s_low',self.window_name,0,255,self.nothing)
+        cv2.createTrackbar('s_high',self.window_name,0,255,self.nothing)
+        cv2.createTrackbar('v_low',self.window_name,0,255,self.nothing)
+        cv2.createTrackbar('v_high',self.window_name,0,255,self.nothing)
+        
+    def set_bar(self,LB,UB):
+        cv2.setTrackbarPos('h_high',self.window_name,UB[0])
+        cv2.setTrackbarPos('s_high',self.window_name,UB[1])
+        cv2.setTrackbarPos('v_high',self.window_name,UB[2])
+        cv2.setTrackbarPos('h_low',self.window_name,LB[0])
+        cv2.setTrackbarPos('s_low',self.window_name,LB[1])
+        cv2.setTrackbarPos('v_low',self.window_name,LB[2])
+        
+    def get_trackbar_values_LB_UB(self):
+        h_low = cv2.getTrackbarPos('h_low',self.window_name)
+        h_high = cv2.getTrackbarPos('h_high',self.window_name)
+        s_low = cv2.getTrackbarPos('s_low',self.window_name)
+        s_high = cv2.getTrackbarPos('s_high',self.window_name)
+        v_low = cv2.getTrackbarPos('v_low',self.window_name)
+        v_high = cv2.getTrackbarPos('v_high',self.window_name)
+        return (h_low,s_low,v_low),(h_high,s_high,v_high)
+
+def find_object(img,
+            LB = (29, 86, 6),
+            UB = (64, 255, 255)
+        ):
+
+        erode_iterations=2
+
+        # (rows,cols,channels) = img.shape
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        mask=cv2.inRange(hsv,LB,UB)
+        kernel = np.ones((5,5),np.uint8)
+        mask = cv2.erode(mask, kernel, erode_iterations)
+        mask = cv2.dilate(mask, kernel, erode_iterations+3)
+    
+        #	# find contours in the mask and initialize the current
+        #	# (x, y) center of the ball
+        cnts = cv2.findContours(mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+        #    # cnts = cnts[0] if imutils.is_cv2() else cnts[1]
+        cnts = cnts[1]
+        center = None
+        mask = cv2.cvtColor(mask,cv2.COLOR_GRAY2RGB)
+        
+    	# only proceed if at least one contour was found
+        if len(cnts) > 0:
+    		# find the largest contour in the mask, then use
+    		# it to compute the minimum enclosing circle and
+    		# centroid
+            c = max(cnts, key=cv2.contourArea)
+            ((x, y), radius) = cv2.minEnclosingCircle(c)
+            radius=int(radius)
+            if radius >= 10: # only proceed if the radius meets a minimum size
+                # M = cv2.moments(c)
+                # center = (int(M["m10"] / M["m00"]), int(M["m01"] / M["m00"]))
+                # draw the circle and centroid on the img,
+                # then update the list of tracked points
+                center=(int(x),int(y))
+                cv2.circle(img, center, radius,(0, 255, 255), 2)
+                cv2.circle(img, center, 1, (0, 0, 255), -1)
+        if center is None:
+            return None, None, None, mask
+        else:
+            return center[0],center[1],int(radius),mask

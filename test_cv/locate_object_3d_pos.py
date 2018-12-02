@@ -21,7 +21,7 @@ HEAD_CAMERA=False
 if HEAD_CAMERA:
     IMAGE_FILENAME0="baxter_head_camera_image.jpg"
     STR_CAMERA_TYPE="Head"
-    X_IN_IMAGE=750 # object pos in image
+    X_IN_IMAGE=750 # object pos in imageflag_result
     Y_IN_IMAGE=750
 else:
     IMAGE_FILENAME0="baxter_left_hand_camera_image.jpg"
@@ -29,7 +29,8 @@ else:
     X_IN_IMAGE=300 # object pos in image
     Y_IN_IMAGE=200
 IMAGE_FOLDERNAME="./test_cv/"
-SQUARE_SIZE=0.02
+# SQUARE_SIZE=0.02
+SQUARE_SIZE=0.0982/5
 
 def main():
     IMAGE_FILENAME=PROJECT_PATH+IMAGE_FOLDERNAME+IMAGE_FILENAME0

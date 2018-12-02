@@ -96,15 +96,39 @@ rosrun baxterplaysyahtzee cv.py
 python cv.py
 ```
 
+``` Feiyu's part:
+
+# To test the functions for detecting chessboard or locate object:
+    $ python test_cv/detect_chessboard.py
+    $ python test_cv/locate_object_3d_pose.py
+
+# To test a proper color threshold using trackbar on an example image:
+    $ python test_cv/use_track_bar_to_select_color.py
+
+# To read video from Baxter and do further processing,
+please do these steps first (to open the desired camera):
+    $ nmcli connection up Rethink
+    $ rosrun baxter_tools camera_control.py -l
+    $ rosrun baxter_tools camera_control.py -c right_hand_camera
+    $ rosrun baxter_tools camera_control.py -o left_hand_camera -r 640x400
+    $ rosrun baxter_tools camera_control.py -o head_camera -r 1280x800
+    $ cd test_cv
+
+# To simple test if you can read Baxter's video
+    $ rosrun baxterplaysyahtzee read_and_save_video_from_baxter.py
+
+# To locate both the chessboard and object in Baxter's video, run these 2 scripts:
+    (A demo I shoot is here: VideoDemo/1201_locate_object.mp4)
+    $ rosrun baxterplaysyahtzee read_video_and_use_trackbar.py
+    $ rosrun baxterplaysyahtzee read_video_and_locate_object.py
+
+```
+
 ##### Camera Calibration
 ```
-cd test_cv
-./detect_chessboard.py
-./locate_object_3d_pose.py
-
-cd camera_calibration
-./calibrate_camerap.py
-./undistort_all_images.py
+$ cd camera_calibration
+$ ./calibrate_camerap.py
+$ ./undistort_all_images.py
 ```
 #### UI 
 
