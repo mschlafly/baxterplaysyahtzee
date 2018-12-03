@@ -16,6 +16,12 @@ find_package(catkin REQUIRED COMPONENTS
   message_runtime
   geometry_msgs
   sensor_msgs
+
+  ## below are added from pykdl
+  tf
+  baxter_core_msgs
+  baxter_interface
+
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,11 +115,21 @@ generate_messages(
 ## LIBRARIES: libraries you create in this project that dependent projects also need
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
+
+# Below are copied from pykdl.
+# Originally, these lines were commented out.
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES yahtzee
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+  CATKIN_DEPENDS
+  rospy
+  geometry_msgs
+  sensor_msgs
+  urdfdom
+  tf
+  baxter_interface
+  baxter_core_msgs
+  DEPENDS
+  python_orocos_kdl
+  urdfdom
 )
 
 ###########
