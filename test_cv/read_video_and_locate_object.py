@@ -1,8 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-# Save baxter's camera's video into images at frequency about 2 image/second.
-# Choose a camera first.
+# Read baxter's camera's video, detect chessboard and locate object at the same time.
 
 import rospy
 import numpy as np

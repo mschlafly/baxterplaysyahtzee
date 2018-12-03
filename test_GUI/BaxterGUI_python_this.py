@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Test my Baxter GUI
+
+
 import Tkinter as tk
 
 # Vars

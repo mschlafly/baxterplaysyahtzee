@@ -1,10 +1,9 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Sep 20 22:36:50 2018
 
-@author: feiyu
-"""
+# Read Baxter's video, create a trackbar for HSV color value.
+# Then you can pull the trackbar to set different color thresholds for color thresholding.
+
 import cv2
 import numpy as np
 import time

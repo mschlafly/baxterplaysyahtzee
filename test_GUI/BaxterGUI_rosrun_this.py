@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# Launch my Baxter GUI
+
 import rospy
 from baxter_pykdl import baxter_kinematics
 
@@ -38,7 +40,6 @@ class myTkGUIforBaxter(myTkGUI):
     #     self.set_text(self.fk_OutP, "EndPose = " + strP)
     #     self.set_text(self.fk_OutR, "EndAngle= " + strR)
 
-    # Compute joint angles based on given end-effector position and Euler-angles
     def read_P_and_R_from_IK_input_text(self):
         str_P = self.get_text(self.ik_InP).split('=')[1].split(',')
         str_R = self.get_text(self.ik_InR).split('=')[1].split(',')
@@ -51,7 +52,8 @@ class myTkGUIforBaxter(myTkGUI):
         except:
             R=[]
         return P, R
-        
+    
+    # compute joint angles (ik) based on given Position (3-vec) and Euler-Angles (3-vec)
     def compute_ik(self, P, R):
         lenP=len(P)
         lenR=len(R)
@@ -67,6 +69,7 @@ class myTkGUIforBaxter(myTkGUI):
             print("Wrong input!")
         return joint_angles
 
+    # Button press will trigger this function. It reads your input and compute IK.
     def button_callback_ik_compute(self):
         P, R = self.read_P_and_R_from_IK_input_text()
         joint_angles = self.compute_ik(P, R)
@@ -76,10 +79,15 @@ class myTkGUIforBaxter(myTkGUI):
         else:
             print "    IK: joint angles = ", joint_angles
             self.set_text(self.ik_Out, "Joint angles = " + list_to_str(joint_angles))
-    
+            
+    # Button press will trigger this function. 
+    # It reads your input, compute IK, and move robot to the angles returned by IK.
     def button_callback_ik_move_robot(self):
         P, R = self.read_P_and_R_from_IK_input_text()
         joint_angles = self.compute_ik(P, R)
+        if joint_angles is None:
+            print "    IK solutino not found ..."            
+            return
         if 1: # use set_joint_positions            
             output_angles = dict(zip(joint_names, joint_angles))
             print "\nMoving robot to : ", output_angles
@@ -114,12 +122,12 @@ def loop():
     FLASH_TIME = 0.05
     while not rospy.is_shutdown():
 
-        # Fresh joint angles
+        # Flash text of joint angles
         angles = limb.joint_angles()
         angles = angles.values()
         gui.set_text(gui.show_joint_Out, list_to_str(angles))
 
-        # Fresh end-effector pose
+        # Flash text of end-effector pose
         # format: [x, y, z, rot_i, rot_j, rot_k, rot_w]
         P_and_Q = kin.forward_position_kinematics()
         position = P_and_Q[0:3]

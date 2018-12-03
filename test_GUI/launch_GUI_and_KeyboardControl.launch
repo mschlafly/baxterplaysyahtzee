@@ -3,7 +3,7 @@
   <!-- please do this first: roslaunch baxter_gazebo baxter_world.launch -->
 
   <!-- rosrun baxter_interface joint_trajectory_action_server.py -->
-  <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py"/>
+  <!-- <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py"/> -->
 
   <node name="GUI_for_Baxter" pkg="baxterplaysyahtzee" type="BaxterGUI_rosrun_this.py"/>
 
