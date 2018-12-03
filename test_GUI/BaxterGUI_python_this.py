@@ -5,11 +5,12 @@ import Tkinter as tk
 # Vars
 WINDOW_WIDTH = 600
 
-ik_InP_TEXT = "EndPose = "
-ik_InR_TEXT = "EndAngle= "
+ik_InP_TEXT = "EndPose  = 0.2, 0.4, -0.6"
+# ik_InR_TEXT = "EndAngle = 0, 0, 0"
+ik_InR_TEXT = "EndAngle = "
 
-fk_OutP_TEXT = "EndPose = "
-fk_OutR_TEXT = "EndAngle= "
+fk_OutP_TEXT = "EndPose  = "
+fk_OutR_TEXT = "EndAngle = "
 
 # ================================================
 class myTkGUI(object):
@@ -36,9 +37,9 @@ class myTkGUI(object):
         # ================================================
         # forward kinamtics
         self.gap()
-        self.fk_bt = self.make_button("Compute FK", self.fk_func)
+        self.fk_bt = self.make_button("Compute FK", self.button_callback_fk_func)
         self.fk_l0 = self.make_label(
-            "Forward kinematics. Input 7 joint values seperated by comma \',\':")
+            "(Not done yet!) Forward kinematics. Input 7 joint values seperated by comma \',\':")
         self.fk_In = self.make_input()
         self.fk_l1 = self.make_label("The end effector Position and Angle is:")
         self.fk_OutP = self.make_output(fk_OutP_TEXT)
@@ -47,11 +48,11 @@ class myTkGUI(object):
         # ================================================
         # inverse kinamtics
         self.gap()
-        self.ik_bt = self.make_button("Compute IK", self.ik_func)
+        self.ik_bt = self.make_button("Compute IK", self.button_callback_ik_func)
         self.ik_l0 = self.make_label(
             "Inverse kinematics. Input Position and Angle of end-effector seperated by comma \',\':")
-        self.ik_In = self.make_input(ik_InP_TEXT)
-        self.ik_In = self.make_input(ik_InR_TEXT)
+        self.ik_InP = self.make_input(ik_InP_TEXT)
+        self.ik_InR = self.make_input(ik_InR_TEXT)
         self.ik_l1 = self.make_label("The joint angles are:")
         self.ik_Out = self.make_output()
 
@@ -60,12 +61,12 @@ class myTkGUI(object):
         # button for closing
         self.make_button("Close",self.func_close_window)
 
-    # ------------------------------ callback functions ------------------------------
-    def fk_func(self):
-        self.set_text(self.fk_OutP, fk_OutP_TEXT+"1,1,1")
-        self.set_text(self.fk_OutR, fk_OutR_TEXT+"1,2,3")
+    # ------------------------------ button_callback functions ------------------------------
+    def button_callback_fk_func(self):
+        self.set_text(self.fk_OutP, fk_OutP_TEXT+"I haven't implemented it yet!")
+        self.set_text(self.fk_OutR, fk_OutR_TEXT+"I haven't implemented it yet!")
 
-    def ik_func(self):
+    def button_callback_ik_func(self):
         self.set_text(self.ik_Out, "ik result")
 
     def func_close_window(self):
@@ -114,7 +115,6 @@ class myTkGUI(object):
         return
 
     def get_text(self, item):
-        item.delete('1.0', "end-1c")
         return item.get("1.0", "end-1c")
 
 
