@@ -111,10 +111,12 @@ class yahtzee:
         counted = Counter(self.dice)
         #print(self.dice)
         print(counted)
-        dice_str = ""
-        for x in counted:
-            print dice[x]
-
+        dice_str = dice[0]
+        for val in counted.keys():
+            count = counted[val]
+            for dict in range(count):
+                dice_str += " " + dice[val]
+        print(dice_str)
         if(len(counted) == 1 and self.combination == FIVE_OF_KIND):
             print "YAHTZEE"
             points = POINTS_FIVE_OF_KIND
