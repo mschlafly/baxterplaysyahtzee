@@ -66,7 +66,9 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  srvGetChessboardPose.srv
+  CalibChessboardPose.srv
+  GetObjectInImage.srv
+  GetObjectInBaxter.srv
 )
 
 ## Generate actions in the 'action' folder
