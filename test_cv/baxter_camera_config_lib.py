@@ -55,13 +55,25 @@ class BaxterCamera_LeftHand(object):
         self.height=400
         self.width=640
 
-        self.distortion=[0.02909140543965944,-0.08374659479659467, -0.0010871751762388689, 0.002550696113092468, 0.03253240050176302]
-        self.distortion=np.array(self.distortion)    
+        BAXTER_ON_THE_RIGHT=False
+        if BAXTER_ON_THE_RIGHT:
+            # ----------------------- The baxter on the right -----------------
+            self.distortion=[0.02909140543965944,-0.08374659479659467, -0.0010871751762388689, 0.002550696113092468, 0.03253240050176302]
+            self.distortion=np.array(self.distortion)    
 
-        self.intrinsic_matrix_array_form=[403.1498765559809, 0.0, 651.3100088479307/2,
-                0.0, 403.9409358133219, 405.82095914289783/2,
-                0.0, 0.0, 1.0]
-        self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
+            self.intrinsic_matrix_array_form=[403.1498765559809, 0.0, 651.3100088479307/2,
+                    0.0, 403.9409358133219, 405.82095914289783/2,
+                    0.0, 0.0, 1.0]
+            self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
+        else:
+            # ----------------------- The baxter on the left -----------------
+            self.distortion=[0.0184964633113, -0.0560618936713, 0.000269508536766, 0.000436460185745, 0.0147597067544]
+            self.distortion=np.array(self.distortion)    
+
+            self.intrinsic_matrix_array_form= [405.329601488, 0.0, 656.494624497, 0.0, 405.329601488, 425.656789027, 0.0, 0.0, 1.0]
+            self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
+
+  
 
 """
 not implemented

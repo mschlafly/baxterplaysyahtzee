@@ -26,13 +26,13 @@ OUTOFBOUNDS = -1
 DONTMOVE = -2
 Vision = True 
 VIZ_ONLY = True
-SKIP = 15
+SKIP = 1
 DOT_DETECTION = False
 frames = 0
 
 RATE = 5
-IMAGE_X = 640
-IMAGE_Y= 480
+IMAGE_X = 1000
+IMAGE_Y= 1000
 CENTER = [IMAGE_X/2, IMAGE_Y/2]
 SEGMENTS = 4
 MINWIDTH = 0.1
@@ -43,9 +43,10 @@ QSIZE = 10
 POS = 255
 NEG = 0
 SHOW_NEG = False
-DOT_MAX_SIZE_FILTER = 1200# pixel count of blob to filter
-DOT_MIN_SIZE_FILTER = 500# pixel count of blob to filter
-DOT_COLOR_THRESHHOLD = 80 
+DOT_MAX_SIZE_FILTER = 130 # pixel count of blob to filter
+DOT_MIN_SIZE_FILTER = 100 # pixel count of blob to filter
+DOT_COLOR_THRESHHOLD = 120
+IMAGE_SIZE = 0.2
 DEBUG_SIZE = 1000
 
 ##
@@ -73,15 +74,17 @@ def image_raw_callback(image):
     from cv_bridge import CvBridge, CvBridgeError
     bridge = CvBridge()
     cv_image = bridge.imgmsg_to_cv2(image, desired_encoding="bgr8")
+    cv_image = cv2.resize(cv_image, (0,0), fx=IMAGE_SIZE, fy=IMAGE_SIZE) 
 
     frames += 1
 
-    if(DOT_DETECTION and frames % SKIP != 0):
+    # if(DOT_DETECTION and frames % SKIP != 0):
+    if(True and frames % SKIP != 0):
         return
 
     obj_x, obj_y, mr = coords_for_object(image, cv_image)
 
-    if(DOT_DETECTION):
+    if(True):
         dots(cv_image)
 
     if(VIZ_ONLY):
@@ -195,7 +198,9 @@ def coords_for_object(image, cv_image):
         cv2.circle(output, (e,y), r/4, (0, 0, 255), 4)
  
     # show images
+    cv2.namedWindow("cv_images", cv2.WINDOW_NORMAL)
     cv2.imshow("cv_images", numpy.hstack([cv_image, output]))
+    cv2.resizeWindow("cv_images", IMAGE_X, IMAGE_Y)
     cv2.waitKey(3)
    
     return x, y, max_count
@@ -326,7 +331,8 @@ def dots(img):
     #print img_l
     colorize(img_l, img)
 
-    cv2.imshow("hmm", img)
+    cv2.namedWindow("dots", cv2.WINDOW_NORMAL)
+    cv2.imshow("dots", img)
     cv2.waitKey(3)
 
 def colorize(img_l, img):
@@ -359,6 +365,7 @@ def filter_rest(lc, img_l):
                 #print "filter: check cl"
                 e = equiv(cl)
                 for l in sorted_lc:
+                    #print "dot size", l[1]
                     if(l[1] > DOT_MIN_SIZE_FILTER and l[1] < DOT_MAX_SIZE_FILTER):
                         #print "for l", l, "keep e: ", e, "of size", l[1]
                         continue

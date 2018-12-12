@@ -1,0 +1,9 @@
+
+print 'Correct usage: python main.py sigma neighborhood K min_comp_size input_file output_file'
+
+
+python test2.py 0.5 8 500 50
+
+
+python test1_segment_image.py 0.5 8 1000 100 # for baxter head image
+python test1_segment_image.py 0.5 8 2000 200 # for cup

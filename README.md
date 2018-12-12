@@ -1,6 +1,15 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
+## Plan
+0. Dice in Cup
+1. Pick up Cup
+2. Shake Cup
+3. Pour Dice
+4. Read Values
+5. Decide Move
+6. Pick up Subset of Dice
+
 ## Setup
 
 ### ROS
@@ -8,7 +17,6 @@
 roscore
 ```
 ### Baxter
-
 
 #### Installation
 
@@ -144,3 +152,4 @@ rqt --standalone rqt_mypkg
 cd baxterplays/yahtzee/src
 python game.py
 ```
+

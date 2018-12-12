@@ -119,7 +119,7 @@ class myTkGUIforBaxter(myTkGUI):
             None
 
 def loop():
-    FLASH_TIME = 0.05
+    FLASH_TIME = 1
     while not rospy.is_shutdown():
 
         # Flash text of joint angles

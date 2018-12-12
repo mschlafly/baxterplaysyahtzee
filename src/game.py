@@ -11,16 +11,17 @@ import numpy
 import random
 import operator
 import enum
+from PIL import Image, ImageDraw, ImageFont
 from collections import Counter
 from sets import Set
 from std_msgs.msg import String
 import roslib
 import cv2
 from sensor_msgs.msg import CameraInfo
-from sensor_msgs.msg import Image
+#from sensor_msgs.msg import Image
 from geometry_msgs.msg import Vector3
 
-GAMES = 100
+GAMES = 1
 
 MAX_ROLLS = 3
 NUM_DICE = 5
@@ -85,7 +86,6 @@ class yahtzee:
         for key in self.game.keys():
             #print "key", key, "points", self.game[key]
             self.points += self.game[key]
-
         print "GAME OVER - SCORE", self.points
  
     def roll(self):
@@ -111,9 +111,15 @@ class yahtzee:
         counted = Counter(self.dice)
         #print(self.dice)
         print(counted)
-        dice_str = ""
-        for x in counted:
-            print dice[x]
+        dice_str = dice[0]
+        dice_vals = []
+        for val in counted.keys():
+            count = counted[val]
+            for dict in range(count):
+                dice_str += " " + dice[val]
+                dice_vals.append(val)
+        self.image(dice_vals)
+        print(dice_str)
 
         if(len(counted) == 1 and self.combination == FIVE_OF_KIND):
             print "YAHTZEE"
@@ -140,7 +146,34 @@ class yahtzee:
         if(d == SMALL_STRAIGHT_FORM_PRE or d == SMALL_STRAIGHT_FORM_POST):
             return SMALL_STRAIGHT 
 
-    def chance_slot():
+    def chance_slot(self):
         return sum(self.dice)
+
+    def image(self, dice_vals):
+        print dice_vals
+        for i in range(len(dice_vals)):
+            print dice_vals[i]
+            dice_vals[i] = "images/b" +  str(dice_vals[i]) + ".jpg"
+
+        images = map(Image.open, dice_vals);
+
+        widths, heights = zip(*(i.size for i in images))
+        total_width = sum(widths)
+        max_height = max(heights)
+
+        new_im = Image.new('RGB', (total_width, max_height))
+        x_offset = 0
+        for im in images:
+            new_im.paste(im, (x_offset,0))
+            x_offset += im.size[0]
+
+        fontsize = 1
+        txt = u"🎲 ⚀ ⚁ ⚂ ⚃ ⚅"
+        img_fraction = 0.5
+        font = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu/UbuntuMono-B.ttf", 24)
+
+        draw = ImageDraw.Draw(new_im)
+        draw.text((10, 25), txt, font=font) # put the text
+        new_im.save('test.jpg')
 
 y = yahtzee()

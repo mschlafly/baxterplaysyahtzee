@@ -3,7 +3,7 @@
 
 import numpy as np
 import cv2
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001) # termination criteria
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER + cv2.CALIB_CB_FAST_CHECK, 30, 0.001) # termination criteria
 import glob
 import sympy as sp
 
@@ -47,8 +47,10 @@ class ChessboardLocator(object):
         self.SQUARE_SIZE = SQUARE_SIZE
 
         # Chessboard squares number
-        self.CHECKER_ROWS = 7
-        self.CHECKER_COLS = 9
+        self.CHECKER_ROWS = 5
+        self.CHECKER_COLS = 6
+        # self.CHECKER_ROWS = 7
+        # self.CHECKER_COLS = 9
 
     # Points coodinate in the chessboard frame
     # (whose technique term is "object points". Opposite to "image points")
@@ -340,3 +342,7 @@ def find_object(img,
             return None, None, None, mask
         else:
             return center[0],center[1],int(radius),mask
+
+def find_object2(img): # This is the more advanced method
+    
+    None
