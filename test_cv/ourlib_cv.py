@@ -340,3 +340,7 @@ def find_object(img,
             return None, None, None, mask
         else:
             return center[0],center[1],int(radius),mask
+
+def find_object2(img): # This is the more advanced method
+    
+    None
