@@ -3,7 +3,7 @@
 
 import numpy as np
 import cv2
-criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001) # termination criteria
+criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER + cv2.CALIB_CB_FAST_CHECK, 30, 0.001) # termination criteria
 import glob
 import sympy as sp
 
