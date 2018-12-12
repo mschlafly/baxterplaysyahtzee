@@ -11,7 +11,19 @@ import numpy
 
 # def labeled_img = color_seg(img0):
 # def res_ellipse, res_rects = find_squares(labeled_img):
+def calc_distance(x1,y1,x2,y2):
+    return sqrt( (x1-x2)**2+(y1-y2)**2)
 
+
+def extract_rect(rect):
+    center_x=np.mean(rect[:,0])
+    center_y=np.mean(rect[:,1])
+    
+    radius_x=calc_distance(rect[0,0],rect[0,1],rect[1,0],rect[1,1])
+    radius_y=calc_distance(rect[1,0],rect[1,1],rect[2,0],rect[2,1])
+
+    angle=np.arctan2(rect[1,1]-rect[0,1],rect[1,0]-rect[0,0] )
+    return (center_x, center_y, radius_x, radius_y, angle)
 
 def rander_color(labeled_img):
     (rows,cols)=labeled_img.shape
@@ -113,14 +125,12 @@ def color_seg(img0,
 def find_squares(labeled_img):
 
     # output:
-    res_rects=list()
-    # each rect: [ [181, 124], [280, 62], [339, 155], [240, 218]]
+    res_rects=list() # each rect: [ [181, 124], [280, 62], [339, 155], [240, 218]]
 
-    res_ellipse=list()
-    # each ellipse: (center, axes, angle)       
-    res_xs=list()
-    res_ys=list()
-    res_angles=list()
+    # res_ellipse=list() # each ellipse: (center, axes, angle)       
+    # res_xs=list()
+    # res_ys=list()
+    # res_angles=list()
 
     # ------------------------ start ----------------
     rows, cols=labeled_img.shape
@@ -134,25 +144,25 @@ def find_squares(labeled_img):
 
     for l in np.arange(1, n_labels + 1):
         mask_object=labeled_img == l
-        ellipse, rect = find_square(mask_object)
-        if ellipse is None:
+        rect = find_square(mask_object)
+        if rect is None:
             continue
 
         # return
         cnt+=1
-        res_ellipse.append(ellipse) # (center, axes, angle)
         res_rects.append(rect)
 
-        center=ellipse[0]
-        angle=ellipse[2]
-        x=center[0]
-        y=center[1]
-        
-        res_xs.append(x)
-        res_ys.append(y)
-        res_angles.append(angle)
+        # res_ellipse.append(ellipse) # (center, axes, angle)
+        # center=ellipse[0]
+        # angle=ellipse[2]
+        # x=center[0]
+        # y=center[1]
+        # res_xs.append(x)
+        # res_ys.append(y)
+        # res_angles.append(angle)
 
-    return res_ellipse, res_rects, res_xs, res_ys, res_angles
+    # return res_ellipse, res_rects, res_xs, res_ys, res_angles
+    return res_rects
 
 def ellipse2xyangle(ellipse):
     # if ellipse is not None:
@@ -192,16 +202,15 @@ def find_square(mask_object,
         if len(xy) < MIN_AREA:  # Too small.
             break
 
-        # get ellipse
-        ellipse = cv2.fitEllipse(xy) # ((42.13095474243164, 124.8644027709961), (16.14134407043457, 36.2296142578125), 18.161659240722656)
-        center, axes, angle = ellipse
-        # axes: the axes whole length, not half
-        # center (x to right, y to down)
-        rect_area = axes[0] * axes[1]
-
         # get rectangular area
         USE_METHOD_1=False
         if USE_METHOD_1:
+            # get ellipse
+            ellipse = cv2.fitEllipse(xy) # ((42.13095474243164, 124.8644027709961), (16.14134407043457, 36.2296142578125), 18.161659240722656)
+            center, axes, angle = ellipse
+            # axes: the axes whole length, not half
+            # center (x to right, y to down)
+            rect_area = radius_x * radius_y
             rect = numpy.round(numpy.float64(
                         cv2.boxPoints(ellipse)
                     )).astype(numpy.int64)
@@ -213,16 +222,19 @@ def find_square(mask_object,
             rect = cv2.boxPoints(rect)
             rect = np.int0(rect)
 
-        # rect= [[ 29 140]
-        # [ 40 105]
-        # [ 55 110]
-        # [ 44 145]]
-        # print "rect=",rect
-        # print "ellipse=",ellipse
+            (center_x, center_y, radius_x, radius_y, angle)=extract_rect(rect)
+            rect_area = radius_x * radius_y
+
+            # rect= [[ 29 140]
+            # [ 40 105]
+            # [ 55 110]
+            # [ 44 145]]
+            # print "rect=",rect
+            # print "ellipse=",ellipse
 
         # C0: length == width
         if 1:
-            if abs(axes[0] / axes[1] -1 )>=ERROR_HOW_SQUARE:
+            if abs(radius_x / radius_y -1 )>=ERROR_HOW_SQUARE:
                 break
 
         # C1: simple check total area
@@ -249,9 +261,9 @@ def find_square(mask_object,
         flag_find=True
 
     if flag_find==True:
-        return ellipse, rect
+        return rect
     else:
-        return None, None
+        return None
 
 
 def refine_image_mask(img, rect, disextend=20):

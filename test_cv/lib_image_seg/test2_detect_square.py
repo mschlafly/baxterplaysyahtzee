@@ -6,7 +6,7 @@ import cv2
 import numpy
 from scipy.ndimage import label
 from matplotlib import pyplot as plt
-from ourlib_cv2 import rander_color, find_squares, find_square, refine_image_mask, ellipse2xyangle
+from ourlib_cv2 import rander_color, find_squares, find_square, refine_image_mask, ellipse2xyangle, extract_rect
 
 import os, sys
 CURRENT_PATH=os.path.join( os.path.dirname(__file__) )
@@ -31,23 +31,19 @@ if __name__=="__main__":
     rows, cols=labeled_img.shape
 
     # find the squares
-    res_ellipse, res_rects, res_xs, res_ys, res_angles = find_squares(labeled_img)
+    res_rects = find_squares(labeled_img)
     n_rects=len(res_rects)
 
     DRAW_SQURAE_TO_IMAGE=True
     for i in range(n_rects):
 
         rect=res_rects[i]
-        angle=res_ellipse[i][2]
-
-        xy=res_ellipse[i][0]
-        x=xy[0]
-        y=xy[1]
+        (center_x, center_y, radius_x, radius_y, angle)=extract_rect(rect)
 
         color=[0,0,255]
         if DRAW_SQURAE_TO_IMAGE:
             cv2.drawContours(colored_img, [rect], 0, color, 2)
-        print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(x, y, angle)
+        print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(center_x, center_y, angle)
     
     if DRAW_SQURAE_TO_IMAGE:
         plt.imshow(colored_img),plt.colorbar(),plt.show()
