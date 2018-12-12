@@ -12,45 +12,37 @@ def main():
 
     rospy.init_node('sequencer')
 
-    # Service initializations (IMPORTANT!!!)
-    '''
-    update_obj_pose = rospy.ServiceProxy('pose_relay/update_obj_pose', Trigger)
-    rospy.wait_for_service('pose_relay/update_obj_pose', 3.0)
-
-    store_bottle_pose = rospy.ServiceProxy('motion_controller/store_bottle_pose', Trigger)
-    move_to_AR_tag = rospy.ServiceProxy('motion_controller/move_to_AR_tag', Trigger)
-    move_to_offset = rospy.ServiceProxy('motion_controller/move_to_offset', OffsetMove)
-    move_to_bottle = rospy.ServiceProxy('motion_controller/move_to_bottle', Trigger)
-    rospy.wait_for_service('motion_controller/move_to_bottle', 3.0)
-
-    close_grip = rospy.ServiceProxy('gripper_controller/close_grip', Trigger)
-    open_grip = rospy.ServiceProxy('gripper_controller/open_grip', Trigger)
-    unscrew_lid = rospy.ServiceProxy('gripper_controller/unscrew_lid', Trigger)
-    screw_lid = rospy.ServiceProxy('gripper_controller/screw_lid', Trigger)
-    rospy.wait_for_service('gripper_controller/screw_lid', 3.0)
-    '''
-
     move_to_cup = rospy.ServiceProxy('iktest_controller/move_to_cup', OffsetMove)
+    pick_up_dice_above = rospy.ServiceProxy('iktest_controller/pick_up_dice_above', OffsetMove)
+    pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice',Trigger)
+    pour_dice = rospy.ServiceProxy('iktest_controller/pour_cup', OffsetMove)
+
     rospy.wait_for_service('iktest_controller/move_to_cup', 3.0)
+    rospy.wait_for_service('iktest_controller/pick_up_dice', 3.0)
 
     close_grip = rospy.ServiceProxy('gripper_controller_test/close_grip', Trigger)
     open_grip = rospy.ServiceProxy('gripper_controller_test/open_grip', Trigger)
 
+
+
     # Stored offset pose information
-    test_1 = Pose(
+    pick_up_dice_offset = Pose(
         position = Point(
-        x = 0.779983393525,
-        y = 0.252447322072,
-        z = 0.4120810140999
+        x = 0,
+        y = 0,
+        z = 0.10
         ),
-        orientation = Quaternion(
-                x = 0.76854798235,
-                y = 0.495120693063,
-                z = 0.6105294616773,
-                w = -0.3192102080429
-        )
+        orientation = Quaternion()
     )
-    test_2 = Pose(
+    pick_up_cup_offset = Pose(
+        position = Point(
+        x = 0,
+        y = 0,
+        z = 0.10
+        ),
+        orientation = Quaternion()
+    )
+    cup_pose = Pose(
         position = Point(
         x = 0.738630511657,
         y = -0.556555331452,
@@ -120,29 +112,11 @@ def main():
     # Main process loop
     while (True):
 
-        # Opening the gripper to place the cup on the table
-        move_to_cup(test_1);
-        rospy.sleep(1)
-        move_to_cup(test_4);
-        rospy.sleep(1)
 
-        close_grip()
+        pick_up_dice_above(pick_up_dice_offset)
 
         rospy.sleep(1)
-        move_to_cup(test_2);
-        rospy.sleep(1)
-        move_to_cup(test_5);
-        open_grip()
-        rospy.sleep(1)
-
-        '''
-        rospy.sleep(1)
-        open_grip()
-        rospy.sleep(1)
-        close_grip()
-        rospy.sleep(1)
-        '''
-
+        pick_up_dice()
 
         rospy.loginfo("Sequence complete.")
 
