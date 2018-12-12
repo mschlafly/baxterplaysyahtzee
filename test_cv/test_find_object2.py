@@ -8,7 +8,7 @@ from lib_image_seg.ourlib_cv2 import *
 
 if __name__ == '__main__':
 
-    Filename="lib_image_seg/image30"
+    Filename="lib_image_seg/image1"
     
     s = ""
     # s = '_'.join(sys.argv[1:])

@@ -47,8 +47,10 @@ class ChessboardLocator(object):
         self.SQUARE_SIZE = SQUARE_SIZE
 
         # Chessboard squares number
-        self.CHECKER_ROWS = 7
-        self.CHECKER_COLS = 9
+        self.CHECKER_ROWS = 5
+        self.CHECKER_COLS = 6
+        # self.CHECKER_ROWS = 7
+        # self.CHECKER_COLS = 9
 
     # Points coodinate in the chessboard frame
     # (whose technique term is "object points". Opposite to "image points")

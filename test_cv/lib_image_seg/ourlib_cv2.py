@@ -166,9 +166,9 @@ def ellipse2xyangle(ellipse):
 
 def find_square(mask_object,
         MIN_AREA=100,
-        ERROR_HOW_SQUARE=0.2, # len/width
-        ERROR_TOTAL_AREA=0.2, # total_area/(len*width)
-        ERROR_TOTAL_AREA2=0.3, # total_area/(the logical "and" area of square and segmentation result)
+        ERROR_HOW_SQUARE=0.5, # len/width
+        ERROR_TOTAL_AREA=0.5, # total_area/(len*width)
+        ERROR_TOTAL_AREA2=0.5, # total_area/(the logical "and" area of square and segmentation result)
     ):
     # output
     flag_find=False
@@ -176,6 +176,11 @@ def find_square(mask_object,
     rect=None
 
     # start
+    mask_object=mask_object.astype(np.uint8)*255
+    kernel = np.ones((5,5),np.uint8)
+    mask_object = cv2.erode(mask_object, kernel, iterations = 1)
+    mask_object = cv2.dilate(mask_object, kernel, iterations = 1)
+
     rows, cols=mask_object.shape[0:2]
     yx = numpy.dstack(numpy.nonzero(mask_object)).astype(numpy.int64)
     xy = numpy.roll(numpy.swapaxes(yx, 0, 1), 1, 2)
@@ -195,9 +200,19 @@ def find_square(mask_object,
         rect_area = axes[0] * axes[1]
 
         # get rectangular area
-        rect = numpy.round(numpy.float64(
-                    cv2.boxPoints(ellipse)
-                )).astype(numpy.int64)
+        USE_METHOD_1=False
+        if USE_METHOD_1:
+            rect = numpy.round(numpy.float64(
+                        cv2.boxPoints(ellipse)
+                    )).astype(numpy.int64)
+        else:
+            # method2: https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
+            
+            im2, contours, hierarchy = cv2.findContours(mask_object, 1, 2)
+            rect = cv2.minAreaRect(contours[0])
+            rect = cv2.boxPoints(rect)
+            rect = np.int0(rect)
+
         # rect= [[ 29 140]
         # [ 40 105]
         # [ 55 110]
@@ -214,7 +229,6 @@ def find_square(mask_object,
         if 1:
             if abs(rect_area / float(len(xy))-1) >= ERROR_TOTAL_AREA:
                 break
-            # method2: https://docs.opencv.org/3.1.0/dd/d49/tutorial_py_contour_features.html
         
         # C2: get the square and then check the area again
         if 1:

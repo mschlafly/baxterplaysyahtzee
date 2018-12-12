@@ -17,7 +17,7 @@ PACKAGE_PATH = os.path.join(os.path.dirname(__file__))+"/../"
 # sys.path.append(PACKAGE_PATH+"")
 
 # ------------settings-----------
-TEST_MODE=True
+TEST_MODE=False
 
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
@@ -49,7 +49,8 @@ CAMERA_TOPIC = "/cameras/"+tmp_CAMERA_TOPIC+"/image"
 
 # Other settings
 IMAGE_FILENAME_FOR_SAVING = 'leftcamera_detection_result'
-SQUARE_SIZE=0.1379/7 # This is the real square size of the chessboard 
+# SQUARE_SIZE=0.1379/7 # This is the real square size of the chessboard 
+SQUARE_SIZE=0.137/4 # This is the real square size of the chessboard 
 
 # Low bound and up bound for color thresholding
 global COLOR_LB, COLOR_UB

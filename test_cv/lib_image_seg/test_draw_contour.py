@@ -4,7 +4,12 @@ import cv2
 import numpy as np
 
 
-img = cv2.imread('star.png',0)
+import os, sys
+CURRENT_PATH=os.path.join( os.path.dirname(__file__) )
+# sys.path.append(PACKAGE_PATH)
+
+
+img = cv2.imread(CURRENT_PATH+'/star.png',0)
 # img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
 
