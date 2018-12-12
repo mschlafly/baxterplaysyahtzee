@@ -69,6 +69,7 @@ add_service_files(
   FILES
   CalibChessboardPose.srv
   GetObjectInImage.srv
+  GetAllObjectsInImage.srv
   GetObjectInBaxter.srv
 )
 

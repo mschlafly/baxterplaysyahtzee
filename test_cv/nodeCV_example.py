@@ -37,8 +37,13 @@ if __name__=="__main__":
         # call_service(SERVICE_NAME, CalibChessboardPose)
 
         # ----------- Test service of locate image in the middle
-        SERVICE_NAME="/mycvGetObjectInImage"
+        # SERVICE_NAME="/mycvGetObjectInImage"
+        # print "calling service: " + SERVICE_NAME
+        # call_service(SERVICE_NAME, GetObjectInImage)
+
+        # ----------- Test service of locate image in the middle
+        SERVICE_NAME="/mycvGetAllObjectsInImage"
         print "calling service: " + SERVICE_NAME
-        call_service(SERVICE_NAME, GetObjectInImage)
+        call_service(SERVICE_NAME, GetAllObjectsInImage)
 
 

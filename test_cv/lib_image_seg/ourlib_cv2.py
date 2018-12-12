@@ -70,11 +70,15 @@ def get_labeled_image(forest, width, height):
     print "label_dict, total labels = ", cnt
     return labeled_img
 
-def equalize_image(img):
+def equalize_image(img, filter_size=5):
     img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
     img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
     # convert the YUV image back to RGB format
     img_output = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+    
+    kernel = np.ones((filter_size,filter_size),np.float32)/(filter_size*filter_size)
+    img_output = cv2.filter2D(img_output,-1,kernel)
+
     return img_output
 
 # Segment image, return the labeled_img
@@ -270,6 +274,81 @@ def find_square(mask_object,
     else:
         return None
 
+
+
+# This calls: equalize_image, color_seg, find_squares, to find all the squares(objects)
+def find_all_objects(img0,
+        FLAG_DRAW_SQURAE_TO_IMAGE=False,
+        IMAGE_RESIZE_SCALE=0.5,
+    ):
+
+    img=img0.copy()
+
+    # --------------------------------------------------
+    img = cv2.resize(img, (0,0), fx=IMAGE_RESIZE_SCALE, fy=IMAGE_RESIZE_SCALE)
+
+    height, width, depth = img.shape
+
+    # pre processing
+    img=equalize_image(img)
+
+    # Segment image, and then label them
+    # print "start segmenting image"
+    labeled_img=color_seg(img,neighbor = 8,
+        sigma = 0.5,
+        K = 1000.0,
+        min_size = 100)
+    
+
+    # Find the squares(object)
+    res_rects = find_squares(labeled_img)
+
+    # draw
+    if FLAG_DRAW_SQURAE_TO_IMAGE:
+
+        n_rects=len(res_rects)
+        print "Find ", n_rects, " rectangulars !"
+
+        colored_image= rander_color(labeled_img)
+        cv2.imshow("colored label image", colored_image)
+        cv2.waitKey(10)
+
+        for i in range(n_rects):
+
+            rect=res_rects[i]
+            (x, y, radius_x, radius_y, angle)=extract_rect(rect)
+
+            color=[0,0,255]
+            cv2.drawContours(img, [rect], 0, color, 2)
+            print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(x, y, angle)
+
+        cv2.imshow("img with objects marked in rects", img)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
+
+    # Restore the scale of the rects
+    res_rects = [rect/IMAGE_RESIZE_SCALE for rect in res_rects]
+    return res_rects, labeled_img
+
+# draw the colored_image with marked rectangulars of objects
+def find_all_objects_then_draw(rects, labeled_img, IF_PRINT=True, IMAGE_RESIZE_SCALE=0.5):
+    n_rects=len(rects)
+    if IF_PRINT:
+        print "Find ", n_rects, " rectangulars !"
+    colored_image= rander_color(labeled_img)
+    # cv2.imshow("colored label image", colored_image)
+    # cv2.waitKey(1000)
+    for i in range(n_rects):
+        rect=rects[i]*IMAGE_RESIZE_SCALE
+        rect=rect.astype(int)
+        (x, y, radius_x, radius_y, angle)=extract_rect(rect)
+        # print (x, y, radius_x, radius_y, angle)
+        color=[0,0,255]
+        # print "debug print rect: ", rect
+        cv2.drawContours(colored_image, [rect], 0, color, 2)
+        if IF_PRINT:
+            print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(x, y, angle)
+    return colored_image
 
 # This function inputs the rectangular that object might be in, 
 #   and then use "grabcut" algorithm to find the extact mask of the object
