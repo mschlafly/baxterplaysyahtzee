@@ -1,8 +1,19 @@
 #!/usr/bin/env python2
 
 
+# rosservice call /baxterplaysyahtzee/teleport_absolute 5.5400 5.5400 0.4636
+
+# rosservice call /clear
+
+# rosservice call /mycvCalibChessboardPose
+# rosservice call /mycvGetObjectInImage
+
+
+
+
 import rospy
 from baxterplaysyahtzee.srv import *
+from baxterplaysyahtzee.msg import *
 
 # a template for calling service
 def call_service(service_name, service_type, args=None):
@@ -17,11 +28,17 @@ def call_service(service_name, service_type, args=None):
 if __name__=="__main__":
     rospy.init_node('nodeCV_example')
 
-    SERVICE_NAME="/mycvCalibChessboardPose"
-
     while not rospy.is_shutdown():
-        rospy.sleep(1.0)
+        rospy.sleep(0.5)
+
+        # ----------- Test service of Chessboard
+        # SERVICE_NAME="/mycvCalibChessboardPose"
+        # print "calling service: " + SERVICE_NAME
+        # call_service(SERVICE_NAME, CalibChessboardPose)
+
+        # ----------- Test service of locate image in the middle
+        SERVICE_NAME="/mycvGetObjectInImage"
         print "calling service: " + SERVICE_NAME
-        call_service(SERVICE_NAME, CalibChessboardPose)
+        call_service(SERVICE_NAME, GetObjectInImage)
 
 

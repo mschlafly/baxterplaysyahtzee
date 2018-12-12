@@ -14,14 +14,19 @@ from std_msgs.msg import String
 import os, sys
 import time
 PACKAGE_PATH = os.path.join(os.path.dirname(__file__))+"/../"
+CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
+# sys.path.append(PACKAGE_PATH)
 # sys.path.append(PACKAGE_PATH+"")
 
 # ------------settings-----------
-TEST_MODE=False
+TEST_MODE=True
+TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgcup.png"
 
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
-from baxterplaysyahtzee.msg import ColorBound 
+from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect
+
+from baxterplaysyahtzee.msg import ColorBound, XYRadiusAngle
 
 # ---------------------- service provided by this node -----------------------
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
@@ -71,8 +76,9 @@ class BaxterCameraProcessing(object):
         self.img=None
         self.t_receive_image=None
         if TEST_MODE:
-            self.img=cv2.imread("image3.jpg", cv2.IMREAD_COLOR)
-            rospy.loginfo("Test mode: reading image image3.jpg ")
+            # filename=CURRENT_PATH+"/lib_image_seg"+"/image3.png"
+            self.img=cv2.imread(TEST_IMAGE_FILENAME, cv2.IMREAD_COLOR)
+            rospy.loginfo("Test mode: reading image: "+TEST_IMAGE_FILENAME)
             # print self.img
             # cv2.imshow("test image", self.img)
             # cv2.waitKey(1)
@@ -124,26 +130,73 @@ class BaxterCameraProcessing(object):
             pose=Rp_to_pose(R,p)
             return pose
 
+    # def srv_GetAllObjectsInImage(self, req):
+    #     img=self.img.copy()
+
+    #     if not self.check_if_image_is_valid():
+    #         rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
+    #         return
+
+    #     xi, yi, radius, mask=find_object(img, COLOR_LB, COLOR_UB)
+    #         img_for_display=np.hstack([img_for_display,mask])
+
+    #     self.object_mask=mask
+    #     return Point(xi, yi, radius)
+
+
     def srv_GetObjectInImage(self, req):
         img=self.img.copy()
-
         if not self.check_if_image_is_valid():
             rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
             return
 
         # Detect object in the image
-        USE_TEST_OBJECT_POS_IN_IMAGE=False
-        if USE_TEST_OBJECT_POS_IN_IMAGE:
-            xi = 400
-            yi = 300
-            radius = 20
-        else:
-            global COLOR_LB, COLOR_UB
-            xi, yi, radius, mask=find_object(img, COLOR_LB, COLOR_UB)
-            img_for_display=np.hstack([img_for_display,mask])
 
+
+        # rows,cols=img.shape[:2]
+        # RADIUS_TO_CHECK=(rows/4)/2
+        # xmid=cols/2
+        # ymid=rows/2
+        # rect=[
+        #     [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+        #     [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+        #     [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+        #     [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+        # ]
+        # mask = refine_image_mask(img, rect, disextend=10)
+        # res_rect = find_square(mask)
+
+
+        # (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(res_rect)
         self.object_mask=mask
-        return Point(xi, yi, radius)
+
+        # Display image        
+        self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
+        self.pub_image_object()
+
+        xyra=XYRadiusAngle(center_x, center_y, radius_x, radius_y, angle)
+        return xyra
+
+    # def srv_GetObjectInImage(self, req):
+    #     img=self.img.copy()
+
+    #     if not self.check_if_image_is_valid():
+    #         rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
+    #         return
+
+    #     # Detect object in the image
+    #     USE_TEST_OBJECT_POS_IN_IMAGE=False
+    #     if USE_TEST_OBJECT_POS_IN_IMAGE:
+    #         xi = 400
+    #         yi = 300
+    #         radius = 20
+    #     else:
+    #         global COLOR_LB, COLOR_UB
+    #         xi, yi, radius, mask=find_object(img, COLOR_LB, COLOR_UB)
+    #         img_for_display=np.hstack([img_for_display,mask])
+
+    #     self.object_mask=mask
+    #     return Point(xi, yi, radius)
 
     def srv_GetObjectInBaxter(self, req):
         img=self.img.copy()
@@ -152,8 +205,11 @@ class BaxterCameraProcessing(object):
             rospy.loginfo(set_str_error("srv_GetObjectInBaxter: Please calib chessboard first."))
             return
 
-        object_point_in_image = self.srv_GetObjectInImage(None)
-        (xi, yi, radius)=(object_point_in_image.x, object_point_in_image.y, object_point_in_image.z)
+        xyra=self.srv_GetObjectInImage(None)
+        (center_x, center_y, radius_x, radius_y, angle) = \
+            (xyra.center_x, xyra.center_y, xyra.radius_x, xyra.radius_y, xyra.angle)
+
+        (xi, yi, radius)=(center_x.x, center_y.y, (radius_x+radius_y)/2)
 
         # Locate the object 3D (x,y,z) wrt camera frame and chessboard frame
         op = Object3DPoseLocator( # initialize
@@ -163,16 +219,6 @@ class BaxterCameraProcessing(object):
         )
         object_p_in_camera, object_p_in_chessboard = op.locate_object(xi=xi, yi=yi, PRINT=False)
         # format: (3,1) column vector
-
-        # Display image
-        object_xyr_in_image=(xi, yi, radius)
-        self.image_for_display_object = self.display_object_in_image(
-            # self.image_for_display_chessboard,
-            img,
-            object_xyr_in_image,
-            object_p_in_chessboard
-        )
-        self.pub_image_object()
 
         # Locate the objects direction
         # Input: self.object_mask

@@ -8,6 +8,8 @@ import numpy as np
 from main import *
 from random import random
 import numpy
+from matplotlib import pyplot as plt
+
 
 # def labeled_img = color_seg(img0):
 # def res_ellipse, res_rects = find_squares(labeled_img):
@@ -266,23 +268,65 @@ def find_square(mask_object,
         return None
 
 
-def refine_image_mask(img, rect, disextend=20):
-    mask = np.zeros(img.shape[:2],np.uint8)
+def refine_image_mask(img0, rect, disextend=20):
+    
+    img=img0.copy()
 
     bgdModel = np.zeros((1,65),np.float64)
     fgdModel = np.zeros((1,65),np.float64)
 
     # print rect
-    minx=min(rect[:,0])-disextend
-    maxwidthx=max(rect[:,0])-minx+disextend*2
-    miny=min(rect[:,1])-disextend
-    maxheighty=max(rect[:,1])-miny+disextend*2
+    # rect=np.array(rect)
+    minx=min(rect[:,0])
+    maxx=max(rect[:,0])
+    maxwidthx=maxx-minx
 
-    rect = (minx,miny,maxwidthx,maxheighty)
-    cv2.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
+    miny=min(rect[:,1])
+    maxy=max(rect[:,1])
+    maxheighty=maxy-miny
+
+    rectxywidth = (minx,miny,maxwidthx,maxheighty)
+    # print "rectxywidth",rectxywidth
+
+    mask = np.zeros(img.shape[:2],np.uint8)
+    mask[miny-disextend:maxy+disextend,minx-disextend:maxx+disextend]=1
+    img[mask==0,:]=[0,0,0]
+    # plt.imshow(img),plt.colorbar(),plt.show()
+
+    cv2.grabCut(img,mask,rectxywidth,bgdModel,fgdModel,10,cv2.GC_INIT_WITH_RECT)
+    # cv2.grabCut(img,mask,None,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_MASK)
 
     mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
     mask_3dim=mask2[:,:,np.newaxis]
-    img = img*mask_3dim
+    img_res = img*mask_3dim
 
-    return mask_3dim[:,:,0]
+    return mask_3dim[:,:,0], img_res
+
+
+
+def find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3):
+    # --------------
+    rows,cols=img.shape[:2]
+    RADIUS_TO_CHECK=(rows/ratio_RADIUS_TO_CHECK)/2
+    xmid=cols/2
+    ymid=rows/2
+    rect=[
+        [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+        [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+        [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+        [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+    ]
+    rect=np.array(rect)
+    image_for_display_object=cv2.drawContours(img.copy(), [rect], 0, [0,1,0], 2)
+    
+    # plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
+    # print "the rect before grabcut, ", rect
+
+    mask,img_res = refine_image_mask(img, rect, disextend=100)
+    
+    # print "the image after grabcut, "
+    # plt.imshow(img_res),plt.colorbar(),plt.show()
+    
+    res_rect = find_square(mask)
+    # print "the rect after grabcut and find_square, ", res_rect
+    return mask, res_rect
