@@ -70,15 +70,18 @@ def get_labeled_image(forest, width, height):
     print "label_dict, total labels = ", cnt
     return labeled_img
 
-
-def equalize_image(img):
+def equalize_image(img, filter_size=5):
     img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
     img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
     # convert the YUV image back to RGB format
     img_output = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+    
+    kernel = np.ones((filter_size,filter_size),np.float32)/(filter_size*filter_size)
+    img_output = cv2.filter2D(img_output,-1,kernel)
+
     return img_output
 
-
+# Segment image, return the labeled_img
 def color_seg(img0,  
         neighbor = 8,
         sigma = 0.5,
@@ -124,6 +127,7 @@ def color_seg(img0,
 
     return labeled_img
 
+# input a image with multiple labels (mask s), find the squares inside them
 def find_squares(labeled_img):
 
     # output:
@@ -166,6 +170,7 @@ def find_squares(labeled_img):
     # return res_ellipse, res_rects, res_xs, res_ys, res_angles
     return res_rects
 
+# Not used
 def ellipse2xyangle(ellipse):
     # if ellipse is not None:
     center=ellipse[0]
@@ -176,6 +181,8 @@ def ellipse2xyangle(ellipse):
     # else:
         # return None, None, None
 
+# Input a mask, output the rectangular containing the mask.
+# This also checks the property of the rectangular, to see if it's a real rect.
 def find_square(mask_object,
         MIN_AREA=100,
         ERROR_HOW_SQUARE=0.5, # len/width
@@ -268,6 +275,83 @@ def find_square(mask_object,
         return None
 
 
+
+# This calls: equalize_image, color_seg, find_squares, to find all the squares(objects)
+def find_all_objects(img0,
+        FLAG_DRAW_SQURAE_TO_IMAGE=False,
+        IMAGE_RESIZE_SCALE=0.5,
+    ):
+
+    img=img0.copy()
+
+    # --------------------------------------------------
+    img = cv2.resize(img, (0,0), fx=IMAGE_RESIZE_SCALE, fy=IMAGE_RESIZE_SCALE)
+
+    height, width, depth = img.shape
+
+    # pre processing
+    img=equalize_image(img)
+
+    # Segment image, and then label them
+    # print "start segmenting image"
+    labeled_img=color_seg(img,neighbor = 8,
+        sigma = 0.5,
+        K = 1000.0,
+        min_size = 100)
+    
+
+    # Find the squares(object)
+    res_rects = find_squares(labeled_img)
+
+    # draw
+    if FLAG_DRAW_SQURAE_TO_IMAGE:
+
+        n_rects=len(res_rects)
+        print "Find ", n_rects, " rectangulars !"
+
+        colored_image= rander_color(labeled_img)
+        cv2.imshow("colored label image", colored_image)
+        cv2.waitKey(10)
+
+        for i in range(n_rects):
+
+            rect=res_rects[i]
+            (x, y, radius_x, radius_y, angle)=extract_rect(rect)
+
+            color=[0,0,255]
+            cv2.drawContours(img, [rect], 0, color, 2)
+            print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(x, y, angle)
+
+        cv2.imshow("img with objects marked in rects", img)
+        cv2.waitKey()
+        cv2.destroyAllWindows()
+
+    # Restore the scale of the rects
+    res_rects = [rect/IMAGE_RESIZE_SCALE for rect in res_rects]
+    return res_rects, labeled_img
+
+# draw the colored_image with marked rectangulars of objects
+def find_all_objects_then_draw(rects, labeled_img, IF_PRINT=True, IMAGE_RESIZE_SCALE=0.5):
+    n_rects=len(rects)
+    if IF_PRINT:
+        print "Find ", n_rects, " rectangulars !"
+    colored_image= rander_color(labeled_img)
+    # cv2.imshow("colored label image", colored_image)
+    # cv2.waitKey(1000)
+    for i in range(n_rects):
+        rect=rects[i]*IMAGE_RESIZE_SCALE
+        rect=rect.astype(int)
+        (x, y, radius_x, radius_y, angle)=extract_rect(rect)
+        # print (x, y, radius_x, radius_y, angle)
+        color=[0,0,255]
+        # print "debug print rect: ", rect
+        cv2.drawContours(colored_image, [rect], 0, color, 2)
+        if IF_PRINT:
+            print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(x, y, angle)
+    return colored_image
+
+# This function inputs the rectangular that object might be in, 
+#   and then use "grabcut" algorithm to find the extact mask of the object
 def refine_image_mask(img0, rect, disextend=20):
     
     img=img0.copy()
@@ -303,30 +387,45 @@ def refine_image_mask(img0, rect, disextend=20):
     return mask_3dim[:,:,0], img_res
 
 
+# This function uses the middle of the image as the rectangular (assume object in the middle), 
+#   and then calles function "refine_image_mask()" to obtain the object pos
+def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
+    img=img0.copy()
+    for i in range(2):
+        if i==1:
+            print "trying HSV"
+            img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
-def find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3):
-    # --------------
-    rows,cols=img.shape[:2]
-    RADIUS_TO_CHECK=(rows/ratio_RADIUS_TO_CHECK)/2
-    xmid=cols/2
-    ymid=rows/2
-    rect=[
-        [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-        [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-    ]
-    rect=np.array(rect)
-    image_for_display_object=cv2.drawContours(img.copy(), [rect], 0, [0,1,0], 2)
-    
-    # plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
-    # print "the rect before grabcut, ", rect
+        # --------------
+        rows,cols=img.shape[:2]
+        RADIUS_TO_CHECK=(rows/ratio_RADIUS_TO_CHECK)/2
+        xmid=cols/2
+        ymid=rows/2
+        rect=[
+            [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+            [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+            [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+            [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+        ]
+        rect=np.array(rect)
+        image_for_display_object=cv2.drawContours(img.copy(), [rect], 0, [0,1,0], 2)
+        
+        # plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
+        # print "the rect before grabcut, ", rect
 
-    mask,img_res = refine_image_mask(img, rect, disextend=100)
-    
-    # print "the image after grabcut, "
-    # plt.imshow(img_res),plt.colorbar(),plt.show()
-    
-    res_rect = find_square(mask)
-    # print "the rect after grabcut and find_square, ", res_rect
+        mask,img_res = refine_image_mask(img, rect, disextend=100)
+        
+        # print "the image after grabcut, "
+        # plt.imshow(img_res),plt.colorbar(),plt.show()
+        
+        res_rect = find_square(mask)
+        # print "the rect after grabcut and find_square, ", res_rect
+        if res_rect is not None:
+            break
+
+    # If display or not
+    if 0 and res_rect is not None:
+        (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(res_rect)
+        image_for_display_object=cv2.drawContours(img, [res_rect], 0, [0,0,1], 2)
+        plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
     return mask, res_rect

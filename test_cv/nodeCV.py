@@ -20,11 +20,12 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 
 # ------------settings-----------
 TEST_MODE=True
-TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgcup.png"
+TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
 
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
-from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect
+from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect,\
+    find_object_in_middle, find_all_objects, find_all_objects_then_draw
 
 from baxterplaysyahtzee.msg import ColorBound, XYRadiusAngle
 
@@ -99,8 +100,11 @@ class BaxterCameraProcessing(object):
         s2 = rospy.Service('mycvGetObjectInImage', GetObjectInImage, self.srv_GetObjectInImage)
         self.object_mask=None
 
-        # services 3: get object in Baxter
-        s3 = rospy.Service('mycvGetObjectInBaxter', GetChessboardPose, self.srv_GetObjectInBaxter)
+        # services 3: get object in image (return: Point)
+        s3 = rospy.Service('mycvGetAllObjectsInImage', GetAllObjectsInImage, self.srv_GetAllObjectsInImage)
+
+        # services 4: get object in Baxter
+        s4 = rospy.Service('mycvGetObjectInBaxter', GetChessboardPose, self.srv_GetObjectInBaxter)
         self.image_for_display_object=None
 
     def topic_receive_image_callback(self, rosImage):
@@ -130,18 +134,19 @@ class BaxterCameraProcessing(object):
             pose=Rp_to_pose(R,p)
             return pose
 
-    # def srv_GetAllObjectsInImage(self, req):
-    #     img=self.img.copy()
+    def srv_GetAllObjectsInImage(self, req):
+        print("inside the srv_GetAllObjectsInImage")
+        img=self.img.copy()
 
-    #     if not self.check_if_image_is_valid():
-    #         rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
-    #         return
+        if not self.check_if_image_is_valid():
+            rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
+            return
 
-    #     xi, yi, radius, mask=find_object(img, COLOR_LB, COLOR_UB)
-    #         img_for_display=np.hstack([img_for_display,mask])
-
-    #     self.object_mask=mask
-    #     return Point(xi, yi, radius)
+        rects, labeled_img=find_all_objects(img)
+        colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=False)
+        self.image_for_display_object=colored_image   
+        self.pub_image_object()     
+        return True
 
 
     def srv_GetObjectInImage(self, req):
@@ -151,33 +156,20 @@ class BaxterCameraProcessing(object):
             return
 
         # Detect object in the image
+        mask, rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3, disextend=50)
 
-
-        # rows,cols=img.shape[:2]
-        # RADIUS_TO_CHECK=(rows/4)/2
-        # xmid=cols/2
-        # ymid=rows/2
-        # rect=[
-        #     [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        #     [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        #     [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-        #     [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-        # ]
-        # mask = refine_image_mask(img, rect, disextend=10)
-        # res_rect = find_square(mask)
-
-
-        # (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(res_rect)
-        self.object_mask=mask
 
         # Display image        
         self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
         self.pub_image_object()
 
+        # save vars
+        self.object_mask=mask
+        (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
         xyra=XYRadiusAngle(center_x, center_y, radius_x, radius_y, angle)
         return xyra
 
-    # def srv_GetObjectInImage(self, req):
+    # def srv_GetObjectInImage(self, req): # This is the old version by color thresholding
     #     img=self.img.copy()
 
     #     if not self.check_if_image_is_valid():
