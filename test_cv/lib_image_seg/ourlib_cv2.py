@@ -70,7 +70,6 @@ def get_labeled_image(forest, width, height):
     print "label_dict, total labels = ", cnt
     return labeled_img
 
-
 def equalize_image(img):
     img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
     img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
@@ -78,7 +77,7 @@ def equalize_image(img):
     img_output = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
     return img_output
 
-
+# Segment image, return the labeled_img
 def color_seg(img0,  
         neighbor = 8,
         sigma = 0.5,
@@ -124,6 +123,7 @@ def color_seg(img0,
 
     return labeled_img
 
+# input a image with multiple labels (mask s), find the squares inside them
 def find_squares(labeled_img):
 
     # output:
@@ -166,6 +166,7 @@ def find_squares(labeled_img):
     # return res_ellipse, res_rects, res_xs, res_ys, res_angles
     return res_rects
 
+# Not used
 def ellipse2xyangle(ellipse):
     # if ellipse is not None:
     center=ellipse[0]
@@ -176,6 +177,8 @@ def ellipse2xyangle(ellipse):
     # else:
         # return None, None, None
 
+# Input a mask, output the rectangular containing the mask.
+# This also checks the property of the rectangular, to see if it's a real rect.
 def find_square(mask_object,
         MIN_AREA=100,
         ERROR_HOW_SQUARE=0.5, # len/width
@@ -268,6 +271,8 @@ def find_square(mask_object,
         return None
 
 
+# This function inputs the rectangular that object might be in, 
+#   and then use "grabcut" algorithm to find the extact mask of the object
 def refine_image_mask(img0, rect, disextend=20):
     
     img=img0.copy()
@@ -303,30 +308,45 @@ def refine_image_mask(img0, rect, disextend=20):
     return mask_3dim[:,:,0], img_res
 
 
+# This function uses the middle of the image as the rectangular (assume object in the middle), 
+#   and then calles function "refine_image_mask()" to obtain the object pos
+def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
+    img=img0.copy()
+    for i in range(2):
+        if i==1:
+            print "trying HSV"
+            img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
-def find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3):
-    # --------------
-    rows,cols=img.shape[:2]
-    RADIUS_TO_CHECK=(rows/ratio_RADIUS_TO_CHECK)/2
-    xmid=cols/2
-    ymid=rows/2
-    rect=[
-        [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-        [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-    ]
-    rect=np.array(rect)
-    image_for_display_object=cv2.drawContours(img.copy(), [rect], 0, [0,1,0], 2)
-    
-    # plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
-    # print "the rect before grabcut, ", rect
+        # --------------
+        rows,cols=img.shape[:2]
+        RADIUS_TO_CHECK=(rows/ratio_RADIUS_TO_CHECK)/2
+        xmid=cols/2
+        ymid=rows/2
+        rect=[
+            [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+            [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
+            [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+            [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
+        ]
+        rect=np.array(rect)
+        image_for_display_object=cv2.drawContours(img.copy(), [rect], 0, [0,1,0], 2)
+        
+        # plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
+        # print "the rect before grabcut, ", rect
 
-    mask,img_res = refine_image_mask(img, rect, disextend=100)
-    
-    # print "the image after grabcut, "
-    # plt.imshow(img_res),plt.colorbar(),plt.show()
-    
-    res_rect = find_square(mask)
-    # print "the rect after grabcut and find_square, ", res_rect
+        mask,img_res = refine_image_mask(img, rect, disextend=100)
+        
+        # print "the image after grabcut, "
+        # plt.imshow(img_res),plt.colorbar(),plt.show()
+        
+        res_rect = find_square(mask)
+        # print "the rect after grabcut and find_square, ", res_rect
+        if res_rect is not None:
+            break
+
+    # If display or not
+    if 0 and res_rect is not None:
+        (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(res_rect)
+        image_for_display_object=cv2.drawContours(img, [res_rect], 0, [0,0,1], 2)
+        plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
     return mask, res_rect

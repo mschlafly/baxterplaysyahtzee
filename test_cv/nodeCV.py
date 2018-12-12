@@ -20,11 +20,11 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 
 # ------------settings-----------
 TEST_MODE=True
-TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgcup.png"
+TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
 
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
-from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect
+from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect, find_object_in_middle
 
 from baxterplaysyahtzee.msg import ColorBound, XYRadiusAngle
 
@@ -151,33 +151,20 @@ class BaxterCameraProcessing(object):
             return
 
         # Detect object in the image
+        mask, rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3, disextend=50)
 
-
-        # rows,cols=img.shape[:2]
-        # RADIUS_TO_CHECK=(rows/4)/2
-        # xmid=cols/2
-        # ymid=rows/2
-        # rect=[
-        #     [xmid-RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        #     [xmid+RADIUS_TO_CHECK,ymid-RADIUS_TO_CHECK],
-        #     [xmid+RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-        #     [xmid-RADIUS_TO_CHECK,ymid+RADIUS_TO_CHECK],
-        # ]
-        # mask = refine_image_mask(img, rect, disextend=10)
-        # res_rect = find_square(mask)
-
-
-        # (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(res_rect)
-        self.object_mask=mask
 
         # Display image        
         self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
         self.pub_image_object()
 
+        # save vars
+        self.object_mask=mask
+        (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
         xyra=XYRadiusAngle(center_x, center_y, radius_x, radius_y, angle)
         return xyra
 
-    # def srv_GetObjectInImage(self, req):
+    # def srv_GetObjectInImage(self, req): # This is the old version by color thresholding
     #     img=self.img.copy()
 
     #     if not self.check_if_image_is_valid():

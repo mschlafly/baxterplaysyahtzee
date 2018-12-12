@@ -21,7 +21,7 @@ if __name__=="__main__":
     # plt.imshow(img),plt.colorbar(),plt.show()
 
     # detect object
-    mask, res_rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3)
+    mask, res_rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3, disextend=50)
 
     if res_rect is None:
         print "not find anything"
