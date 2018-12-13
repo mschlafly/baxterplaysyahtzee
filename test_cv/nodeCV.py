@@ -178,11 +178,11 @@ class BaxterCameraProcessing(object):
             T_cam_to_chess=form_T(R,p)
             # T_cam_to_chess=np.linalg.inv(form_T(R,p))
 
-            print "Calibration result: self.get_T_bax_to_cam()", self.get_T_bax_to_cam()
-            print "Calibration result: T_cam_to_chess", T_cam_to_chess
+            # print "Calibration result: self.get_T_bax_to_cam()", self.get_T_bax_to_cam()
+            # print "Calibration result: T_cam_to_chess", T_cam_to_chess
             self.T_bax_to_chess=self.get_T_bax_to_cam().dot(T_cam_to_chess)
             
-            print "Calibration result: T_bax_to_chess", self.T_bax_to_chess
+            # print "Calibration result: T_bax_to_chess", self.T_bax_to_chess
 
             return CalibChessboardPoseResponse(True, pose)
 

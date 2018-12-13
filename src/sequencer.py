@@ -8,6 +8,43 @@ from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 from std_srvs.srv import Trigger
 from baxterplaysyahtzee.srv import OffsetMove
 
+from baxterplaysyahtzee.srv import *
+from baxterplaysyahtzee.msg import *
+
+# -------------------------------- Added by Feiyu --------------------------------
+
+# a template for calling service
+def call_service(service_name, service_type, args=None):
+    rospy.wait_for_service(service_name)
+    try:
+        func = rospy.ServiceProxy(service_name, service_type)
+        return func(args) if args else func() # call this service
+    except rospy.ServiceException, e:
+        print "Failed to call service:", service_name
+        print "The error is: ", e
+        sys.exit()
+
+def call_feiyu_service_detect_all():
+    SERVICE_NAME="/mycvGetAllObjectsInBaxter"
+    print "calling service: " + SERVICE_NAME
+    resp=call_service(SERVICE_NAME, GetAllObjectsInBaxter)
+    if resp.flag:
+        objInfos=resp.objInfos
+        print "Detect %d objects!\n"%(len(objInfos))
+        for i in range(len(objInfos)):
+            print "\n\n ------- Printing the %dth pose:-------"%i
+            print objInfos[i]
+
+        pose=objInfos[0].pose
+        return pose
+
+    else:
+        print "Not finding anything"
+        assert(0)
+
+# -------------------------------- Added by Feiyu Ends here --------------------------------
+
+
 def main():
 
     rospy.init_node('sequencer')
@@ -19,7 +56,7 @@ def main():
     pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice',OffsetMove)
     pour_dice = rospy.ServiceProxy('iktest_controller/pour_dice', OffsetMove)
 
-    rospy.wait_for_service('iktest_controller/move_to_cup_offset', 3.0)
+    #rospy.wait_for_service('iktest_controller/move_to_cup_offset', 3.0)
     rospy.wait_for_service('iktest_controller/pick_up_dice', 3.0)
 
     close_grip = rospy.ServiceProxy('gripper_controller_test/close_grip', Trigger)
@@ -123,8 +160,19 @@ def main():
         #move_to_homepose()
 
         #move_to_cup_offset(pick_up_cup_offset) # //need Offset
+
+        # ------- added by feiyu ---------------
+        dice_pose = call_feiyu_service_detect_all()
+        dice_pose.orientation.x=0.0513302551773
+        dice_pose.orientation.y= 0.998019774196
+        dice_pose.orientation.z=0.0328060524923
+        dice_pose.orientation.w=-0.0156683801899
+        print "printing feiyu's returned dice-Pose",dice_pose
+
+        # --------------------------------------
+
         pick_up_dice_above(dice_pose)
-        pick_up_dice(dice_pose) #//need Offset
+        #pick_up_dice(dice_pose) #//need Offset
 
         #pick_up_dice(pick_up_cup_offset)
 

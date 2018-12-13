@@ -70,18 +70,18 @@ class motionControls():
                 )
         )
 
-
+ 
 
         self.home_pose = Pose(
             position = Point(
-            x =  0.755132045435,
-            y = 0.126829611762,
-            z = 0.103069173101),
+            x =  0.791222167058,
+            y = 0.105760404052,
+            z = 0.122732076447),
             orientation = Quaternion(
-            x = 0.135343535566,
-            y = 0.990330499967,
-            z = 0.0109878946826,
-            w = -0.0284058864551
+            x = 0.0513302551773,
+            y = 0.998019774196,
+            z = 0.0328060524923,
+            w = -0.0156683801899
                 )
         )
         self.cup_above = Pose(
@@ -449,8 +449,8 @@ def main():
 
     # Class initialization
     iktest_control = motionControls()
-    iktest_control.svc_pour_dice()
-    #iktest_control.move_to_obj(iktest_control.home_pose)
+    #iktest_control.svc_pour_dice()
+    iktest_control.move_to_obj(iktest_control.home_pose)
     #iktest_control.move_to_obj(iktest_control.cup_ready_to_grip)
     #iktest_control.svc_pour_dice()
     #iktest_control.raise_cup()
