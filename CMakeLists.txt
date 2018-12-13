@@ -79,6 +79,7 @@ add_service_files(
   GetAllObjectsInBaxter.srv
 
   CupShake.srv
+  OffsetMove.srv
 )
 
 ## Generate actions in the 'action' folder

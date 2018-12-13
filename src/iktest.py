@@ -259,20 +259,19 @@ class motionControls():
 
     def svc_move_to_initpose(self,data):
 
-        self.move_to_obj(self.init_pose)
+        #self.move_to_obj(self.init_pose)
 
         print ('sucess')
         return (True,'Moving to initial pose')
 
     def svc_move_to_homepose(self,data):
 
-        self.move_to_obj(self.test_pose)
+        #self.move_to_obj(self.test_pose)
 
         return (True,'Moving to home pose')
 
     # has to change this to move to cup above
     def svc_move_to_cup_offset(self,data):
-
 
         self.cup_pose_offset = Pose(
             position = Point(
@@ -307,6 +306,7 @@ class motionControls():
 
 
     def svc_pick_up_dice_above(self,data):
+        print "IM HERE"
 
         self.dice_above = self.add_offset(data,self.dice_above_offset)
 

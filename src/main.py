@@ -126,15 +126,96 @@ class Main():
         SERVICE_NAME="/mycvGetObjectInImage"
         self.debug("calling service: " + SERVICE_NAME)
         val = self.call_service(SERVICE_NAME, GetObjectInImage)
-        #self.debug(val)
+        self.debug(val)
 
     """
     mp
     """
-    def offset_move(self):
+    def move_to_cup_offset(self):
         self.debug(self.fname(inspect.currentframe()))
-        #geometry_msgs/Pose offset   # Desired offset position for the motion controller to adjust the current EE position by
-        pass
+        cup_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+
+        move_to_cup_offset = rospy.ServiceProxy('iktest_controller/move_to_cup_offset', OffsetMove)
+        val = move_to_cup_offset()
+        self.debug(val)
+
+    def pick_up_dice_above(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pick_up_dice_above = rospy.ServiceProxy('iktest_controller/pick_up_dice_above', OffsetMove)
+
+        dice_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+
+        val = pick_up_dice_above(dice_pose)
+        self.debug(val)
+
+    def pick_up_dice(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice', OffsetMove)
+        dice_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+        val = pick_up_dice(dice_pose)
+        self.debug(val)
+
+    def move_to_initpose(self):
+        move_to_initpose = rospy.ServiceProxy('iktest_controller/move_to_initpose', Trigger)
+        val = move_to_initpose()
+        self.debug(val)
+
+    def move_to_homepose(self):
+        self.debug(self.fname(inspect.currentframe()))
+        move_to_homepose= rospy.ServiceProxy('iktest_controller/move_to_homepose', Trigger)
+        val = move_to_homepose()
+        self.debug(val)
+
+    def pour_dice(self):
+        self.debug(self.fname(inspect.currentframe()))
+        dice_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+        pour_dice = rospy.ServiceProxy('iktest_controller/pour_dice', OffsetMove)
+        val = pour_dice(dice_pose)
+        self.debug(val)
 
     """
     flow
@@ -282,17 +363,31 @@ class Main():
             actual_name = None
         return actual_name, closest_name
 
+
+    """
+    Test
+    """
+    def test_cv(self):
+        # cv test
+        self.object_in_image()
+        object = self.object_in_robot()
+        actual, closest = self.closest_colour((19, 31, 55))
+        print actual, closest
+        self.visible_objects()
+
+    def test_mp(self):
+        self.pick_up_dice_above() #ok
+        self.pick_up_dice() # ok
+        self.pour_dice() # ok
+        self.move_to_homepose() # ok
+        #self.move_to_initpose() # do not test
+        #self.move_to_cup_offset() # do not test
 """
 Init
 """
 def main():
     m = Main()
-    # cv test
-    #m.object_in_image()
-    object = m.object_in_robot()
-    actual, closest = m.closest_colour((19, 31, 55))
-    print actual, closest
-    #m.visible_objects()
+    m.test_mp()
 
 if __name__ == '__main':
     try: 
@@ -301,5 +396,4 @@ if __name__ == '__main':
     except rospy.ROSInterruptException:
             print "ROS Interrut : %s" %e
             pass
-
 main()
