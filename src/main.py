@@ -18,6 +18,8 @@ import numpy
 import random
 import operator
 import argparse
+from optparse import OptionParser
+import inspect
 from sets import Set
 from os import system
 from requests import get
@@ -68,94 +70,123 @@ SOME_SRV= "/some/srv"
 """
 Class
 """
-class main():
+class Main():
     def __init__(self):
+        self.debug_info = DEBUG;
+        self.debug(self.fname(inspect.currentframe()))
         rospy.init_node('yahtzee')
 
         self.vel_pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
         self.rate = rospy.Rate(10)
 
-        def example_service(self, x, y, theta):
-            rospy.wait_for_service('/turtle1/teleport_absolute')
-            try:
-                teleport_absolute = rospy.ServiceProxy('SOME_TOPIC',TeleportAbsolute)
-                teleport_absolute(x, y, theta)
-            except rospy.ServiceException, e:
-                print "Service call failed: %s" %e
+    def debug(self, msg):
+        if(self.debug_info):
+            rospy.loginfo(msg)
 
-        def calibrate(self):
-            """
-            CalibChessboardPose
-            geometry_msgs/Pose pose
-            """
-            pass
+    def fname(self, frame):
+        return inspect.getframeinfo(frame).function
 
-        def get_visible_objects(self):
-             """
-             GetAllObjectsInImage.srv
-             """
+    def example_service(self, x, y, theta):
+        self.debug(self.fname(inspect.currentframe()))
+        rospy.wait_for_service('/turtle1/teleport_absolute')
+        try:
+            teleport_absolute = rospy.ServiceProxy('SOME_TOPIC',TeleportAbsolute)
+            teleport_absolute(x, y, theta)
+        except rospy.ServiceException, e:
+            print "Service call failed: %s" %e
 
-        def locate_object(self):
-             """
-             GetObjectInBaxter.srv
-             """
+    def calibrate(self):
+        self.debug(self.fname(inspect.currentframe()))
+        """
+        CalibChessboardPose
+        geometry_msgs/Pose pose
+        """
 
-        def object_in_image(self):
-            """
-            GetObjectInImage.srv
-            baxterplaysyahtzee/XYRadiusAngle xyra
-            """
-            pass
+        pass
 
-        def offset_move(self):
-            pass
+    def get_visible_objects(self):
+        self.debug(self.fname(inspect.currentframe()))
+        """
+        GetAllObjectsInImage.srv
+        """
+        self.debug("======" + inspect.currentframe() + "======")
 
-        def home_position(self):
-            pass
+    def locate_object(self):
+        self.debug(self.fname(inspect.currentframe()))
+        """
+        GetObjectInBaxter.srv
+        """
 
-        def pickup_cup(self):
-            pass
+    def object_in_image(self):
+        self.debug(self.fname(inspect.currentframe()))
+        """
+        GetObjectInImage.srv
+        baxterplaysyahtzee/XYRadiusAngle xyra
+        """
+        debug(self, 
+             "======" + inspect.currentframe() + "======")
+        pass
 
-        def shake_cup(self):
-            pass
+    def offset_move(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pass
 
-        def pour_dice(self):
-            # get wrist angle
-            # set wrist angle
+    def home_position(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pass
 
-            # get wrist angle
-            # set wrist angle
+    def pickup_cup(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pass
 
-            # place cup outside boundary
+    def shake_cup(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pass
 
-            pass
+    def pour_dice(self):
+        self.debug(self.fname(inspect.currentframe()))
+        # get wrist angle
+        # set wrist angle
 
-        def read_values(self):
-            # read dice values
-            pass
+        # get wrist angle
+        # set wrist angle
 
-        def decide_move(self):
-            """
-            ge srv
-            """
-            pass
-        
-        def pickup_dice(self):
-            pass
+        # place cup outside boundary
 
-        def update_display(self):
-            """
-            """
-            pass
+        pass
 
-        def fetch_param(self,name,default):
-            if rospy.has_param(name):
-                return rospy.get_param(name)
-            else:
-                rospy.logwarn("parameter %s not defined. Defaulting to %.3f" % (name, default))
-            return default
+    def read_values(self):
+        self.debug(self.fname(inspect.currentframe()))
+        # read dice values
+        pass
 
-def run(self):
+    def decide_move(self):
+        self.debug(self.fname(inspect.currentframe()))
+        """
+        ge srv
+        """
+        pass
+    
+    def pickup_dice(self):
+        self.debug(self.fname(inspect.currentframe()))
+        pass
+
+    def update_display(self):
+        self.debug(self.fname(inspect.currentframe()))
+        """
+        """
+        pass
+
+    def fetch_param(self,name,default):
+        self.debug(self.fname(inspect.currentframe()))
+        if rospy.has_param(name):
+            return rospy.get_param(name)
+        else:
+            rospy.logwarn("parameter %s not defined. Defaulting to %.3f" % (name, default))
+        return default
+
+    def run(self):
+        self.debug(self.fname(inspect.currentframe()))
         pub = rospy.Publisher('turtle1/cmd_vel',Twist, queue_size=10)
         rate = rospy.Rate(10)
         time = 0.0
@@ -164,19 +195,24 @@ def run(self):
         twist = Twist()
 
         while not rospy.is_shutdown():
-
-            # calculate linear velocity
             pub.publish(twist)
-
             rate.sleep()
+
+    def debugtool(self):
+        # inspect.getmembers(Main, predicate=inspect.ismethod)
+        pass
 
 """
 Init
 """
+def main():
+    m = Main()
+    m.locate_object()
+
 if __name__ == '__main':
     try: 
-        main = main()
-        main.main()
+        main()
+
     except rospy.ROSInterruptException:
             pass
 
