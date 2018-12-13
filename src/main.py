@@ -67,7 +67,7 @@ Define
 """
 SOME_CALLBACK = "callback()"
 NODE_NAME = "yahtzee"
-DEBUG = False 
+DEBUG = True
 SOME_TOPIC = "/some/topic"
 SOME_SRV= "/some/srv"
 RATE = 10
@@ -99,19 +99,23 @@ class Main():
         val = call_service(SERVICE_NAME, CalibChessboardPose)
         self.debug(val)
 
-    def get_visible_objects(self):
+    def visible_objects(self):
         self.debug(self.fname(inspect.currentframe()))
         SERVICE_NAME="/mycvGetAllObjectsInImage"
         self.debug("calling service: " + SERVICE_NAME)
-        val = call_service(SERVICE_NAME, GetAllObjectsInImage)
+        val = self.call_service(SERVICE_NAME, GetAllObjectsInImage)
         self.debug(val)
 
-    def locate_object(self):
-        self.debug(self.fname(inspect.currentframe()))
+    def object_in_robot(self):
         SERVICE_NAME="/mycvGetObjectInBaxter"
         self.debug("calling service: " + SERVICE_NAME)
-        val = call_service(SERVICE_NAME, GetObjectInBaxter)
-        self.debug(val)
+        resp=self.call_service(SERVICE_NAME, GetObjectInBaxter)
+        if resp.flag:
+            objInfo=resp.objInfo
+            print "\n\n -----------Detect the object!------------- \n"
+            print objInfo
+        else:
+            print "Not finding anything"
 
     def object_in_image(self):
         self.debug(self.fname(inspect.currentframe()))
@@ -123,7 +127,6 @@ class Main():
     """
     mp
     """
-
     def offset_move(self):
         self.debug(self.fname(inspect.currentframe()))
         #geometry_msgs/Pose offset   # Desired offset position for the motion controller to adjust the current EE position by
@@ -234,6 +237,7 @@ class Main():
         x = v.x
         y = v.y
 
+        # a method
         client.commands_from_coords(x, y)
 
     def commands_from_coords(self, x, y):
@@ -256,9 +260,11 @@ class Main():
 Init
 """
 def main():
-    return inspect.getframeinfo(frame).function
     m = Main()
-    m.object_in_image()
+    # cv test
+    #m.object_in_image()
+    #m.object_in_robot()
+    #m.visible_objects()
 
 if __name__ == '__main':
     try: 

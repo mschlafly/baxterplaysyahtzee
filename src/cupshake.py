@@ -8,7 +8,8 @@ from std_msgs.msg import (
 from baxterplaysyahtzee.srv import*
 
 
-def handle_pour_the_cup():
+def handle_pour_the_cup(data):
+
     # Getting limbs and joints
     print("Fetching limbs and joints...")
     left_arm = baxter_interface.Limb("left")
@@ -24,27 +25,30 @@ def handle_pour_the_cup():
     # set displacement angle for pouring the cup
     print("Retrieving current joint positions...")
     current_joint_angles = right_arm.joint_angles()
+    print(current_joint_angles)
 
     print("Setting last joint angle to Pi, and moving the joint to this angle...")
-    current_joint_angles[-1] = math.pi
-    right_arm.move_to_joint_positions(current_joint_angles,timeout=15)
+    current_joint_angles['right_w2'] = math.pi
+    right_arm.move_to_joint_positions(current_joint_angles,timeout=30)
 
     print("Moving the last joint by pi/2 radians to pour the dice out...")
     pouring_angles = current_joint_angles
-    pouring_angles[-1] = pouring_angles[-1] + math.pi/2
-    right_arm.move_to_joint_positions(pouring_angles,timeout=15)
+    pouring_angles['right_w2'] = pouring_angles['right_w2'] + math.pi/2
+    right_arm.move_to_joint_positions(pouring_angles,timeout=30)
 
     print("Waiting...")
     rospy.sleep(2.0)
 
     print("Moving arm back to standoff position...")
-    right_arm.move_to_joint_positions(current_joint_angles,timeout=15)
+    right_arm.move_to_joint_positions(current_joint_angles,timeout=30)
 
     rospy.sleep(1.0)
 
     success = True
 
-    return CupShakeResponse(success)
+    return success
+    # return CupShakeResponse(success)
+    # return;
 
 
     # rotation_for_pouring = (math.pi)/2
@@ -71,7 +75,7 @@ def handle_pour_the_cup():
 
 def pour_the_cup_server():
 
-    pub_rate = rospy.Publisher('robot/joint_state_publish_rate',UInt16, queue_size=10)
+    # pub_rate = rospy.Publisher('robot/joint_state_publish_rate',UInt16, queue_size=10)
 
     #rospy.Subscriber('')
 
@@ -87,6 +91,7 @@ def pour_the_cup_server():
 
 
 if __name__ == '__main__':
+    pub_rate = rospy.Publisher('robot/joint_state_publish_rate',UInt16, queue_size=10)
     try:
         pour_the_cup_server()
     except rospy.ROSInterruptException:

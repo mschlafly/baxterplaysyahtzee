@@ -8,8 +8,9 @@ def pour_the_cup_client():
     rospy.wait_for_service('pour_the_cup')
     try:
         pour_the_cup = rospy.ServiceProxy('pour_the_cup', CupShake)
-        sucess = pour_the_cup()
-        return success
+        success = pour_the_cup()
+        # return success
+        print(success)
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
