@@ -331,6 +331,10 @@ class Main():
         k.dice5
         print(k)
 
+        # send with value 1 (reroll) in self.list_ofobjects to motion planning to be picked up and put into cup
+        # reroll_objects = compare (self.list_of_objects and k)
+        #self.pick_up_dice_above(self_objects) #ok
+
     def listener(self):
         print("listening for reroll....")
         rospy.Subscriber(REROLL_TOPIC, KeepDice, self.reroll_callback, (self))
@@ -374,7 +378,7 @@ class Main():
         #self.move_to_cup_offset(object.pose) # do not test
         object = self.object_in_robot()
         #self.move_to_cup_offset(object.pose) # do not test
-        self.visible_objects()
+        list_of_objects = self.visible_objects()
         self.pick_up_dice() # ok
 
         #actual, closest = self.closest_colour((19, 31, 55))
@@ -386,6 +390,19 @@ class Main():
         self.move_to_homepose() # ok
         #self.move_to_initpose() # do not test
         #self.move_to_cup_offset() # do not test
+    """
+    example flow
+    """
+    def example_flow(self):
+        # ie get visible dice
+        self.list_of_objects = self.visible_objects()
+
+        # send dice values to display code
+        self.publish() # should take list_of_dice values, see publish for hardcoded example
+
+       #check self.reroll_callback for response
+
+
 """
 Init
 """
