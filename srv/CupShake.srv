@@ -1,3 +1,2 @@
 ---
-bool success                # Indicate successful run of triggered service
-string message              # Informational, e.g. for error messages
+bool success      

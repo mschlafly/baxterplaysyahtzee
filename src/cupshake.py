@@ -5,7 +5,7 @@ import baxter_interface
 from std_msgs.msg import (
     UInt16,
 )
-from baxterplaysyahtzee.srv import *
+from baxterplaysyahtzee.srv import*
 
 
 def handle_pour_the_cup():
@@ -42,9 +42,9 @@ def handle_pour_the_cup():
 
     rospy.sleep(1.0)
 
-    return 0;
+    success = True
 
-
+    return CupShakeResponse(success)
 
 
     # rotation_for_pouring = (math.pi)/2
