@@ -35,7 +35,22 @@ def call_feiyu_service_detect_all():
             print "\n\n ------- Printing the %dth pose:-------"%i
             print objInfos[i]
 
-        pose=objInfos[0].pose
+        pose=objInfos[-1].pose
+        return pose
+
+    else:
+        print "Not finding anything"
+        assert(0)
+
+def call_feiyu_service_detect_one():
+    SERVICE_NAME="/mycvGetObjectInBaxter"
+    print "calling service: " + SERVICE_NAME
+    resp=call_service(SERVICE_NAME, GetObjectInBaxter)
+    if resp.flag:
+        objInfo=resp.objInfo
+        print "Detect objects!\n"
+        print objInfo
+        pose=objInfo.pose
         return pose
 
     else:
@@ -54,7 +69,7 @@ def main():
     move_to_cup_offset = rospy.ServiceProxy('iktest_controller/move_to_cup_offset', OffsetMove)
     pick_up_dice_above = rospy.ServiceProxy('iktest_controller/pick_up_dice_above', OffsetMove)
     pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice',OffsetMove)
-    pour_dice = rospy.ServiceProxy('iktest_controller/pour_dice', OffsetMove)
+    pour_dice = rospy.ServiceProxy('iktest_controller/pour_dice', Trigger)
 
     #rospy.wait_for_service('iktest_controller/move_to_cup_offset', 3.0)
     rospy.wait_for_service('iktest_controller/pick_up_dice', 3.0)
@@ -157,22 +172,51 @@ def main():
 
         #move_to_initpose()
 
-        #move_to_homepose()
+        move_to_homepose()
+
+
+        rospy.sleep(1)
 
         #move_to_cup_offset(pick_up_cup_offset) # //need Offset
 
         # ------- added by feiyu ---------------
+        pour_dice()
+
+        move_to_homepose()
+
         dice_pose = call_feiyu_service_detect_all()
-        dice_pose.orientation.x=0.0513302551773
-        dice_pose.orientation.y= 0.998019774196
-        dice_pose.orientation.z=0.0328060524923
-        dice_pose.orientation.w=-0.0156683801899
+        #dice_pose = call_feiyu_service_detect_one()
+        #dice_pose.position.x=0.834
+        #dice_pose.position.y=0.07
+        dice_pose.position.z = dice_pose.position.z - 0.03
+        dice_pose.orientation.x=0.5
+        dice_pose.orientation.y= 0.0
+        dice_pose.orientation.z=0.0
+        dice_pose.orientation.w=-0.0
         print "printing feiyu's returned dice-Pose",dice_pose
 
         # --------------------------------------
 
         pick_up_dice_above(dice_pose)
-        #pick_up_dice(dice_pose) #//need Offset
+        rospy.sleep(1)
+        pick_up_dice(dice_pose) #//need Offset
+
+        move_to_homepose()
+
+        dice_pose = call_feiyu_service_detect_all()
+
+        dice_pose.position.z = dice_pose.position.z - 0.03
+        dice_pose.orientation.x=0.5
+        dice_pose.orientation.y= 0.0
+        dice_pose.orientation.z=0.0
+        dice_pose.orientation.w=-0.0
+
+        pick_up_dice_above(dice_pose)
+        rospy.sleep(1)
+        pick_up_dice(dice_pose) #//need Offset
+
+
+        #pour_dice()
 
         #pick_up_dice(pick_up_cup_offset)
 

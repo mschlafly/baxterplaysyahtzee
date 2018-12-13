@@ -17,6 +17,8 @@ from baxterplaysyahtzee.srv import*
 from baxter_core_msgs.srv import (SolvePositionIK, SolvePositionIKRequest)
 from std_srvs.srv import Trigger
 
+
+
 class motionControls():
 
     def __init__(self):
@@ -46,7 +48,7 @@ class motionControls():
             position = Point(
             x =  0,
             y =  0,
-            z = 0.2),
+            z = 0.1),
             orientation = Quaternion())
 
         self.cup_above_offset = Pose(
@@ -70,46 +72,49 @@ class motionControls():
                 )
         )
 
- 
+
 
         self.home_pose = Pose(
             position = Point(
-            x =  0.791222167058,
-            y = 0.105760404052,
-            z = 0.122732076447),
+            x =  0.791631676282,
+            y = 0.0889369404762,
+            z = -0.0245516063639),
             orientation = Quaternion(
-            x = 0.0513302551773,
-            y = 0.998019774196,
-            z = 0.0328060524923,
-            w = -0.0156683801899
+            x = 0.0528354322773,
+            y = 0.998207795751,
+            z = 0.0126737622251,
+            w =  -0.0250796600484
                 )
         )
+
+
         self.cup_above = Pose(
             position = Point(
-            x = 0.85190640362,
-            y =0.347657681023,
-            z =-0.0455096862729
+            x = 0.809871607686,
+            y = 0.291500747638,
+            z =-0.0298257041711
             ),
             orientation = Quaternion(
-            x = 0.107378490231,
-            y = 0.993110808031,
-            z = 0.0308105490348,
-            w =-0.0353764452071
+            x = 0.998710442347,
+            y = -0.0472537801641,
+            z =-0.0165893925935,
+            w =-0.00832614319472
                 )
         )
+
 
 
         self.cup_ready_to_grip = Pose(
         position = Point(
-        x = 0.867223386146,
-        y = 0.106406676123,
-        z = 0.0761445029937
+        x = 0.8639658962576,
+        y = 0.288214295747,
+        z =  0.0819743789111
         ),
         orientation = Quaternion(
-        x = 0.700567930833,
-        y = -0.100213678564,
-        z = 0.697478502247,
-        w = 0.112630066237
+        x = 0.697345324287,
+        y = -0.0729093965645,
+        z = 0.711741333725,
+        w = 0.0426379227384
             ))
         # off3 = off2- off1
 
@@ -247,11 +252,8 @@ class motionControls():
 
 
     def move_to_obj(self,data):
-        '''
-        This service function takes the cached pose information for the , based on the original AR marker's pose,
-        calls for an IK solution that brings the designated end effector into position, and executes a move to the
-        calculated joint positions.
-        '''
+
+
 
         # Establish connection to specific limb's IKSolver service
         ns = '/ExternalTools/' + self.limb + '/PositionKinematicsNode/IKService'
@@ -285,6 +287,7 @@ class motionControls():
         try:
             rospy.wait_for_service(ns, 5.0)
             resp = iksvc(ikreq)
+
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call fault: %s" % (e,))
             return (False, "MOTION CTRL - Service call to Baxter's IK solver failed.")
@@ -324,7 +327,7 @@ class motionControls():
 
     def svc_move_to_homepose(self,data):
 
-        #self.move_to_obj(self.test_pose)
+        self.move_to_obj(self.home_pose)
 
         return (True,'Moving to home pose')
 
@@ -375,6 +378,9 @@ class motionControls():
         return (True,"Moving above to dice")
 
     def svc_pick_up_dice(self,data):
+
+
+
         goal = Pose(
             position = Point(
                 x = data.pose.position.x,
@@ -382,10 +388,10 @@ class motionControls():
                 z = data.pose.position.z
             ),
             orientation = Quaternion(
-            x = data.pose.orientation.x,
-            y = data.pose.orientation.y,
-            z = data.pose.orientation.z,
-            w = data.pose.orientation.w)
+            x = 1.0,
+            y = 0,
+            z = 0,
+            w = 0)
             )
 
 
@@ -411,7 +417,7 @@ class motionControls():
         # self.raise_cup()
 
 
-    def svc_pour_dice(self):
+    def svc_pour_dice(self,data):
 
         self.move_to_obj(self.cup_ready_to_grip)
         cup_down = Pose()
@@ -450,7 +456,7 @@ def main():
     # Class initialization
     iktest_control = motionControls()
     #iktest_control.svc_pour_dice()
-    iktest_control.move_to_obj(iktest_control.home_pose)
+    #iktest_control.move_to_obj(iktest_control.home_pose)
     #iktest_control.move_to_obj(iktest_control.cup_ready_to_grip)
     #iktest_control.svc_pour_dice()
     #iktest_control.raise_cup()
