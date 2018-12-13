@@ -26,19 +26,19 @@ class motionControls():
         rospy.Subscriber('dice_pose_topic', Pose, self.set_dice_position)
         rospy.Subscriber('tag_pose_topic', Pose, self.read_tag_position)
 
-        rospy.Service('iktest_controller/move_to_cup', OffsetMove, self.svc_move_to_cup)
+        rospy.Service('iktest_controller/move_to_cup_offset', OffsetMove, self.svc_move_to_cup_offset)
         rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)
-        rospy.Service('iktest_controller/pick_up_dice', Trigger, self.svc_pick_up_dice)
+        rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)
         rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)
         rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)
-        rospy.Service('iktest_controller/pour_cup', OffsetMove, self.svc_pour_cup)
+        rospy.Service('iktest_controller/pour_dice', OffsetMove, self.svc_pour_dice)
 
         self.close_grip = rospy.ServiceProxy('gripper_controller_test/close_grip', Trigger)
         self.open_grip = rospy.ServiceProxy('gripper_controller_test/open_grip', Trigger)
         # Just for test
         self.limb = 'right'
 
-        self.cup = Pose(
+        self.cup_pose = Pose(
             position = Point(
             x =  0.785972474799,
             y = -0.274381410551,
@@ -64,7 +64,7 @@ class motionControls():
                 )
         )
 
-        self.init_pose = Pose(
+        self.home_pose = Pose(
             position = Point(
             x =  0.785972474799,
             y = -0.274381410551,
@@ -85,8 +85,8 @@ class motionControls():
         #rospy.Service('ik_test/move_to_cup', Trigger, self.svc_move_to_cup)
 
     def set_cup_position(self,data):
-        self.cup = data
-        print(self.cup)
+        self.cup_pose = data
+        print(self.cup_pose)
         #print(self.cup)
 
         return
@@ -109,7 +109,6 @@ class motionControls():
             z = self.tag.orientation.z + 1,
             w = self.tag.orientation.w + 1)
             )
-        )
 
         return
     def set_dice_position(self,data):
@@ -184,6 +183,8 @@ class motionControls():
         # convert rospy's string representation of uint8[]'s to int's
         resp_seeds = struct.unpack('<%dB' % len(resp.result_type),
                                    resp.result_type)
+        print(use_advanced_options)
+        
         if (resp_seeds[0] != resp.RESULT_INVALID):
             seed_str = {
                         ikreq.SEED_USER: 'User Provided Seed',
@@ -199,49 +200,47 @@ class motionControls():
             limb.move_to_joint_positions(limb_joints)
             rospy.loginfo("Valid solution Found! Baxter begins to move!")
 
+
+
         return
 
     # has to change this to move to cup above
-    def svc_move_to_cup(self,data):
-        '''
-        This service function takes the cached pose information for the , based on the original AR marker's pose,
-        calls for an IK solution that brings the designated end effector into position, and executes a move to the
-        calculated joint positions.
-        '''
+    def svc_move_to_cup_offset(self,data):
 
-        self.cup_pose = Pose(
+
+        self.cup_pose_offset = Pose(
             position = Point(
-                x = data.offset.position.x + self.tag.position.x,
-                y = data.offset.position.y + self.tag.position.y,
-                z = data.offset.position.z + self.tag.position.z
+                x = data.offset.position.x + self.cup_pose.position.x,
+                y = data.offset.position.y + self.cup_pose.position.y,
+                z = data.offset.position.z + self.cup_pose.position.z
             ),
             orientation = Quaternion(
-            x = data.offset.orientation.x + self.tag.orientation.x,
-            y = data.offset.orientation.y + self.tag.orientation.y,
-            z = data.offset.orientation.z + self.tag.orientation.z,
-            w = data.offset.orientation.w + self.tag.orientation.w)
+            x = data.offset.orientation.x + self.cup_pose.orientation.x,
+            y = data.offset.orientation.y + self.cup_pose.orientation.y,
+            z = data.offset.orientation.z + self.cup_pose.orientation.z,
+            w = data.offset.orientation.w + self.cup_pose.orientation.w)
             )
-        )
 
-        self.move_to_obj(self.cup_pose)
+
+        self.move_to_obj(self.cup_pose_offset)
 
         return (True, 'Moving to cup completed')
 
-            ''' here does not use seed method
-            if (resp.isValid[0]):
-                rospy.loginfo("IK SOLVER - Success! Valid joint solution found.")
+        ''' here does not use seed method
+        if (resp.isValid[0]):
+            rospy.loginfo("IK SOLVER - Success! Valid joint solution found.")
 
-                # Format solution into Limb API-compatible dictionary
-                limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
+            # Format solution into Limb API-compatible dictionary
+            limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-                # Print Info message to alert users of impending motion
-                rospy.loginfo("MOTION CTRL - WARNING! Moving Baxter's " + self.limb + " arm to cup pounce position.")
-            '''
+            # Print Info message to alert users of impending motion
+            rospy.loginfo("MOTION CTRL - WARNING! Moving Baxter's " + self.limb + " arm to cup pounce position.")
+        '''
 
 
     def svc_move_to_initpose(self,data):
 
-        self.move_to_obj(self.init_pose)
+        self.move_to_obj(self.home_pose)
 
         return (True,'Moving to initial pose')
 
@@ -282,7 +281,24 @@ class motionControls():
 
         rospy.sleep(1)
 
-        self.move_to_obj(self.dice_above)
+        self.move_to_obj(self.home_pose)
+
+        self.cup_pose_above = Pose(
+            position = Point(
+            x = data.offset.position.x + self.cup_pose.position.x,
+            y = data.offset.position.y + self.cup_pose.position.y,
+            z = data.offset.position.z + self.cup_pose.position.z),
+            orientation = Quaternion(
+            x = data.offset.orientation.x + self.cup_pose.orientation.x,
+            y = data.offset.orientation.y + self.cup_pose.orientation.y,
+            z = data.offset.orientation.z + self.cup_pose.orientation.z,
+            w = data.offset.orientation.w + self.cup_pose.orientation.w
+                )
+        )
+
+        self.move_to_obj(self.cup_pose_above)
+
+        self.open_grip()
 
         rospy.loginfo("Have picked up the dice!.")
 
@@ -292,39 +308,24 @@ class motionControls():
         # self.raise_cup()
 
 
+    def svc_pour_dice(self,data):
 
-    def svc_pour_cup(self,data):
 
-        self.cup_above_offset = Pose(
-            position = Point(
-            x = data.offset.position.x + self.cup.position.x,
-            y = data.offset.position.y + self.cup.position.y,
-            z = data.offset.position.z + self.cup.position.z),
-            orientation = Quaternion(
-            x = data.offset.orientation.x + self.cup.orientation.x,
-            y = data.offset.orientation.y + self.cup.orientation.y,
-            z = data.offset.orientation.z + self.cup.orientation.z,
-            w = data.offset.orientation.w + self.cup.orientation.w
-                )
-        )
-
-        self.move_to_obj(self.cup_above_offset)
-
-        cup_down = self.cup_above_offset
-        cup_down.position.z = self.cup_above_offset.position.z - 0.2
+        cup_down = self.cup_pose_offset
+        cup_down.position.z = self.cup_pose_offset.position.z - 0.2
 
         self.move_to_obj(cup_down)
 
         self.close_grip()
 
-        self.move_to_obj(self.cup_above_offset)
+        self.move_to_obj(self.cup_pose_offset)
         ## Pour dice
 
         self.move_to_obj(cup_down)
 
         self.open_grip()
 
-        self.move_to_obj(self.cup_above_offset)
+        self.move_to_obj(self.cup_pose_offset)
 
         return(True,'Pour finished')
 
