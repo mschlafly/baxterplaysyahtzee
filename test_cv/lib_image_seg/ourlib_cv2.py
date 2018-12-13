@@ -390,7 +390,7 @@ def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
     img=img0.copy()
     for i in range(2):
         if i==1:
-            print "trying HSV"
+            # print "trying HSV"
             img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
         # --------------
