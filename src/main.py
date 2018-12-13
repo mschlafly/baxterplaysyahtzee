@@ -99,19 +99,23 @@ class Main():
         val = call_service(SERVICE_NAME, CalibChessboardPose)
         self.debug(val)
 
-    def get_visible_objects(self):
+    def visible_objects(self):
         self.debug(self.fname(inspect.currentframe()))
         SERVICE_NAME="/mycvGetAllObjectsInImage"
         self.debug("calling service: " + SERVICE_NAME)
-        val = call_service(SERVICE_NAME, GetAllObjectsInImage)
+        val = self.call_service(SERVICE_NAME, GetAllObjectsInImage)
         self.debug(val)
 
     def object_in_robot(self):
-        self.debug(self.fname(inspect.currentframe()))
         SERVICE_NAME="/mycvGetObjectInBaxter"
         self.debug("calling service: " + SERVICE_NAME)
-        val = call_service(SERVICE_NAME, GetObjectInBaxter)
-        self.debug(val)
+        resp=self.call_service(SERVICE_NAME, GetObjectInBaxter)
+        if resp.flag:
+            objInfo=resp.objInfo
+            print "\n\n -----------Detect the object!------------- \n"
+            print objInfo
+        else:
+            print "Not finding anything"
 
     def object_in_image(self):
         self.debug(self.fname(inspect.currentframe()))
@@ -257,9 +261,10 @@ Init
 """
 def main():
     m = Main()
-    m.object_in_image()
-    m.object_in_world()
-    m.visible_objects()
+    # cv test
+    #m.object_in_image()
+    #m.object_in_robot()
+    #m.visible_objects()
 
 if __name__ == '__main':
     try: 

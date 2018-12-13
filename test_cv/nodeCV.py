@@ -8,7 +8,6 @@ Provide services for:
 3. mycvGetAllObjectsInBaxter
 '''
 
-
 # ----------------------------------------
 import rospy
 import numpy as np
