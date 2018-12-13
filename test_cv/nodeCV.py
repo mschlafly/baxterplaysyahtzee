@@ -45,7 +45,7 @@ from baxterplaysyahtzee.srv import *
 # ---------------------- TEST SETTINGS ------------------
 TEST_MODE=True
 if TEST_MODE:
-    DETECT_ONE_OBJECT=False
+    DETECT_ONE_OBJECT=True
     if DETECT_ONE_OBJECT:
         TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
     else:
@@ -308,17 +308,20 @@ class BaxterCameraProcessing(object):
         flag, objInfo=self._GetObjectInImage(None)
 
         if flag == False:
-            GetObjectInBaxterResponse(False, Pose())
+            GetObjectInBaxterResponse(False, ObjectInfo())
         else:
             IF_DISPLAY_IMAGE=True
             pose = self.calc_object_pose_in_baxter_frame(
                 objInfo, poseLocator, T_bax_to_cam,
                 IF_DISPLAY_IMAGE=IF_DISPLAY_IMAGE)
+
+            objInfo.pose=pose
+            
             if IF_DISPLAY_IMAGE:
                 self.pub_image_chessboard()
-            return GetObjectInBaxterResponse(True, pose)
-    
 
+            return GetObjectInBaxterResponse(True, objInfo)
+    
     def srv_GetAllObjectsInBaxter(self, req):
         img=self.img.copy()
                 
@@ -334,24 +337,22 @@ class BaxterCameraProcessing(object):
 
         # Detect objects
         flag, objInfos=self._GetAllObjectsInImage(None)
-        poses=list()
+
         if flag == False:
-            return GetAllObjectsInBaxterResponse(False, poses)
+            return GetAllObjectsInBaxterResponse(False, list())
+
         else:
             IF_DISPLAY_IMAGE=True
-            n=len(objInfos)
             # calc the pose of each object
-            for i in range(n):
+            for i in range(len(objInfos)):
                 pose = self.calc_object_pose_in_baxter_frame(
                     objInfos[i], poseLocator, T_bax_to_cam,
                     IF_DISPLAY_IMAGE=IF_DISPLAY_IMAGE)
-
-                # append to list
-                poses.append(pose)
+                objInfos[i].pose=pose
                 
             if IF_DISPLAY_IMAGE:
                 self.pub_image_chessboard()
-            return GetAllObjectsInBaxterResponse(True, poses)
+            return GetAllObjectsInBaxterResponse(True, objInfos)
 
 
     def calc_object_pose_in_baxter_frame(self, objInfo, poseLocator, T_bax_to_cam,
@@ -472,14 +473,14 @@ def Rp_to_pose(R,p):
     pose.position.z=p[2]
     return pose
 
-def callback_ColorBound(msg):
-    global COLOR_LB, COLOR_UB
-    COLOR_LB=(msg.low_bound0,msg.low_bound1,msg.low_bound2)
-    COLOR_UB=(msg.high_bound0, msg.high_bound1, msg.high_bound2)
+# def callback_ColorBound(msg):
+#     global COLOR_LB, COLOR_UB
+#     COLOR_LB=(msg.low_bound0,msg.low_bound1,msg.low_bound2)
+#     COLOR_UB=(msg.high_bound0, msg.high_bound1, msg.high_bound2)
 
 if __name__ == '__main__':
-    rospy.init_node('read_video_and_locate_object')
-    sub=rospy.Subscriber("ColorBound",ColorBound,callback_ColorBound)
+    rospy.init_node('nodeCV')
+    # sub=rospy.Subscriber("ColorBound",ColorBound,callback_ColorBound)
     BaxterCameraProcessing()
     try:
         rospy.spin()

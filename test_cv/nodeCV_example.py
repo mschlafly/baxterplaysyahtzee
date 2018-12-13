@@ -42,9 +42,9 @@ if __name__=="__main__":
         # print "calling service: " + SERVICE_NAME
         # resp=call_service(SERVICE_NAME, GetObjectInBaxter)
         # if resp.flag:
-        #     pose=resp.pose
-        #     print "Detect the object!\n"
-        #     print pose
+        #     objInfo=resp.objInfo
+        #     print "\n\n -----------Detect the object!------------- \n"
+        #     print objInfo
         # else:
         #     print "Not finding anything"
 
@@ -53,11 +53,11 @@ if __name__=="__main__":
         print "calling service: " + SERVICE_NAME
         resp=call_service(SERVICE_NAME, GetAllObjectsInBaxter)
         if resp.flag:
-            poses=resp.poses
-            print "Detect %d objects!\n"%(len(poses))
-            for i in range(len(poses)):
-                print "\nPrinting the %dth pose:"%i
-                print poses[i]
+            objInfos=resp.objInfos
+            print "Detect %d objects!\n"%(len(objInfos))
+            for i in range(len(objInfos)):
+                print "\n\n ------- Printing the %dth pose:-------"%i
+                print objInfos[i]
         else:
             print "Not finding anything"
 
