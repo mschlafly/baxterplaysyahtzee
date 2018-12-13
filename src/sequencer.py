@@ -12,12 +12,14 @@ def main():
 
     rospy.init_node('sequencer')
 
-    move_to_cup = rospy.ServiceProxy('iktest_controller/move_to_cup', OffsetMove)
+    move_to_initpose = rospy.ServiceProxy('iktest_controller/move_to_initpose', Trigger)
+    move_to_homepose = rospy.ServiceProxy('iktest_controller/move_to_homepose', Trigger)
+    move_to_cup_offset = rospy.ServiceProxy('iktest_controller/move_to_cup_offset', OffsetMove)
     pick_up_dice_above = rospy.ServiceProxy('iktest_controller/pick_up_dice_above', OffsetMove)
-    pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice',Trigger)
-    pour_dice = rospy.ServiceProxy('iktest_controller/pour_cup', OffsetMove)
+    pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice',OffsetMove)
+    pour_dice = rospy.ServiceProxy('iktest_controller/pour_dice', OffsetMove)
 
-    rospy.wait_for_service('iktest_controller/move_to_cup', 3.0)
+    rospy.wait_for_service('iktest_controller/move_to_cup_offset', 3.0)
     rospy.wait_for_service('iktest_controller/pick_up_dice', 3.0)
 
     close_grip = rospy.ServiceProxy('gripper_controller_test/close_grip', Trigger)
@@ -30,7 +32,7 @@ def main():
         position = Point(
         x = 0,
         y = 0,
-        z = 0.10
+        z = 0.30
         ),
         orientation = Quaternion()
     )
@@ -38,32 +40,32 @@ def main():
         position = Point(
         x = 0,
         y = 0,
-        z = 0.10
+        z = 0
         ),
         orientation = Quaternion()
     )
-    cup_pose = Pose(
+    dice_pose = Pose(
         position = Point(
-        x = 0.738630511657,
-        y = -0.556555331452,
-        z = -0.18647989183),
+        x = 0.776647640113,
+        y =-0.0615496888226,
+        z = -0.210376983209),
         orientation = Quaternion(
-            x = 0.116148506347,
-            y = 0.987081133254,
-            z = -0.0710489184446,
-            w = 0.0844536087706
+            x = 0.981404960951,
+            y = -0.19031770757,
+            z = 0.016510737149,
+            w = -0.0187314806041
             )
     )
     test_3 = Pose(
         position = Point(
-        x = 0.742458121141,
-        y = -0.54910143742,
-        z = -0.0879302385051),
+        x = 0.00424581141,
+        y = -0.0054910142,
+        z = -0.0008795051),
         orientation = Quaternion(
-            x = 0.125168443887,
-            y = 0.988860385041,
-            z = -0.0470217320896,
-            w = 0.0653984423634
+            x = 0.00125168443887,
+            y = 0.00988860385041,
+            z = -0.000470217320896,
+            w = 0.000653984423634
             )
     )
     # catch big cube
@@ -113,10 +115,25 @@ def main():
     while (True):
 
 
-        pick_up_dice_above(pick_up_dice_offset)
+        # pick_up_dice_above(pick_up_dice_offset)
+        open_grip()
+
+        #move_to_initpose()
+
+        #move_to_homepose()
+
+        #move_to_cup_offset(pick_up_cup_offset) # //need Offset
+        pick_up_dice_above(dice_pose)
+        pick_up_dice(dice_pose) #//need Offset
+
+        #pick_up_dice(pick_up_cup_offset)
+
+
+        #pour_dice(pick_up_cup_offset) #//need Offset
+
 
         rospy.sleep(1)
-        pick_up_dice()
+        # pick_up_dice()
 
         rospy.loginfo("Sequence complete.")
 

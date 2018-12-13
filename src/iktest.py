@@ -6,6 +6,7 @@ import baxter_interface
 import math
 import tf
 import struct
+import copy
 
 from baxter_core_msgs.msg import EndpointState
 from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
@@ -36,49 +37,81 @@ class motionControls():
         self.close_grip = rospy.ServiceProxy('gripper_controller_test/close_grip', Trigger)
         self.open_grip = rospy.ServiceProxy('gripper_controller_test/open_grip', Trigger)
         # Just for test
-        self.limb = 'right'
+        self.limb = 'left'
 
-        self.cup_pose = Pose(
+        self.dice_above_offset =  Pose(
             position = Point(
-            x =  0.785972474799,
-            y = -0.274381410551,
-            z = -0.20952233235),
-            orientation = Quaternion(
-            x = 0.029607883567,
-            y = 0.99939738394,
-            z = -0.0179203375188,
-            w = -0.00266527806519
-                )
-        )
+            x =  0,
+            y =  0,
+            z = 0.2),
+            orientation = Quaternion())
+
+        self.cup_above_offset = Pose(
+            position = Point(
+            x =  0,
+            y =  0,
+            z = 0.2),
+            orientation = Quaternion())
+
 
         self.dice = Pose(
             position = Point(
-            x =  0.785972474799,
-            y = -0.274381410551,
-            z = -0.20952233235),
+            x = 0.823170538072,
+            y =   0.379869013763,
+            z = 0.0210766529964),
             orientation = Quaternion(
-            x = 0.029607883567,
-            y = 0.99939738394,
-            z = -0.0179203375188,
-            w = -0.00266527806519
+            x = 0.999254863914,
+            y = -0.0349792264003,
+            z = 0.0143418919002,
+            w = 0.00777694036586
                 )
         )
+
+
 
         self.home_pose = Pose(
             position = Point(
-            x =  0.785972474799,
-            y = -0.274381410551,
-            z = -0.20952233235),
+            x =  0.755132045435,
+            y = 0.126829611762,
+            z = 0.103069173101),
             orientation = Quaternion(
-            x = 0.029607883567,
-            y = 0.99939738394,
-            z = -0.0179203375188,
-            w = -0.00266527806519
+            x = 0.135343535566,
+            y = 0.990330499967,
+            z = 0.0109878946826,
+            w = -0.0284058864551
+                )
+        )
+        self.cup_above = Pose(
+            position = Point(
+            x = 0.85190640362,
+            y =0.347657681023,
+            z =-0.0455096862729
+            ),
+            orientation = Quaternion(
+            x = 0.107378490231,
+            y = 0.993110808031,
+            z = 0.0308105490348,
+            w =-0.0353764452071
                 )
         )
 
 
-        print(self.dice)
+        self.cup_ready_to_grip = Pose(
+        position = Point(
+        x = 0.867223386146,
+        y = 0.106406676123,
+        z = 0.0761445029937
+        ),
+        orientation = Quaternion(
+        x = 0.700567930833,
+        y = -0.100213678564,
+        z = 0.697478502247,
+        w = 0.112630066237
+            ))
+        # off3 = off2- off1
+
+
+
 
 
         # Service Definitions
@@ -137,6 +170,24 @@ class motionControls():
 
         return
 
+    def add_offset(self,locate,offset):
+
+        add_offset = Pose(
+        position = Point(
+            x = locate.pose.position.x + offset.position.x,
+            y = locate.pose.position.y + offset.position.y,
+            z = locate.pose.position.z + offset.position.z
+        ),
+        orientation = Quaternion(
+        x = locate.pose.orientation.x + offset.orientation.x,
+        y = locate.pose.orientation.y + offset.orientation.y,
+        z = locate.pose.orientation.z + offset.orientation.z,
+        w = locate.pose.orientation.w + offset.orientation.w)
+
+        )
+        return add_offset
+
+
     def move_to_obj(self,data):
         '''
         This service function takes the cached pose information for the , based on the original AR marker's pose,
@@ -183,8 +234,8 @@ class motionControls():
         # convert rospy's string representation of uint8[]'s to int's
         resp_seeds = struct.unpack('<%dB' % len(resp.result_type),
                                    resp.result_type)
-        print(use_advanced_options)
-        
+
+
         if (resp_seeds[0] != resp.RESULT_INVALID):
             seed_str = {
                         ikreq.SEED_USER: 'User Provided Seed',
@@ -199,10 +250,25 @@ class motionControls():
             limb = baxter_interface.Limb(self.limb)
             limb.move_to_joint_positions(limb_joints)
             rospy.loginfo("Valid solution Found! Baxter begins to move!")
+        else:
+            rospy.loginfo("No valid solution Found!")
 
 
 
         return
+
+    def svc_move_to_initpose(self,data):
+
+        self.move_to_obj(self.init_pose)
+
+        print ('sucess')
+        return (True,'Moving to initial pose')
+
+    def svc_move_to_homepose(self,data):
+
+        self.move_to_obj(self.test_pose)
+
+        return (True,'Moving to home pose')
 
     # has to change this to move to cup above
     def svc_move_to_cup_offset(self,data):
@@ -210,9 +276,9 @@ class motionControls():
 
         self.cup_pose_offset = Pose(
             position = Point(
-                x = data.offset.position.x + self.cup_pose.position.x,
-                y = data.offset.position.y + self.cup_pose.position.y,
-                z = data.offset.position.z + self.cup_pose.position.z
+                x = data.pose.position.x + self.cup_pose.position.x,
+                y = data.pose.position.y + self.cup_pose.position.y,
+                z = data.pose.position.z + self.cup_pose.position.z
             ),
             orientation = Quaternion(
             x = data.offset.orientation.x + self.cup_pose.orientation.x,
@@ -238,33 +304,11 @@ class motionControls():
         '''
 
 
-    def svc_move_to_initpose(self,data):
 
-        self.move_to_obj(self.home_pose)
-
-        return (True,'Moving to initial pose')
-
-    def svc_move_to_homepose(self,data):
-
-        self.move_to_obj(self.home_pose)
-
-        return (True,'Moving to home pose')
 
     def svc_pick_up_dice_above(self,data):
 
-        print('suc')
-        self.dice_above = Pose(
-            position = Point(
-            x = data.offset.position.x + self.dice.position.x,
-            y = data.offset.position.y + self.dice.position.y,
-            z = data.offset.position.z + self.dice.position.z),
-            orientation = Quaternion(
-            x = data.offset.orientation.x + self.dice.orientation.x,
-            y = data.offset.orientation.y + self.dice.orientation.y,
-            z = data.offset.orientation.z + self.dice.orientation.z,
-            w = data.offset.orientation.w + self.dice.orientation.w
-                )
-        )
+        self.dice_above = self.add_offset(data,self.dice_above_offset)
 
 
         self.move_to_obj(self.dice_above)
@@ -272,8 +316,21 @@ class motionControls():
         return (True,"Moving above to dice")
 
     def svc_pick_up_dice(self,data):
+        goal = Pose(
+            position = Point(
+                x = data.pose.position.x,
+                y = data.pose.position.y,
+                z = data.pose.position.z
+            ),
+            orientation = Quaternion(
+            x = data.pose.orientation.x,
+            y = data.pose.orientation.y,
+            z = data.pose.orientation.z,
+            w = data.pose.orientation.w)
+            )
 
-        self.move_to_obj(self.dice)
+
+        self.move_to_obj(goal)
 
         rospy.sleep(1)
 
@@ -281,22 +338,9 @@ class motionControls():
 
         rospy.sleep(1)
 
-        self.move_to_obj(self.home_pose)
+        self.move_to_obj(self.dice_above)
 
-        self.cup_pose_above = Pose(
-            position = Point(
-            x = data.offset.position.x + self.cup_pose.position.x,
-            y = data.offset.position.y + self.cup_pose.position.y,
-            z = data.offset.position.z + self.cup_pose.position.z),
-            orientation = Quaternion(
-            x = data.offset.orientation.x + self.cup_pose.orientation.x,
-            y = data.offset.orientation.y + self.cup_pose.orientation.y,
-            z = data.offset.orientation.z + self.cup_pose.orientation.z,
-            w = data.offset.orientation.w + self.cup_pose.orientation.w
-                )
-        )
-
-        self.move_to_obj(self.cup_pose_above)
+        self.move_to_obj(self.cup_above)
 
         self.open_grip()
 
@@ -308,25 +352,31 @@ class motionControls():
         # self.raise_cup()
 
 
-    def svc_pour_dice(self,data):
+    def svc_pour_dice(self):
 
+        self.move_to_obj(self.cup_ready_to_grip)
+        cup_down = Pose()
+        cup_down = Pose(
+                position = copy.copy(self.cup_ready_to_grip.position),
+                orientation = copy.copy(self.cup_ready_to_grip.orientation))
 
-        cup_down = self.cup_pose_offset
-        cup_down.position.z = self.cup_pose_offset.position.z - 0.2
+        cup_down.position.z = self.cup_ready_to_grip.position.z - 0.15
 
         self.move_to_obj(cup_down)
+        rospy.sleep(1)
 
         self.close_grip()
+        rospy.sleep(1)
 
-        self.move_to_obj(self.cup_pose_offset)
+        self.move_to_obj(self.cup_ready_to_grip)
         ## Pour dice
-
+        rospy.sleep(1)
         self.move_to_obj(cup_down)
-
+        rospy.sleep(1)
         self.open_grip()
-
-        self.move_to_obj(self.cup_pose_offset)
-
+        rospy.sleep(1)
+        self.move_to_obj(self.cup_ready_to_grip)
+        rospy.sleep(1)
         return(True,'Pour finished')
 
 
@@ -338,8 +388,13 @@ def main():
 
     # Class initialization
     iktest_control = motionControls()
+    #iktest_control.move_to_obj(iktest_control.home_pose)
+    #iktest_control.move_to_obj(iktest_control.cup_ready_to_grip)
+    #iktest_control.svc_pour_dice()
     #iktest_control.raise_cup()
 
+    #iktest_control.move_to_obj(dice_pose)
+    #print(iktest_control.dice_above_offset)
     #iktest_control.move_to_cup(iktest_control.cup)
 
     while not rospy.is_shutdown():
