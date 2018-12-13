@@ -45,7 +45,7 @@ yahtzee imports
 from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 
 # cv
-# from CalibChessboardPose.srv import Pose
+#from CalibChessboardPose.srv import Pose
 #from GetObjectInBaxter.srv import import Pose
 
 # tbd
@@ -54,7 +54,7 @@ from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 
 # mp tbd
 #from std_srvs.srv import Trigger
-#from baxterplaysyahtzee.srv import OffsetMove
+from baxterplaysyahtzee.srv import *
 
 # ge
 
@@ -63,9 +63,10 @@ from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 """
 Define
 """
-DEBUG = True
+DEBUG = False 
 SOME_TOPIC = "/some/topic"
 SOME_SRV= "/some/srv"
+RATE = 10
 
 """
 Class
@@ -76,8 +77,8 @@ class Main():
         self.debug(self.fname(inspect.currentframe()))
         rospy.init_node('yahtzee')
 
-        self.vel_pub = rospy.Publisher('/turtle1/cmd_vel', Twist, queue_size=10)
-        self.rate = rospy.Rate(10)
+        self.vel_pub = rospy.Publisher(SOME_SRV, Twist, queue_size=10)
+        self.rate = rospy.Rate(RATE)
 
     def debug(self, msg):
         if(self.debug_info):
@@ -88,20 +89,23 @@ class Main():
 
     def example_service(self, x, y, theta):
         self.debug(self.fname(inspect.currentframe()))
-        rospy.wait_for_service('/turtle1/teleport_absolute')
+        rospy.wait_for_service(SOME_SRV)
         try:
             teleport_absolute = rospy.ServiceProxy('SOME_TOPIC',TeleportAbsolute)
             teleport_absolute(x, y, theta)
+
         except rospy.ServiceException, e:
             print "Service call failed: %s" %e
 
+    def initrobot(self):
+        self.debug(self.fname(inspect.currentframe()))
+    
     def calibrate(self):
         self.debug(self.fname(inspect.currentframe()))
         """
         CalibChessboardPose
         geometry_msgs/Pose pose
         """
-
         pass
 
     def get_visible_objects(self):
@@ -109,7 +113,6 @@ class Main():
         """
         GetAllObjectsInImage.srv
         """
-        self.debug("======" + inspect.currentframe() + "======")
 
     def locate_object(self):
         self.debug(self.fname(inspect.currentframe()))
@@ -171,6 +174,10 @@ class Main():
         self.debug(self.fname(inspect.currentframe()))
         pass
 
+    def startup_display(self):
+        self.debug(self.fname(inspect.currentframe()))
+        update_display()
+
     def update_display(self):
         self.debug(self.fname(inspect.currentframe()))
         """
@@ -207,7 +214,6 @@ Init
 """
 def main():
     m = Main()
-    m.locate_object()
 
 if __name__ == '__main':
     try: 
