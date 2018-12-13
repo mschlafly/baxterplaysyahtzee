@@ -24,32 +24,38 @@ def handle_pour_the_cup(data):
 
     # set displacement angle for pouring the cup
     print("Retrieving current joint positions...")
-    current_joint_angles = right_arm.joint_angles()
+    current_joint_angles = left_arm.joint_angles()
     print(current_joint_angles)
 
-    print("Setting last joint angle to Pi, and moving the joint to this angle...")
-    current_joint_angles['right_w2'] = math.pi
-    right_arm.move_to_joint_positions(current_joint_angles,timeout=30)
+    print("Moving the last joint (w2) to its neutral position...")
 
-    print("--- Right_w2 at Pi ---")
-    print(right_arm.joint_angles())
+    current_joint_angles['left_w2'] = 0.0
+    left_arm.move_to_joint_positions(current_joint_angles,timeout=15)
+
+    print("--- Left_w2 at 0.0 ---")
+    print(left_arm.joint_angles())
 
     print("Moving the last joint by pi/2 radians to pour the dice out...")
     pouring_angles = current_joint_angles
-    pouring_angles['right_w2'] = pouring_angles['right_w2'] - math.pi/2
-    right_arm.move_to_joint_positions(pouring_angles,timeout=30)
+    pouring_angles['left_w2'] = math.pi/2
 
+
+    left_arm.move_to_joint_positions(pouring_angles,timeout=15)
+
+    # left_arm.set_joint_positions(['left_w2']: math.pi/2)
     print("--- Joint angles for pouring ---")
-    print(right_arm.joint_angles())
+    print(left_arm.joint_angles())
 
     print("Waiting...")
     rospy.sleep(2.0)
 
     print("Moving arm back to standoff position...")
-    right_arm.move_to_joint_positions(current_joint_angles,timeout=30)
+    current_joint_angles = pouring_angles
+    current_joint_angles['left_w2'] = 0.0
+    left_arm.move_to_joint_positions(current_joint_angles,timeout=15)
 
     print("--- Original Standoff position ---")
-    print(right_arm.joint_angles())
+    print(left_arm.joint_angles())
 
     rospy.sleep(1.0)
 
