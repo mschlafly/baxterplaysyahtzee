@@ -65,7 +65,9 @@ class headdisplay():
         run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
         # When a new state is published, callback is called
         rospy.Subscriber("/statetopic", GameState, self.callback)
-        rospy.spin()        
+        
+        while not rospy.is_shutdown():
+            rospy.spin()        
 #time.sleep(100)
         #r.sleep()
 
@@ -76,7 +78,7 @@ class headdisplay():
             self.nextmove(message)
         else:
             img = Image.new('RGB', (1024, 600), color = (229, 0, 11))
-            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 90, encoding="unic")
+            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 70, encoding="unic")
             fontsm = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 30, encoding="unic")
             d = ImageDraw.Draw(img)
             d.text((150,250), message.state+"...", font=font,fill=(255, 255, 255))
@@ -88,6 +90,9 @@ class headdisplay():
             # Call the xdisplay_image.py node to display the image on baxter's head
             run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
     def nextmove(self,message):
+<<<<<<< HEAD
+        # If the turn is either 1 or 2, determine the next roll and display dice
+=======
         #Display the dice 
         img = Image.new('RGB', (1024, 600), color = (229, 0, 11))
         font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 90, encoding="unic")
@@ -131,7 +136,9 @@ class headdisplay():
         print("HERE")
 
         # If the turn is either 1 or 2, determine the 
+>>>>>>> c5d8b6b5874d35abc33cace223588e63f7e04228
         if (message.roll==1) or (message.roll==2):
+
             # Determine the number with the most dice
             self.dice[0]=message.dice1
             self.dice[1]=message.dice2
@@ -171,17 +178,43 @@ class headdisplay():
             else:
                 di.dice5=1
             pub.publish(di)
-            #Display image
+
+                
+            #Display the dice 
             img = Image.new('RGB', (1024, 600), color = (229, 0, 11))
-            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 90, encoding="unic")
+            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 60, encoding="unic")
             fontsm = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 30, encoding="unic")
+
+            #Image pasting from Vikas
+            dice_vals[0] = dir_path+"/DicePictures/" + message.dice1color + str(message.dice1) + ".jpg"
+            dice_vals[1] = dir_path+"/DicePictures/" + message.dice2color + str(message.dice2) + ".jpg"
+            dice_vals[2] = dir_path+"/DicePictures/" + message.dice3color + str(message.dice3) + ".jpg"
+            dice_vals[3] = dir_path+"/DicePictures/" + message.dice4color + str(message.dice4) + ".jpg"
+            dice_vals[4] = dir_path+"/DicePictures/" + message.dice5color + str(message.dice5) + ".jpg"
+
+            images = map(Image.open, dice_vals);
+
+            widths, heights = zip(*(i.size for i in images))
+            total_width = sum(widths)
+            max_height = max(heights)
+
+            new_im = Image.new('RGB', (total_width, max_height))
+            x_offset = 0
+            for im in images:
+                new_im.paste(im, (x_offset,0))
+                x_offset += im.size[0]
+            draw = ImageDraw.Draw(new_im)
+            new_im=new_im.resize((677,200), resample=0, box=None)
+            img.paste(new_im,(200,350))
+
+            #me
             d = ImageDraw.Draw(img)
             d.text((150,250), 'Keep Dice with '+str(maxnum)+' dot/s', font=font,fill=(255, 255, 255))
             d.text((10,10), "Turn: "+str(message.turn), font=fontsm,fill=(0, 0, 0))
             d.text((10,50), "Roll: "+str(message.roll), font=fontsm,fill=(0, 0, 0))
             d.text((10,90), "Score: "+str(self.score), font=fontsm,fill=(0, 0, 0))
             img.save(dir_path+'/headdisplay.png')   
-            time.sleep(timetosleep)
+            #time.sleep(timetosleep)
             # Call the xdisplay_image.py node to display the image on baxter's head
             run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
         else: 
@@ -268,7 +301,7 @@ class headdisplay():
             self.score=self.score+points
             #Display image
             img = Image.new('RGB', (1024, 600), color = (229, 0, 11))
-            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 90, encoding="unic")
+            font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 70, encoding="unic")
             fontsm = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 30, encoding="unic")
             d = ImageDraw.Draw(img)
             d.text((150,250), str(self.combination) , font=font,fill=(255, 255, 255))
