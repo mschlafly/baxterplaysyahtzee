@@ -17,6 +17,7 @@ import copy
 import numpy
 import random
 import operator
+import webcolors
 import argparse
 from optparse import OptionParser
 import inspect
@@ -107,13 +108,16 @@ class Main():
         self.debug(val)
 
     def object_in_robot(self):
+        self.debug(self.fname(inspect.currentframe()))
         SERVICE_NAME="/mycvGetObjectInBaxter"
         self.debug("calling service: " + SERVICE_NAME)
         resp=self.call_service(SERVICE_NAME, GetObjectInBaxter)
         if resp.flag:
             objInfo=resp.objInfo
             print "\n\n -----------Detect the object!------------- \n"
-            print objInfo
+            self.debug(type(objInfo))
+            self.debug(objInfo)
+            return objInfo
         else:
             print "Not finding anything"
 
@@ -122,7 +126,7 @@ class Main():
         SERVICE_NAME="/mycvGetObjectInImage"
         self.debug("calling service: " + SERVICE_NAME)
         val = self.call_service(SERVICE_NAME, GetObjectInImage)
-        self.debug(val)
+        #self.debug(val)
 
     """
     mp
@@ -256,6 +260,28 @@ class Main():
         except rospy.ROSInterruptException:
             pass
         rospy.spin()
+
+    """
+    colors
+    """
+    def closest_colour(self, requested_colour):
+        min_colours = {}
+        for key, name in webcolors.css3_hex_to_names.items():
+            r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+            rd = (r_c - requested_colour[0]) ** 2
+            gd = (g_c - requested_colour[1]) ** 2
+            bd = (b_c - requested_colour[2]) ** 2
+            min_colours[(rd + gd + bd)] = name
+        return min_colours[min(min_colours.keys())]
+
+    def get_colour_name(self, requested_colour):
+        try:
+            closest_name = actual_name = webcolors.rgb_to_name(requested_colour)
+        except ValueError:
+            closest_name = self.closest_colour(requested_colour)
+            actual_name = None
+        return actual_name, closest_name
+
 """
 Init
 """
@@ -263,7 +289,9 @@ def main():
     m = Main()
     # cv test
     #m.object_in_image()
-    #m.object_in_robot()
+    object = m.object_in_robot()
+    actual, closest = m.closest_colour((19, 31, 55))
+    print actual, closest
     #m.visible_objects()
 
 if __name__ == '__main':
