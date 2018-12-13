@@ -131,7 +131,7 @@ class Main():
     """
     mp
     """
-    def move_to_cup_offset(self):
+    def move_to_cup_offset(self, pose):
         self.debug(self.fname(inspect.currentframe()))
         cup_pose = Pose(
             position = Point(
@@ -150,7 +150,7 @@ class Main():
         val = move_to_cup_offset()
         self.debug(val)
 
-    def pick_up_dice_above(self):
+    def pick_up_dice_above(self, poses):
         self.debug(self.fname(inspect.currentframe()))
         pick_up_dice_above = rospy.ServiceProxy('iktest_controller/pick_up_dice_above', OffsetMove)
 
@@ -170,7 +170,7 @@ class Main():
         val = pick_up_dice_above(dice_pose)
         self.debug(val)
 
-    def pick_up_dice(self):
+    def pick_up_dice(self, pose):
         self.debug(self.fname(inspect.currentframe()))
         pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice', OffsetMove)
         dice_pose = Pose(
@@ -199,7 +199,7 @@ class Main():
         val = move_to_homepose()
         self.debug(val)
 
-    def pour_dice(self):
+    def pour_dice(self, pose):
         self.debug(self.fname(inspect.currentframe()))
         dice_pose = Pose(
             position = Point(
@@ -369,12 +369,15 @@ class Main():
     """
     def test_cv(self):
         # cv test
-        self.object_in_image()
+        object = self.object_in_image()
+        #self.move_to_cup_offset(object.pose) # do not test
         object = self.object_in_robot()
-        actual, closest = self.closest_colour((19, 31, 55))
-        print actual, closest
+        #self.move_to_cup_offset(object.pose) # do not test
         self.visible_objects()
+        self.pick_up_dice() # ok
 
+        #actual, closest = self.closest_colour((19, 31, 55))
+        #print actual, closest
     def test_mp(self):
         self.pick_up_dice_above() #ok
         self.pick_up_dice() # ok
@@ -387,7 +390,9 @@ Init
 """
 def main():
     m = Main()
-    m.test_mp()
+
+    m.test_cv()
+    #m.test_mp()
 
 if __name__ == '__main':
     try: 
