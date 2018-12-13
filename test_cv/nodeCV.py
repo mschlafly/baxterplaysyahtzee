@@ -1,11 +1,15 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-# Provide services for:
-# Read baxter's camera's video, detect chessboard and locate object.
+'''
+Provide services for:
+1. mycvCalibChessboardPose
+2. mycvGetObjectInBaxter
+3. mycvGetAllObjectsInBaxter
+'''
 
-TEST_MODE=True
 
+# ----------------------------------------
 import rospy
 import numpy as np
 from sensor_msgs.msg import Image
@@ -21,10 +25,6 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 # sys.path.append(PACKAGE_PATH)
 # sys.path.append(PACKAGE_PATH+"")
 
-# ------------settings-----------
-# TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
-TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/image3.png"
-
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
 from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect,\
@@ -36,10 +36,20 @@ from ourlib_transformations import form_T, get_Rp_from_T
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import Pose, Point
 from baxterplaysyahtzee.msg import ColorBound, ObjectInfo
-from baxterplaysyahtzee.srv import GetAllObjectsInImageResponse, GetObjectInBaxterResponse
+from baxterplaysyahtzee.srv import GetAllObjectsInImageResponse, GetObjectInImageResponse, \
+    GetObjectInBaxterResponse, GetAllObjectsInBaxterResponse, CalibChessboardPoseResponse
 from baxterplaysyahtzee.srv import *
 
 # dont forget to call: undistortPoints
+
+# ---------------------- TEST SETTINGS ------------------
+TEST_MODE=True
+if TEST_MODE:
+    DETECT_ONE_OBJECT=False
+    if DETECT_ONE_OBJECT:
+        TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
+    else:
+        TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/image3.png"
 
 # ---------------------- setup -----------------------
 
@@ -111,14 +121,17 @@ class BaxterCameraProcessing(object):
         s4 = rospy.Service('mycvGetObjectInBaxter', GetObjectInBaxter, self.srv_GetObjectInBaxter)
         self.image_for_display_object=None
 
+        # services 5: get all object in Baxter
+        s4 = rospy.Service('mycvGetAllObjectsInBaxter', GetAllObjectsInBaxter, self.srv_GetAllObjectsInBaxter)
+
     def topic_receive_image_callback(self, rosImage):
         self.img = self.bridge.imgmsg_to_cv2(rosImage, "bgr8")
         self.t_receive_image=rospy.get_time()
         self.cnt+=1
 
-    # tested, OK!!!
+    # tested, OK!!! 
     def srv_CalibChessboardPose(self, req):
-        print("inside the srv_CalibChessboardPose")
+        # print("inside the srv_CalibChessboardPose")
         img=self.img.copy()
         if not self.check_if_image_is_valid():
             rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
@@ -131,20 +144,22 @@ class BaxterCameraProcessing(object):
             img, SAVE=False, SHOW=False, PRINT=False)
         self.pub_image_chessboard()
 
+        # store it 
+        (self.R_cam_to_chess, self.p_cam_to_chess)=(R,p)
+
+        # output
         if flag is False:
             print "Fail to calibrate"
-            (self.R_cam_to_chess, self.p_cam_to_chess)=(R,p)
-            return Pose()
+            return CalibChessboardPoseResponse(False, Pose())
         else:
-            print "Successfully calibrate the chessboard, R=",R,"\np=",p
-            (self.R_cam_to_chess, self.p_cam_to_chess)=(R,p)
+            print "Successfully calibrate the chessboard\nR=",R,"\np=",p
             pose=Rp_to_pose(R,p)
-            return pose
+            return CalibChessboardPoseResponse(True, pose)
 
-    # tested, OK!!!
+    # tested, OK!!! 
     def srv_GetAllObjectsInImage(self, req):
-        objInfos=self._GetAllObjectsInImage(req)
-        return GetAllObjectsInImageResponse(objInfos)
+        flag, objInfos=self._GetAllObjectsInImage(req)
+        return GetAllObjectsInImageResponse(flag, objInfos)
         
     def _GetAllObjectsInImage(self, req):
         print("inside the srv_GetAllObjectsInImage")
@@ -190,7 +205,8 @@ class BaxterCameraProcessing(object):
             
                 # ---------------------- Output -----------------
                 objInfo=ObjectInfo()
-                objInfo.flag2d=True
+
+                objInfo.index=i
                 (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)=\
                     (center_x, center_y, radius_x, radius_y, angle)
                 objInfo.radius_mean=(radius_x+radius_y)/2
@@ -198,17 +214,21 @@ class BaxterCameraProcessing(object):
                 objInfos.append(objInfo)
             
             objInfos.sort(key=lambda x: x.radius_mean, reverse=True)
+            return True, objInfos
         else:
-            None
+            return False, objInfos
 
-        return objInfos
 
-    # tested, OK!!!
+    # tested, OK!!! 
     def srv_GetObjectInImage(self, req):
+        flag, objInfo = self._GetObjectInImage(req)
+        return GetObjectInImageResponse(flag, objInfo)
+
+    def _GetObjectInImage(self, req):
         img=self.img.copy()
         if not self.check_if_image_is_valid():
             rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
-            return
+            assert(0)
 
         # Detect object in the image
         mask, rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3, disextend=50)
@@ -225,14 +245,13 @@ class BaxterCameraProcessing(object):
             # output:
             objInfo=ObjectInfo()
 
-            objInfo.flag2d=True
             (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)=\
                 (center_x, center_y, radius_x, radius_y, angle)
             objInfo.radius_mean=(radius_x+radius_y)/2
+            return True, objInfo
         else:
             objInfo=ObjectInfo()
-            objInfo.flag2d=False
-        return objInfo
+            return False, objInfo
 
     def srv_GetObjectInImage_old(self, req): # This is the old version by color thresholding
         img=self.img.copy()
@@ -255,16 +274,29 @@ class BaxterCameraProcessing(object):
         self.object_mask=mask
         return Point(xi, yi, radius)
 
+    def set_up_test_mode_for_GetObjectInBaxter(self):
+        if self.R_cam_to_chess is None: # Not calibrated?
+            self.srv_CalibChessboardPose(None)
+        if self.R_cam_to_chess is None:
+            rospy.loginfo(set_str_error("still wrong? I'll manually set it... Now it's Ok "))
+            R_vec=[-0.15,0.14,0.26]
+            p=[2.23,-7.44,27.02]
+            R_vec=np.array([R_vec])
+            p=np.array(p)*0.015
+            R, _ = cv2.Rodrigues(R_vec)
+            self.R_cam_to_chess=R
+            self.p_cam_to_chess=p # both 3-vec or 3x1-mat would be fine
+        R_cam_to_chess=self.R_cam_to_chess
+        p_cam_to_chess=self.p_cam_to_chess
+        T_bax_to_cam=np.identity(4)
+        return R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
+
     def srv_GetObjectInBaxter(self, req):
         img=self.img.copy()
         
         if TEST_MODE: # Extract data from the stored chessboard pos
-            if self.R_cam_to_chess is None:
-                rospy.loginfo(set_str_error("srv_GetObjectInBaxter: Please calib chessboard first."))
-                return
-            R_cam_to_chess=self.R_cam_to_chess
-            p_cam_to_chess=self.p_cam_to_chess
-            T_bax_to_cam=np.identity(4)
+            R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
+                self.set_up_test_mode_for_GetObjectInBaxter()
 
         poseLocator = Object3DPoseLocator( # initialize
             STR_CAMERA_TYPE,
@@ -273,59 +305,91 @@ class BaxterCameraProcessing(object):
         )
 
         # Detect objects
-        poses=list()
-        objInfos=self._GetAllObjectsInImage(None)
+        flag, objInfo=self._GetObjectInImage(None)
 
-        n=len(objInfos)
-        print "\n\nGetObjectInBaxter: received ", n, " objects."
-        # print objInfos
-
-        if n==0:
-            return GetObjectInBaxterResponse(poses)
-
-        # change from image frame to world frame
-        IF_PLOT=False
-        for i in range(n):
-            objInfo=objInfos[i]
-            (xi, yi, radius_x, radius_y, angle) = \
-                (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)
-            radius=objInfo.radius_mean
-
-            # Locate the object 3D (x,y,z) wrt camera frame and chessboard frame
-            p_cam_to_obj, p_chess_to_obj = \
-                poseLocator.locate_object(xi=xi, yi=yi, PRINT=False) # format: (3,1) column vector
-
-            # Locate the objects direction
-            # Input: self.object_mask
-            T_cam_to_obj=form_T(R=np.identity(3),p=p_cam_to_obj)
-
-            # transform p_in_camera to p_in_world
-            T_bax_to_obj=T_bax_to_cam.dot(T_cam_to_obj)            
-
-            # return
-            pose=Pose()
-            (pose.position.x, pose.position.y, pose.position.z)=\
-                (T_bax_to_obj[0,3],T_bax_to_obj[1,3],T_bax_to_obj[2,3])
-            
-            # plot
-            IF_PLOT=True
-            if IF_PLOT:
-                object_in_image=(xi, yi, radius)
-                object_in_chessboard=(p_chess_to_obj[0,0],p_chess_to_obj[1,0],p_chess_to_obj[2,0])
-
-                self.display_object_pose_in_image(self.image_for_display_chessboard,
-                    object_in_image=object_in_image,
-                    radius=radius,
-                    object_in_chessboard=object_in_chessboard)
-
-            # append to list
-            poses.append(pose)
-
-        if IF_PLOT:
-            self.pub_image_chessboard()
-
-        return GetObjectInBaxterResponse(poses)
+        if flag == False:
+            GetObjectInBaxterResponse(False, Pose())
+        else:
+            IF_DISPLAY_IMAGE=True
+            pose = self.calc_object_pose_in_baxter_frame(
+                objInfo, poseLocator, T_bax_to_cam,
+                IF_DISPLAY_IMAGE=IF_DISPLAY_IMAGE)
+            if IF_DISPLAY_IMAGE:
+                self.pub_image_chessboard()
+            return GetObjectInBaxterResponse(True, pose)
     
+
+    def srv_GetAllObjectsInBaxter(self, req):
+        img=self.img.copy()
+                
+        if TEST_MODE: # Extract data from the stored chessboard pos
+            R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
+                self.set_up_test_mode_for_GetObjectInBaxter()
+                
+        poseLocator = Object3DPoseLocator( # initialize
+            STR_CAMERA_TYPE,
+            R_cam_table=R_cam_to_chess,
+            p_cam_table=p_cam_to_chess
+        )
+
+        # Detect objects
+        flag, objInfos=self._GetAllObjectsInImage(None)
+        poses=list()
+        if flag == False:
+            return GetAllObjectsInBaxterResponse(False, poses)
+        else:
+            IF_DISPLAY_IMAGE=True
+            n=len(objInfos)
+            # calc the pose of each object
+            for i in range(n):
+                pose = self.calc_object_pose_in_baxter_frame(
+                    objInfos[i], poseLocator, T_bax_to_cam,
+                    IF_DISPLAY_IMAGE=IF_DISPLAY_IMAGE)
+
+                # append to list
+                poses.append(pose)
+                
+            if IF_DISPLAY_IMAGE:
+                self.pub_image_chessboard()
+            return GetAllObjectsInBaxterResponse(True, poses)
+
+
+    def calc_object_pose_in_baxter_frame(self, objInfo, poseLocator, T_bax_to_cam,
+            IF_DISPLAY_IMAGE=True
+        ):
+        
+        (xi, yi, radius_x, radius_y, angle) = \
+            (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)
+        radius=objInfo.radius_mean
+
+        # Locate the object 3D (x,y,z) wrt camera frame and chessboard frame
+        p_cam_to_obj, p_chess_to_obj = \
+            poseLocator.locate_object(xi=xi, yi=yi, PRINT=False) # format: (3,1) column vector
+
+        # Locate the objects direction
+        # Input: self.object_mask
+        T_cam_to_obj=form_T(R=np.identity(3),p=p_cam_to_obj)
+
+        # transform p_in_camera to p_in_world
+        T_bax_to_obj=T_bax_to_cam.dot(T_cam_to_obj)            
+
+        # plot
+        if IF_DISPLAY_IMAGE:
+            object_in_image=(xi, yi, radius)
+            object_in_chessboard=(p_chess_to_obj[0,0],p_chess_to_obj[1,0],p_chess_to_obj[2,0])
+
+            self.display_object_pose_in_image(self.image_for_display_chessboard,
+                object_in_image=object_in_image,
+                radius=radius,
+                object_in_chessboard=object_in_chessboard)
+
+        # return
+        pose=Pose()
+        (pose.position.x, pose.position.y, pose.position.z)=\
+            (T_bax_to_obj[0,3],T_bax_to_obj[1,3],T_bax_to_obj[2,3])
+
+        return pose
+
     def display_object_pose_in_image(self, img_for_display, object_in_image, radius, object_in_chessboard):
         
         (xi, yi)=(object_in_image[0], object_in_image[1])

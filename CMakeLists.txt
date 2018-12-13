@@ -75,6 +75,7 @@ add_service_files(
   GetAllObjectsInImage.srv
   
   GetObjectInBaxter.srv
+  GetAllObjectsInBaxter.srv
 )
 
 ## Generate actions in the 'action' folder
