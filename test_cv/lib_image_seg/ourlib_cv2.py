@@ -426,3 +426,27 @@ def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
         image_for_display_object=cv2.drawContours(img, [res_rect], 0, [0,0,1], 2)
         plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
     return mask, res_rect
+
+# get the color float list[r, g, b]
+def get_color_median(img, mask, rect):
+    minx=min(rect[:,0])
+    maxx=max(rect[:,0])
+    miny=min(rect[:,1])
+    maxy=max(rect[:,1])
+    cb=list()
+    cg=list()
+    cr=list()
+    for i in range(miny,maxy):
+        for j in range(minx,maxx):
+            # print mask[i,j]
+            if mask[i,j]==0:
+                continue
+            cb.append(img[i,j,0])
+            cg.append(img[i,j,1])
+            cr.append(img[i,j,2])
+    cr=np.array(cr)
+    cb=np.array(cb)
+    cg=np.array(cg)
+    color=[np.median(cr),np.median(cg),np.median(cb)]
+    # print "the color is ",color
+    return color

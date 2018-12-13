@@ -63,7 +63,8 @@ add_message_files(
   ColorBound.msg
   XYRadiusAngle.msg
   ObjectInfo.msg
-
+  GameState.msg
+  KeepDice.msg
   )
 
 ## Generate services in the 'srv' folder
