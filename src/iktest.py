@@ -352,7 +352,7 @@ class motionControls():
                 # New Addition
                 rospy.loginfo("Attemping a new solution...")
                 limb = baxter_interface.Limb(self.limb)
-                current_joints_angles = limb.joint_angles()
+                current_joint_angles = limb.joint_angles()
                 current_joint_angles['left_s1'] =  current_joint_angles['left_s1'] + 0.1
 
                 limb.move_to_joint_positions(current_joint_angles)
