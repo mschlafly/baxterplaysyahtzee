@@ -32,18 +32,22 @@ if __name__=="__main__":
         rospy.sleep(0.5)
 
         # ----------- Test service of Chessboard
-        # SERVICE_NAME="/mycvCalibChessboardPose"
-        # print "calling service: " + SERVICE_NAME
-        # call_service(SERVICE_NAME, CalibChessboardPose)
+        SERVICE_NAME="/mycvCalibChessboardPose"
+        print "calling service: " + SERVICE_NAME
+        call_service(SERVICE_NAME, CalibChessboardPose)
 
-        # ----------- Test service of locate image in the middle
+        # ----------- Get Object In Image
         # SERVICE_NAME="/mycvGetObjectInImage"
         # print "calling service: " + SERVICE_NAME
         # call_service(SERVICE_NAME, GetObjectInImage)
 
-        # ----------- Test service of locate image in the middle
-        SERVICE_NAME="/mycvGetAllObjectsInImage"
+        # ----------- Get All Objects In Image
+        # SERVICE_NAME="/mycvGetAllObjectsInImage"
+        # print "calling service: " + SERVICE_NAME
+        # call_service(SERVICE_NAME, GetAllObjectsInImage)
+
+
+        # ----------- Test service of Chessboard
+        SERVICE_NAME="/mycvGetObjectInBaxter"
         print "calling service: " + SERVICE_NAME
-        call_service(SERVICE_NAME, GetAllObjectsInImage)
-
-
+        call_service(SERVICE_NAME, GetObjectInBaxter)
