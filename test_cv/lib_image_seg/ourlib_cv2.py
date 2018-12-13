@@ -293,7 +293,7 @@ def find_all_objects(img0,
     # print "start segmenting image"
     labeled_img=color_seg(img,neighbor = 8,
         sigma = 0.5,
-        K = 1000.0,
+        K = 800.0,
         min_size = 100)
     
 

@@ -315,6 +315,7 @@ class BaxterCameraProcessing(object):
 
                 self.display_object_pose_in_image(self.image_for_display_chessboard,
                     object_in_image=object_in_image,
+                    radius=radius,
                     object_in_chessboard=object_in_chessboard)
 
             # append to list
@@ -325,9 +326,9 @@ class BaxterCameraProcessing(object):
 
         return GetObjectInBaxterResponse(poses)
     
-    def display_object_pose_in_image(self, img_for_display, object_in_image, object_in_chessboard):
+    def display_object_pose_in_image(self, img_for_display, object_in_image, radius, object_in_chessboard):
         
-        (xi, yi, radius)=(object_in_image[0], object_in_image[1], object_in_image[2])
+        (xi, yi)=(object_in_image[0], object_in_image[1])
 
         # ---- Show ----
         # Add circle to img_for_display
@@ -339,16 +340,16 @@ class BaxterCameraProcessing(object):
 
         # Add text to img_for_display
         FONT = cv2.FONT_HERSHEY_SIMPLEX
-        FONTSIZE = 1
-        sss = ["object pos wrt chessboard", "x=", "y="]
+        FONTSIZE = 0.7
+        sss = ["pos", "x=", "y="]
         ppp = [xi, yi]
         for i in range(-1, 2):
             if i != -1:
                 s = "{:.2f}".format(object_in_chessboard[i])
             else:
                 s = ""
-            TEST_ROWS = int(yi-80+i*30)
-            TEST_COLS = int(xi-50)
+            TEST_ROWS = int(yi+i*20)
+            TEST_COLS = int(xi)
             COLOR = 255
             # print sss[i+1]+s, "TEST_COLS=", TEST_COLS, "TEST_ROWS", TEST_ROWS, FONT,\
             #     FONTSIZE, (0, 0, COLOR), 2, cv2.LINE_AA
