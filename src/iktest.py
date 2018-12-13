@@ -84,7 +84,7 @@ class motionControls():
                 )
         )
 
- 
+
 
         self.home_pose = Pose(
             position = Point(
@@ -302,7 +302,7 @@ class motionControls():
             seed.position = [0.7, 0.4, -1.7, 1.4, -1.1, -1.6, -0.4]
             ikreq.seed_angles.append(seed)
             # Once the primary IK task is solved, the solver will then try to bias the
-            # the joint angles toward the goal joint configuration. The null space is 
+            # the joint angles toward the goal joint configuration. The null space is
             # the extra degrees of freedom the joints can move without affecting the
             # primary IK task.
             #ikreq.use_nullspace_goal.append(True)
@@ -328,24 +328,35 @@ class motionControls():
         resp_seeds = struct.unpack('<%dB' % len(resp.result_type),
                                    resp.result_type)
 
+        while(True):
+            if (resp_seeds[0] != resp.RESULT_INVALID):
+                seed_str = {
+                ikreq.SEED_USER: 'User Provided Seed',
+                ikreq.SEED_CURRENT: 'Current Joint Angles',
+                ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
+                }.get(resp_seeds[0], 'None')
+                print("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
+                (seed_str,))
+                # Format solution into Limb API-compatible dictionary
+                limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-        if (resp_seeds[0] != resp.RESULT_INVALID):
-            seed_str = {
-                        ikreq.SEED_USER: 'User Provided Seed',
-                        ikreq.SEED_CURRENT: 'Current Joint Angles',
-                        ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
-                       }.get(resp_seeds[0], 'None')
-            print("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
-                  (seed_str,))
-            # Format solution into Limb API-compatible dictionary
-            limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
+                limb = baxter_interface.Limb(self.limb)
+                limb.move_to_joint_positions(limb_joints)
+                rospy.loginfo("Valid solution Found! Baxter begins to move!")
+                return
+            else:
+                rospy.loginfo("No valid solution Found!")
 
-            limb = baxter_interface.Limb(self.limb)
-            limb.move_to_joint_positions(limb_joints)
-            rospy.loginfo("Valid solution Found! Baxter begins to move!")
-        else:
-            rospy.loginfo("No valid solution Found!")
-        return
+                # New Addition
+                rospy.loginfo("Attemping a new solution...")
+                limb = baxter_interface.Limb(self.limb)
+                current_joints = limb.joint_angles()
+                current_joint_angles['left_s1'] =  current_joint_angles['left_s1'] + 0.1
+
+                limb.move_to_joint_positions(current_joint_angles)
+
+
+
 
     def svc_move_to_initpose(self,data):
 
