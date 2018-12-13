@@ -17,6 +17,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from matplotlib import pyplot as plt
 from std_msgs.msg import String
+import tf
 
 import os, sys
 import time
@@ -28,7 +29,8 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
 from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect,\
-    find_object_in_middle, find_all_objects, find_all_objects_then_draw
+    find_object_in_middle, find_all_objects, find_all_objects_then_draw, detect_dots, get_color_median
+
 from ourlib_transformations import form_T, get_Rp_from_T
 
 
@@ -45,7 +47,7 @@ from baxterplaysyahtzee.srv import *
 # ---------------------- TEST SETTINGS ------------------
 TEST_MODE=True
 if TEST_MODE:
-    DETECT_ONE_OBJECT=False
+    DETECT_ONE_OBJECT=True
     if DETECT_ONE_OBJECT:
         TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
     else:
@@ -81,6 +83,18 @@ NODE_NAME="nodeCV"
 def set_str_error(str_error):
     return "\nError from " +NODE_NAME+": "+str_error+""
 
+# -------------------
+
+def color_to_string(rgbcolor):
+    # we need some algorithm here
+    return str(rgbcolor)
+
+# -------------------
+
+
+# -------------------
+
+
 class BaxterCameraProcessing(object):
     def __init__(self):
         print("Initialing class BaxterCameraProcessing")
@@ -110,6 +124,10 @@ class BaxterCameraProcessing(object):
         self.p_cam_to_chess=None
         self.image_for_display_chessboard=None
 
+        self.flag_calibrated=False
+        self.T_bax_to_chess=None # after calibration, fill in this value
+        self.tf_listener = tf.TransformListener()
+
         # services 2: get object in image (return: Point)
         s2 = rospy.Service('mycvGetObjectInImage', GetObjectInImage, self.srv_GetObjectInImage)
         self.object_mask=None
@@ -137,7 +155,7 @@ class BaxterCameraProcessing(object):
             rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
             return
 
-        print(img.shape)
+        # print(img.shape)
         # Image processing
         self.chessboard_locator = ChessboardLocator(STR_CAMERA_TYPE, SQUARE_SIZE=SQUARE_SIZE)
         flag, R, p, self.image_for_display_chessboard = self.chessboard_locator.locate_chessboard(
@@ -154,6 +172,13 @@ class BaxterCameraProcessing(object):
         else:
             print "Successfully calibrate the chessboard\nR=",R,"\np=",p
             pose=Rp_to_pose(R,p)
+            self.flag_calibrated=True
+
+            # transformation matrix
+            
+            T_cam_to_chess=form_T(R,p)
+            self.T_bax_to_chess=self.get_T_bax_to_cam().dot(T_cam_to_chess)
+
             return CalibChessboardPoseResponse(True, pose)
 
     # tested, OK!!! 
@@ -164,6 +189,7 @@ class BaxterCameraProcessing(object):
     def _GetAllObjectsInImage(self, req):
         print("inside the srv_GetAllObjectsInImage")
         img=self.img.copy()
+        rows,cols=img.shape[:2]
 
         if not self.check_if_image_is_valid():
             rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
@@ -205,7 +231,23 @@ class BaxterCameraProcessing(object):
             
                 # ---------------------- Output -----------------
                 objInfo=ObjectInfo()
+                    
+                # dots
+                mask=labeled_img==labeled_img[int(center_y/2),int(center_x/2)]
+                blank_image = np.zeros(mask.shape, np.uint8)
+                blank_image[mask]=255
+                mask = cv2.resize(blank_image, (0,0), fx=2, fy=2)
+                mask[mask<128]=0
+                mask[mask>=128]=1
+                rect_int= rect.astype(np.uint8)
+                ndots=detect_dots(img, mask, rect_int) # detect dots
+                objInfo.value=ndots
 
+                # color
+                rgbcolor=get_color_median(img, mask, rect_int)
+                objInfo.color=color_to_string(rgbcolor)
+
+                # xyz pose
                 objInfo.index=i
                 (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)=\
                     (center_x, center_y, radius_x, radius_y, angle)
@@ -238,12 +280,19 @@ class BaxterCameraProcessing(object):
             self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
             self.pub_image_object()
 
+            # output:
+            objInfo=ObjectInfo()
+            
+            # color and dots
+            ndots=detect_dots(img, mask, rect) # detect dots
+            rgbcolor=get_color_median(img, mask, rect)
+            objInfo.value=ndots
+            objInfo.color=color_to_string(rgbcolor)
+
             # save vars
             self.object_mask=mask
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
 
-            # output:
-            objInfo=ObjectInfo()
 
             (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)=\
                 (center_x, center_y, radius_x, radius_y, angle)
@@ -297,7 +346,9 @@ class BaxterCameraProcessing(object):
         if TEST_MODE: # Extract data from the stored chessboard pos
             R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
                 self.set_up_test_mode_for_GetObjectInBaxter()
-
+        else:
+            R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=self.get_required_poses_for_2d3d()
+            
         poseLocator = Object3DPoseLocator( # initialize
             STR_CAMERA_TYPE,
             R_cam_table=R_cam_to_chess,
@@ -308,24 +359,29 @@ class BaxterCameraProcessing(object):
         flag, objInfo=self._GetObjectInImage(None)
 
         if flag == False:
-            GetObjectInBaxterResponse(False, Pose())
+            GetObjectInBaxterResponse(False, ObjectInfo())
         else:
             IF_DISPLAY_IMAGE=True
             pose = self.calc_object_pose_in_baxter_frame(
                 objInfo, poseLocator, T_bax_to_cam,
                 IF_DISPLAY_IMAGE=IF_DISPLAY_IMAGE)
+
+            objInfo.pose=pose
+            
             if IF_DISPLAY_IMAGE:
                 self.pub_image_chessboard()
-            return GetObjectInBaxterResponse(True, pose)
-    
 
+            return GetObjectInBaxterResponse(True, objInfo)
+    
     def srv_GetAllObjectsInBaxter(self, req):
         img=self.img.copy()
                 
         if TEST_MODE: # Extract data from the stored chessboard pos
             R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
                 self.set_up_test_mode_for_GetObjectInBaxter()
-                
+        else:
+            R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=self.get_required_poses_for_2d3d()
+          
         poseLocator = Object3DPoseLocator( # initialize
             STR_CAMERA_TYPE,
             R_cam_table=R_cam_to_chess,
@@ -334,24 +390,22 @@ class BaxterCameraProcessing(object):
 
         # Detect objects
         flag, objInfos=self._GetAllObjectsInImage(None)
-        poses=list()
+
         if flag == False:
-            return GetAllObjectsInBaxterResponse(False, poses)
+            return GetAllObjectsInBaxterResponse(False, list())
+
         else:
             IF_DISPLAY_IMAGE=True
-            n=len(objInfos)
             # calc the pose of each object
-            for i in range(n):
+            for i in range(len(objInfos)):
                 pose = self.calc_object_pose_in_baxter_frame(
                     objInfos[i], poseLocator, T_bax_to_cam,
                     IF_DISPLAY_IMAGE=IF_DISPLAY_IMAGE)
-
-                # append to list
-                poses.append(pose)
+                objInfos[i].pose=pose
                 
             if IF_DISPLAY_IMAGE:
                 self.pub_image_chessboard()
-            return GetAllObjectsInBaxterResponse(True, poses)
+            return GetAllObjectsInBaxterResponse(True, objInfos)
 
 
     def calc_object_pose_in_baxter_frame(self, objInfo, poseLocator, T_bax_to_cam,
@@ -457,6 +511,22 @@ class BaxterCameraProcessing(object):
             self.bridge.cv2_to_imgmsg(self.image_for_display_object, "bgr8")
         )
 
+    # ---------------------------------------------
+    def get_T_bax_to_cam(self):
+        (trans, rot) = tf_listener.lookupTransform(
+            '/base_link', '/left_hand_camera', rospy.Time(0))
+        r3=euler_from_quaternion(rot)
+        R,_=cv2.Rodrigues(r3)
+        T = form_T(R,trans)
+        return T
+
+    def get_required_poses_for_2d3d(self):
+        T_bax_to_cam=get_T_bax_to_cam()
+        T_cam_to_bax=np.linalg.inv(T_bax_to_cam)
+        T_cam_to_chess = T_cam_to_bax.dot(self.T_bax_to_chess)
+        R_cam_to_chess, p_cam_to_chess =get_Rp_from_T(T_cam_to_chess)
+        return R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
+
 def Rp_to_pose(R,p):
     pose=Pose()
 
@@ -472,14 +542,14 @@ def Rp_to_pose(R,p):
     pose.position.z=p[2]
     return pose
 
-def callback_ColorBound(msg):
-    global COLOR_LB, COLOR_UB
-    COLOR_LB=(msg.low_bound0,msg.low_bound1,msg.low_bound2)
-    COLOR_UB=(msg.high_bound0, msg.high_bound1, msg.high_bound2)
+# def callback_ColorBound(msg):
+#     global COLOR_LB, COLOR_UB
+#     COLOR_LB=(msg.low_bound0,msg.low_bound1,msg.low_bound2)
+#     COLOR_UB=(msg.high_bound0, msg.high_bound1, msg.high_bound2)
 
 if __name__ == '__main__':
-    rospy.init_node('read_video_and_locate_object')
-    sub=rospy.Subscriber("ColorBound",ColorBound,callback_ColorBound)
+    rospy.init_node('nodeCV')
+    # sub=rospy.Subscriber("ColorBound",ColorBound,callback_ColorBound)
     BaxterCameraProcessing()
     try:
         rospy.spin()
