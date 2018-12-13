@@ -29,7 +29,8 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
 from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect,\
-    find_object_in_middle, find_all_objects, find_all_objects_then_draw
+    find_object_in_middle, find_all_objects, find_all_objects_then_draw, detect_dots, get_color_median
+
 from ourlib_transformations import form_T, get_Rp_from_T
 
 
@@ -81,6 +82,18 @@ COLOR_UB=(79, 255, 255)
 NODE_NAME="nodeCV"
 def set_str_error(str_error):
     return "\nError from " +NODE_NAME+": "+str_error+""
+
+# -------------------
+
+def color_to_string(rgbcolor):
+    # we need some algorithm here
+    return str(rgbcolor)
+
+# -------------------
+
+
+# -------------------
+
 
 class BaxterCameraProcessing(object):
     def __init__(self):
@@ -176,6 +189,7 @@ class BaxterCameraProcessing(object):
     def _GetAllObjectsInImage(self, req):
         print("inside the srv_GetAllObjectsInImage")
         img=self.img.copy()
+        rows,cols=img.shape[:2]
 
         if not self.check_if_image_is_valid():
             rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
@@ -217,7 +231,23 @@ class BaxterCameraProcessing(object):
             
                 # ---------------------- Output -----------------
                 objInfo=ObjectInfo()
+                    
+                # dots
+                mask=labeled_img==labeled_img[int(center_y/2),int(center_x/2)]
+                blank_image = np.zeros(mask.shape, np.uint8)
+                blank_image[mask]=255
+                mask = cv2.resize(blank_image, (0,0), fx=2, fy=2)
+                mask[mask<128]=0
+                mask[mask>=128]=1
+                rect_int= rect.astype(np.uint8)
+                ndots=detect_dots(img, mask, rect_int) # detect dots
+                objInfo.value=ndots
 
+                # color
+                rgbcolor=get_color_median(img, mask, rect_int)
+                objInfo.color=color_to_string(rgbcolor)
+
+                # xyz pose
                 objInfo.index=i
                 (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)=\
                     (center_x, center_y, radius_x, radius_y, angle)
@@ -250,12 +280,19 @@ class BaxterCameraProcessing(object):
             self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
             self.pub_image_object()
 
+            # output:
+            objInfo=ObjectInfo()
+            
+            # color and dots
+            ndots=detect_dots(img, mask, rect) # detect dots
+            rgbcolor=get_color_median(img, mask, rect)
+            objInfo.value=ndots
+            objInfo.color=color_to_string(rgbcolor)
+
             # save vars
             self.object_mask=mask
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
 
-            # output:
-            objInfo=ObjectInfo()
 
             (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.radius_y, objInfo.angle)=\
                 (center_x, center_y, radius_x, radius_y, angle)

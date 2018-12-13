@@ -17,7 +17,7 @@ from ourlib_cv2 import *
 
 if __name__=="__main__":
     
-    filename = CURRENT_PATH+"/imgmid2.png"
+    filename = CURRENT_PATH+"/imgmid3.png"
     print filename
     img = cv2.imread(filename)
     # img= equalize_image(img)
@@ -25,30 +25,71 @@ if __name__=="__main__":
 
     # detect object
     mask, rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3, disextend=50)
+    
 
     # mean_val = cv2.mean(img,mask = mask)
     # print "mean_val", mean_val
+    
+    def create_blob_detector(blob_min_area=12, 
+                         blob_min_int=0.0, blob_max_int=1.0, blob_th_step=5):
+        params = cv2.SimpleBlobDetector_Params()
+        params.filterByArea = True
+        params.minArea = blob_min_area
+        params.maxArea = 30
+        params.filterByCircularity = False
+        params.filterByColor = False
+        params.filterByConvexity = False
+        params.filterByInertia = False
+        # blob detection only works with "uint8" images.
+        params.minThreshold = int(blob_min_int*255)
+        params.maxThreshold = int(blob_max_int*255)
+        params.thresholdStep = blob_th_step
+        ver = (cv2.__version__).split('.')
+        if int(ver[0]) < 3:
+            return cv2.SimpleBlobDetector(params)
+        else:
+            return cv2.SimpleBlobDetector_create(params) 
 
-    mean_color=get_color_median(img, mask, rect)    
-    print mean_color
+    imgmask=img.copy()
+    imgmask[mask==0]=0
 
-    minx=min(rect[:,0])
-    maxx=max(rect[:,0])
-    miny=min(rect[:,1])
-    maxy=max(rect[:,1])
+    small = crop_image(imgmask, rect)
+    # small = equalize_image(small, filter_size=2)
+    detector = create_blob_detector()
+    keypoints = detector.detect(small)
 
-    for i in range(miny,maxy):
-        for j in range(minx,maxx):
-            if mask[i,j]==0:
-                img[i,j]=mean_color
-            cb.append(img[i,j,0])
-            cg.append(img[i,j,1])
-            cr.append(img[i,j,2])
+    print "number of dots", len(keypoints)
+    
+    # Draw detected blobs as red circles.
+    # cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures the size of the circle corresponds to the size of blob
+    im_with_keypoints = cv2.drawKeypoints(small, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    
+    # Show keypoints
+    cv2.imshow("Keypoints", im_with_keypoints)
+    cv2.waitKey(0)
 
-    small=img[miny:maxy, minx:maxx]
+    TRY_THRESHOLD=False
+    if TRY_THRESHOLD:
+        mean_color=get_color_median(img, mask, rect)    
+        print mean_color
 
-    img[mask==0]=0
-    plt.imshow(mask),plt.colorbar(),plt.show()
+        minx=min(rect[:,0])
+        maxx=max(rect[:,0])
+        miny=min(rect[:,1])
+        maxy=max(rect[:,1])
+
+        for i in range(miny,maxy):
+            for j in range(minx,maxx):
+                if mask[i,j]==0:
+                    img[i,j]=mean_color
+                cb.append(img[i,j,0])
+                cg.append(img[i,j,1])
+                cr.append(img[i,j,2])
+
+        small=img[miny:maxy, minx:maxx]
+
+        img[mask==0]=0
+        plt.imshow(mask),plt.colorbar(),plt.show()
 
     
     TEST_SEG=False
