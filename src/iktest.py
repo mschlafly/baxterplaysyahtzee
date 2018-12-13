@@ -9,9 +9,10 @@ import struct
 import copy
 
 from baxter_core_msgs.msg import EndpointState
+from std_msgs.msg import (UInt16,)
 from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 from std_msgs.msg import Header
-from baxterplaysyahtzee.srv import OffsetMove
+from baxterplaysyahtzee.srv import*
 
 from baxter_core_msgs.srv import (SolvePositionIK, SolvePositionIKRequest)
 from std_srvs.srv import Trigger
@@ -27,15 +28,17 @@ class motionControls():
         rospy.Subscriber('dice_pose_topic', Pose, self.set_dice_position)
         rospy.Subscriber('tag_pose_topic', Pose, self.read_tag_position)
 
-        rospy.Service('iktest_controller/move_to_cup_offset', OffsetMove, self.svc_move_to_cup_offset)
+        # rospy.Service('iktest_controller/move_to_cup_offset', OffsetMove, self.svc_move_to_cup_offset)
         rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)
         rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)
         rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)
         rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)
-        rospy.Service('iktest_controller/pour_dice', OffsetMove, self.svc_pour_dice)
+        rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)
+        rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)
 
         self.close_grip = rospy.ServiceProxy('gripper_controller_test/close_grip', Trigger)
         self.open_grip = rospy.ServiceProxy('gripper_controller_test/open_grip', Trigger)
+        self.pour_the_cup = rospy.ServiceProxy('iktest_controller/pour_the_cup', CupShake)
         # Just for test
         self.limb = 'left'
 
@@ -170,6 +173,61 @@ class motionControls():
 
         return
 
+    def svc_handle_pour_the_cup(self,data):
+
+        # Getting limbs and joints
+        #print("Fetching limbs and joints...")
+        left_arm = baxter_interface.Limb("left")
+        #right_arm = baxter_interface.Limb("right")
+        left_joint_names = left_arm.joint_names()
+        #right_joint_names = right_arm.joint_names()
+
+        # set joint state publishing to 500Hz
+        #print("Setting joint state publishing rate...")
+        #rate = 500.0  # Hz
+        #pub_rate.publish(rate)
+
+        # set displacement angle for pouring the cup
+        #print("Retrieving current joint positions...")
+        current_joint_angles = left_arm.joint_angles()
+        #print(current_joint_angles)
+
+        #print("Moving the last joint (w2) to its neutral position...")
+
+        current_joint_angles['left_w2'] = 0.0
+        left_arm.move_to_joint_positions(current_joint_angles,timeout=15)
+
+        #print("--- Left_w2 at 0.0 ---")
+        #print(left_arm.joint_angles())
+
+        print("Moving the last joint by pi/2 radians to pour the dice out...")
+        pouring_angles = current_joint_angles
+        pouring_angles['left_w2'] = 4*math.pi/7
+
+
+        left_arm.move_to_joint_positions(pouring_angles,timeout=15)
+
+        # left_arm.set_joint_positions(['left_w2']: math.pi/2)
+        #print("--- Joint angles for pouring ---")
+        print(left_arm.joint_angles())
+
+        #print("Waiting...")
+        rospy.sleep(1.0)
+
+        #print("Moving arm back to standoff position...")
+        current_joint_angles = pouring_angles
+        current_joint_angles['left_w2'] = 0.0
+        left_arm.move_to_joint_positions(current_joint_angles,timeout=15)
+
+        #print("--- Original Standoff position ---")
+        print(left_arm.joint_angles())
+
+        rospy.sleep(1.0)
+
+        success = True
+
+        return success
+
     def add_offset(self,locate,offset):
 
         add_offset = Pose(
@@ -270,6 +328,7 @@ class motionControls():
 
         return (True,'Moving to home pose')
 
+        '''
     # has to change this to move to cup above
     def svc_move_to_cup_offset(self,data):
 
@@ -291,7 +350,7 @@ class motionControls():
 
         return (True, 'Moving to cup completed')
 
-        ''' here does not use seed method
+         here does not use seed method
         if (resp.isValid[0]):
             rospy.loginfo("IK SOLVER - Success! Valid joint solution found.")
 
@@ -369,7 +428,9 @@ class motionControls():
         rospy.sleep(1)
 
         self.move_to_obj(self.cup_ready_to_grip)
-        ## Pour dice
+
+        self.pour_the_cup()
+
         rospy.sleep(1)
         self.move_to_obj(cup_down)
         rospy.sleep(1)
@@ -388,6 +449,7 @@ def main():
 
     # Class initialization
     iktest_control = motionControls()
+    iktest_control.svc_pour_dice()
     #iktest_control.move_to_obj(iktest_control.home_pose)
     #iktest_control.move_to_obj(iktest_control.cup_ready_to_grip)
     #iktest_control.svc_pour_dice()

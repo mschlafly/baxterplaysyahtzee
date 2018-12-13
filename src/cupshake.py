@@ -18,9 +18,9 @@ def handle_pour_the_cup(data):
     right_joint_names = right_arm.joint_names()
 
     # set joint state publishing to 500Hz
-    print("Setting joint state publishing rate...")
-    rate = 500.0  # Hz
-    pub_rate.publish(rate)
+    #print("Setting joint state publishing rate...")
+    #rate = 500.0  # Hz
+    #pub_rate.publish(rate)
 
     # set displacement angle for pouring the cup
     print("Retrieving current joint positions...")
