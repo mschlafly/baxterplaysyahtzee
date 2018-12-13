@@ -17,6 +17,7 @@ from cv_bridge import CvBridge, CvBridgeError
 import cv2
 from matplotlib import pyplot as plt
 from std_msgs.msg import String
+import tf
 
 import os, sys
 import time
@@ -110,6 +111,10 @@ class BaxterCameraProcessing(object):
         self.p_cam_to_chess=None
         self.image_for_display_chessboard=None
 
+        self.flag_calibrated=False
+        self.T_bax_to_chess=None # after calibration, fill in this value
+        self.tf_listener = tf.TransformListener()
+
         # services 2: get object in image (return: Point)
         s2 = rospy.Service('mycvGetObjectInImage', GetObjectInImage, self.srv_GetObjectInImage)
         self.object_mask=None
@@ -137,7 +142,7 @@ class BaxterCameraProcessing(object):
             rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
             return
 
-        print(img.shape)
+        # print(img.shape)
         # Image processing
         self.chessboard_locator = ChessboardLocator(STR_CAMERA_TYPE, SQUARE_SIZE=SQUARE_SIZE)
         flag, R, p, self.image_for_display_chessboard = self.chessboard_locator.locate_chessboard(
@@ -154,6 +159,13 @@ class BaxterCameraProcessing(object):
         else:
             print "Successfully calibrate the chessboard\nR=",R,"\np=",p
             pose=Rp_to_pose(R,p)
+            self.flag_calibrated=True
+
+            # transformation matrix
+            
+            T_cam_to_chess=form_T(R,p)
+            self.T_bax_to_chess=self.get_T_bax_to_cam().dot(T_cam_to_chess)
+
             return CalibChessboardPoseResponse(True, pose)
 
     # tested, OK!!! 
@@ -297,7 +309,9 @@ class BaxterCameraProcessing(object):
         if TEST_MODE: # Extract data from the stored chessboard pos
             R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
                 self.set_up_test_mode_for_GetObjectInBaxter()
-
+        else:
+            R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=self.get_required_poses_for_2d3d()
+            
         poseLocator = Object3DPoseLocator( # initialize
             STR_CAMERA_TYPE,
             R_cam_table=R_cam_to_chess,
@@ -328,7 +342,9 @@ class BaxterCameraProcessing(object):
         if TEST_MODE: # Extract data from the stored chessboard pos
             R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
                 self.set_up_test_mode_for_GetObjectInBaxter()
-                
+        else:
+            R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=self.get_required_poses_for_2d3d()
+          
         poseLocator = Object3DPoseLocator( # initialize
             STR_CAMERA_TYPE,
             R_cam_table=R_cam_to_chess,
@@ -457,6 +473,22 @@ class BaxterCameraProcessing(object):
         self.pub2.publish(
             self.bridge.cv2_to_imgmsg(self.image_for_display_object, "bgr8")
         )
+
+    # ---------------------------------------------
+    def get_T_bax_to_cam(self):
+        (trans, rot) = tf_listener.lookupTransform(
+            '/base_link', '/left_hand_camera', rospy.Time(0))
+        r3=euler_from_quaternion(rot)
+        R,_=cv2.Rodrigues(r3)
+        T = form_T(R,trans)
+        return T
+
+    def get_required_poses_for_2d3d(self):
+        T_bax_to_cam=get_T_bax_to_cam()
+        T_cam_to_bax=np.linalg.inv(T_bax_to_cam)
+        T_cam_to_chess = T_cam_to_bax.dot(self.T_bax_to_chess)
+        R_cam_to_chess, p_cam_to_chess =get_Rp_from_T(T_cam_to_chess)
+        return R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
 
 def Rp_to_pose(R,p):
     pose=Pose()
