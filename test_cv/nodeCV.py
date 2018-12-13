@@ -20,18 +20,19 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 
 # ------------settings-----------
 TEST_MODE=True
-TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
+# TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
+TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/image3.png"
 
 # ---------------------- Import from our own library -----------------------
 from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
 from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect,\
     find_object_in_middle, find_all_objects, find_all_objects_then_draw
 
-from baxterplaysyahtzee.msg import ColorBound, XYRadiusAngle
 
 # ---------------------- service provided by this node -----------------------
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from geometry_msgs.msg import Pose, Point
+from baxterplaysyahtzee.msg import ColorBound, ObjectInfo
 
 from baxterplaysyahtzee.srv import *
 
@@ -112,6 +113,7 @@ class BaxterCameraProcessing(object):
         self.t_receive_image=rospy.get_time()
         self.cnt+=1
 
+    # tested, OK!
     def srv_CalibChessboardPose(self, req):
         print("inside the srv_CalibChessboardPose")
         img=self.img.copy()
@@ -134,6 +136,7 @@ class BaxterCameraProcessing(object):
             pose=Rp_to_pose(R,p)
             return pose
 
+    # tested, OK!
     def srv_GetAllObjectsInImage(self, req):
         print("inside the srv_GetAllObjectsInImage")
         img=self.img.copy()
@@ -145,10 +148,26 @@ class BaxterCameraProcessing(object):
         rects, labeled_img=find_all_objects(img)
         colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=False)
         self.image_for_display_object=colored_image   
-        self.pub_image_object()     
-        return True
+        self.pub_image_object()   
 
+        # output:
+        objInfos=list()
+        for i in range(len(rects)):
+            rect=rects[i]
+            (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
 
+            objInfo=ObjectInfo()
+            objInfo.flag2d=True
+            (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.yi, objInfo.angle)=\
+                (center_x, center_y, radius_x, radius_y, angle)
+            objInfo.radius_mean=(radius_x+radius_y)/2
+
+            objInfos.append(objInfo)
+        
+        objInfos.sort(key=lambda x: x.radius_mean, reverse=True)
+        return objInfo
+
+    # tested, OK!
     def srv_GetObjectInImage(self, req):
         img=self.img.copy()
         if not self.check_if_image_is_valid():
@@ -158,7 +177,6 @@ class BaxterCameraProcessing(object):
         # Detect object in the image
         mask, rect = find_object_in_middle(img, ratio_RADIUS_TO_CHECK=3, disextend=50)
 
-
         # Display image        
         self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
         self.pub_image_object()
@@ -166,29 +184,37 @@ class BaxterCameraProcessing(object):
         # save vars
         self.object_mask=mask
         (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
-        xyra=XYRadiusAngle(center_x, center_y, radius_x, radius_y, angle)
-        return xyra
 
-    # def srv_GetObjectInImage(self, req): # This is the old version by color thresholding
-    #     img=self.img.copy()
+        # output:
+        objInfo=ObjectInfo()
 
-    #     if not self.check_if_image_is_valid():
-    #         rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
-    #         return
+        objInfo.flag2d=True
+        (objInfo.xi, objInfo.yi, objInfo.radius_x, objInfo.yi, objInfo.angle)=\
+            (center_x, center_y, radius_x, radius_y, angle)
+        objInfo.radius_mean=(radius_x+radius_y)/2
 
-    #     # Detect object in the image
-    #     USE_TEST_OBJECT_POS_IN_IMAGE=False
-    #     if USE_TEST_OBJECT_POS_IN_IMAGE:
-    #         xi = 400
-    #         yi = 300
-    #         radius = 20
-    #     else:
-    #         global COLOR_LB, COLOR_UB
-    #         xi, yi, radius, mask=find_object(img, COLOR_LB, COLOR_UB)
-    #         img_for_display=np.hstack([img_for_display,mask])
+        return objInfo
 
-    #     self.object_mask=mask
-    #     return Point(xi, yi, radius)
+    def srv_GetObjectInImage_old(self, req): # This is the old version by color thresholding
+        img=self.img.copy()
+
+        if not self.check_if_image_is_valid():
+            rospy.loginfo(set_str_error("srv_CalibChessboardPose failed."))
+            return
+
+        # Detect object in the image
+        USE_TEST_OBJECT_POS_IN_IMAGE=False
+        if USE_TEST_OBJECT_POS_IN_IMAGE:
+            xi = 400
+            yi = 300
+            radius = 20
+        else:
+            global COLOR_LB, COLOR_UB
+            xi, yi, radius, mask=find_object(img, COLOR_LB, COLOR_UB)
+            img_for_display=np.hstack([img_for_display,mask])
+
+        self.object_mask=mask
+        return Point(xi, yi, radius)
 
     def srv_GetObjectInBaxter(self, req):
         img=self.img.copy()
