@@ -115,6 +115,7 @@ class BaxterCameraProcessing(object):
         self.sub = rospy.Subscriber(CAMERA_TOPIC, Image, self.topic_receive_image_callback)
         self.pub1 = rospy.Publisher("image_with_chessboard",Image, queue_size=10)
         self.pub2 = rospy.Publisher("image_with_object",Image, queue_size=10)
+        self.pub3 = rospy.Publisher("/robot/xdisplay",Image, queue_size=10)
 
      
         # services 1: calib chessboard (return: Pose)
@@ -212,7 +213,7 @@ class BaxterCameraProcessing(object):
             rect=rects[i]
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
             # Criteria for removing wrong objects
-            if center_x<150 or center_x>640-300 or center_y<100 or center_y>400-100:
+            if center_x<150 or center_x>640-150 or center_y<80 or center_y>400-80:
                 continue
             else:
                 tmp.append(rect.copy())
@@ -283,7 +284,7 @@ class BaxterCameraProcessing(object):
 
         # Display image      
         if rect is not None:  
-            self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,0,1], 2)
+            self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,1,1], 2)
             self.pub_image_object()
 
             # output:
@@ -367,6 +368,7 @@ class BaxterCameraProcessing(object):
         print "detecting result: ", flag, objInfo
 
         if flag == False:
+            self.pub_to_screen()
             GetObjectInBaxterResponse(False, objInfo    )
         else:
             IF_DISPLAY_IMAGE=True
@@ -378,7 +380,7 @@ class BaxterCameraProcessing(object):
             
             if IF_DISPLAY_IMAGE:
                 self.pub_image_chessboard()
-
+                self.pub_to_screen()
             return GetObjectInBaxterResponse(True, objInfo)
     
     def srv_GetAllObjectsInBaxter(self, req):
@@ -414,6 +416,7 @@ class BaxterCameraProcessing(object):
                 
             if IF_DISPLAY_IMAGE:
                 self.pub_image_chessboard()
+                self.pub_to_screen()
             return GetAllObjectsInBaxterResponse(True, objInfos)
 
     def calc_object_pose_in_baxter_frame(self, objInfo, poseLocator, T_bax_to_cam,
@@ -427,8 +430,8 @@ class BaxterCameraProcessing(object):
         # Locate the object 3D (x,y,z) wrt camera frame and chessboard frame
         p_cam_to_obj, p_chess_to_obj = \
             poseLocator.locate_object(xi=xi, yi=yi, PRINT=False) # format: (3,1) column vector
-        print "p_cam_to_obj:\n",p_cam_to_obj
-        print "p_chess_to_obj:\n",p_chess_to_obj
+        # print "p_cam_to_obj:\n",p_cam_to_obj
+        # print "p_chess_to_obj:\n",p_chess_to_obj
 
         # Locate the objects direction
         # Input: self.object_mask
@@ -445,7 +448,8 @@ class BaxterCameraProcessing(object):
             self.display_object_pose_in_image(self.image_for_display_chessboard,
                 object_in_image=object_in_image,
                 radius=radius,
-                object_in_chessboard=object_in_chessboard)
+                object_in_chessboard=object_in_chessboard,
+                dice_value=objInfo.value)
 
         # return
         pose=Pose()
@@ -454,7 +458,8 @@ class BaxterCameraProcessing(object):
 
         return pose
 
-    def display_object_pose_in_image(self, img_for_display, object_in_image, radius, object_in_chessboard):
+    def display_object_pose_in_image(self, img_for_display, object_in_image, radius, 
+            object_in_chessboard, dice_value):
         
         (xi, yi)=(object_in_image[0], object_in_image[1])
 
@@ -469,11 +474,14 @@ class BaxterCameraProcessing(object):
         # Add text to img_for_display
         FONT = cv2.FONT_HERSHEY_SIMPLEX
         FONTSIZE = 0.7
-        sss = ["pos", "x=", "y="]
+        sss = ["pos", "x=", "y=","dice="]
         ppp = [xi, yi]
-        for i in range(-1, 2):
-            if i != -1:
+        for i in range(-1, 3):
+            if i ==0 or i==1:
                 s = "{:.2f}".format(object_in_chessboard[i])
+            elif i==2:
+                print "dice_value in 2",dice_value
+                s = str(dice_value)
             else:
                 s = ""
             TEST_ROWS = int(yi+i*20)
@@ -519,6 +527,13 @@ class BaxterCameraProcessing(object):
         self.pub2.publish(
             self.bridge.cv2_to_imgmsg(self.image_for_display_object, "bgr8")
         )
+
+    def pub_to_screen(self):
+        if self.image_for_display_object is not None and self.image_for_display_chessboard is not None:
+            # tmpimage=np.hstack([self.image_for_display_object,self.image_for_display_chessboard])
+            tmpimage=np.hstack([self.image_for_display_object,self.image_for_display_chessboard])
+            tmpimage=cv2.resize(tmpimage,(0,0),fx=0.8,fy=0.8) #!!!!!!!!!
+            self.pub3.publish(self.bridge.cv2_to_imgmsg(tmpimage, "bgr8"))
 
     # ---------------------------------------------
     def get_T_bax_to_cam(self):

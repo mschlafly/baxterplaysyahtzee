@@ -181,11 +181,11 @@ def find_squares(labeled_img):
 # Input a mask, output the rectangular containing the mask.
 # This also checks the property of the rectangular, to see if it's a real rect.
 def find_square(mask_object,
-        MIN_AREA=50,
+        MIN_AREA=80,
         ERROR_HOW_SQUARE=0.3, # len/width
         ERROR_TOTAL_AREA=0.5, # total_area/(len*width)
         ERROR_TOTAL_AREA2=0.8, # total_area/(the logical "and" area of square and segmentation result)
-    ):
+    ):  #!!!!!!!!!!!!!!!!!
     # output
     flag_find=False
     ellipse=None
@@ -386,7 +386,7 @@ def refine_image_mask(img0, rect, disextend=20):
 
 # This function uses the middle of the image as the rectangular (assume object in the middle), 
 #   and then calles function "refine_image_mask()" to obtain the object pos
-def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
+def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=4, disextend=50):
     img=img0.copy()
     for i in range(2):
         if i==1:

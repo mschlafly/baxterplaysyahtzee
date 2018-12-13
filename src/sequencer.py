@@ -189,12 +189,16 @@ def main():
         #dice_pose = call_feiyu_service_detect_one()
         #dice_pose.position.x=0.834
         #dice_pose.position.y=0.07
-        dice_pose.position.z = dice_pose.position.z - 0.03
-        dice_pose.orientation.x=0.5
-        dice_pose.orientation.y= 0.0
-        dice_pose.orientation.z=0.0
-        dice_pose.orientation.w=-0.0
-        print "printing feiyu's returned dice-Pose",dice_pose
+        
+        def reset_dice_pose(dice_pose):
+            dice_pose.position.z = dice_pose.position.z - 0.03
+            dice_pose.orientation.x=0.5
+            dice_pose.orientation.y=0.0
+            dice_pose.orientation.z=0.0
+            dice_pose.orientation.w=-0.0
+            print "printing feiyu's returned dice-Pose",dice_pose
+            return dice_pose
+        dice_pose=reset_dice_pose(dice_pose)
 
         # --------------------------------------
 

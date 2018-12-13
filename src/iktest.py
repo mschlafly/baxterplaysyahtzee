@@ -296,7 +296,7 @@ class motionControls():
         # Set the desired pose in the service request message to pose information pulled from the object pose topic
         ikreq.pose_stamp.append(obj_pose)
 
-        if (1):
+        if (0):
             # The joint seed is where the IK position solver starts its optimization
             ikreq.seed_mode = ikreq.SEED_USER
             seed = JointState()
@@ -330,32 +330,34 @@ class motionControls():
         resp_seeds = struct.unpack('<%dB' % len(resp.result_type),
                                    resp.result_type)
 
-        while(True):
-            if (resp_seeds[0] != resp.RESULT_INVALID):
-                seed_str = {
-                ikreq.SEED_USER: 'User Provided Seed',
-                ikreq.SEED_CURRENT: 'Current Joint Angles',
-                ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
-                }.get(resp_seeds[0], 'None')
-                print("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
-                (seed_str,))
-                # Format solution into Limb API-compatible dictionary
-                limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-                limb = baxter_interface.Limb(self.limb)
-                limb.move_to_joint_positions(limb_joints)
-                rospy.loginfo("Valid solution Found! Baxter begins to move!")
-                return
-            else:
-                rospy.loginfo("No valid solution Found!")
+        if (resp_seeds[0] != resp.RESULT_INVALID):
+            seed_str = {
+            ikreq.SEED_USER: 'User Provided Seed',
+            ikreq.SEED_CURRENT: 'Current Joint Angles',
+            ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
+            }.get(resp_seeds[0], 'None')
+            print("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
+            (seed_str,))
+            # Format solution into Limb API-compatible dictionary
+            limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-                # New Addition
-                rospy.loginfo("Attemping a new solution...")
-                limb = baxter_interface.Limb(self.limb)
-                current_joint_angles = limb.joint_angles()
-                current_joint_angles['left_s1'] =  current_joint_angles['left_s1'] + 0.1
+            limb = baxter_interface.Limb(self.limb)
+            limb.move_to_joint_positions(limb_joints)
+            rospy.loginfo("Valid solution Found! Baxter begins to move!")
+               
+        else:
+            rospy.loginfo("No valid solution Found!")
 
-                limb.move_to_joint_positions(current_joint_angles)
+            # # New Addition
+            # rospy.loginfo("Attemping a new solution...")
+            # limb = baxter_interface.Limb(self.limb)
+            # current_joint_angles = limb.joint_angles()
+            # current_joint_angles['left_s1'] =  current_joint_angles['left_s1'] + 0.01
+            # current_joint_angles['left_s0'] =  current_joint_angles['left_s0'] + 0.01
+
+            # limb.move_to_joint_positions(current_joint_angles)
+        return
 
 
 
