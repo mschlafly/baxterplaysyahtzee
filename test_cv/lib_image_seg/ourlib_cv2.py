@@ -1,11 +1,10 @@
-
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 from PIL import Image
 import cv2
 import numpy as np
-from main import *
+from lib_main import *
 from random import random
 import numpy
 from matplotlib import pyplot as plt
@@ -26,6 +25,13 @@ def extract_rect(rect):
 
     angle=np.arctan2(rect[1,1]-rect[0,1],rect[1,0]-rect[0,0] )
     return (center_x, center_y, radius_x, radius_y, angle)
+
+def extract_ellipse(ellipse):
+    center=ellipse[0]
+    angle=ellipse[2]
+    x=center[0]
+    y=center[1]
+    return x, y, angle
 
 def rander_color(labeled_img):
     (rows,cols)=labeled_img.shape
@@ -170,16 +176,7 @@ def find_squares(labeled_img):
     # return res_ellipse, res_rects, res_xs, res_ys, res_angles
     return res_rects
 
-# Not used
-def ellipse2xyangle(ellipse):
-    # if ellipse is not None:
-    center=ellipse[0]
-    angle=ellipse[2]
-    x=center[0]
-    y=center[1]
-    return x, y, angle
-    # else:
-        # return None, None, None
+
 
 # Input a mask, output the rectangular containing the mask.
 # This also checks the property of the rectangular, to see if it's a real rect.
@@ -296,7 +293,7 @@ def find_all_objects(img0,
     # print "start segmenting image"
     labeled_img=color_seg(img,neighbor = 8,
         sigma = 0.5,
-        K = 1000.0,
+        K = 800.0,
         min_size = 100)
     
 

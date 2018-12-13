@@ -62,14 +62,18 @@ add_message_files(
   FILES
   ColorBound.msg
   XYRadiusAngle.msg
+  ObjectInfo.msg
+  
   )
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
   CalibChessboardPose.srv
+
   GetObjectInImage.srv
   GetAllObjectsInImage.srv
+  
   GetObjectInBaxter.srv
 )
 
@@ -83,9 +87,9 @@ add_service_files(
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs
   # nav_msgs
   # ar_track_alvar_msgs
+  std_msgs
   geometry_msgs
   baxter_core_msgs
 )

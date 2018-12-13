@@ -14,9 +14,19 @@
 
 ### ROS
 ```
+# start roscore in a terminal 
 roscore
+
+# in another terminal 
+cd baxterws
+source devel/setup.sh
+catkin_make
+
+#type roscd and baxterplays then hit tab to ensure ros recognizes the workspace
+
 ```
 ### Baxter
+
 
 #### Installation
 
