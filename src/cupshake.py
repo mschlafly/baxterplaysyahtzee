@@ -37,7 +37,7 @@ def handle_pour_the_cup(data):
 
     print("Moving the last joint by pi/2 radians to pour the dice out...")
     pouring_angles = current_joint_angles
-    pouring_angles['left_w2'] = math.pi/2
+    pouring_angles['left_w2'] = 4*math.pi/7
 
 
     left_arm.move_to_joint_positions(pouring_angles,timeout=15)
