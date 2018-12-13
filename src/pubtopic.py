@@ -13,22 +13,22 @@ from baxterplaysyahtzee.msg import GameState
 class pubtopic():
 	def __init__(self):
 		rospy.init_node('pubtopic')
-		r=rospy.Rate(10)
+		r=rospy.Rate(.1)
 		pub = rospy.Publisher('/statetopic', GameState, queue_size=10)
 		pretend=GameState()
 		pretend.state="Dice Read"
-		pretend.turn=1
-		pretend.roll=1
+		pretend.turn=5
+		pretend.roll=2
 		pretend.dice1=1
-		pretend.dice2=1
-		pretend.dice3=1
-		pretend.dice4=1
-		pretend.dice5=1
+		pretend.dice2=2
+		pretend.dice3=3
+		pretend.dice4=4
+		pretend.dice5=5
 		pretend.dice1color='b'
 		pretend.dice2color='b'
-		pretend.dice3color='b'
-		pretend.dice4color='b'
-		pretend.dice5color='b'
+		pretend.dice3color='r'
+		pretend.dice4color='bl'
+		pretend.dice5color='y'
 		while not rospy.is_shutdown():
 			pub.publish(pretend)
 			#rospy.loginfo(1)
