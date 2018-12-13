@@ -108,7 +108,7 @@ class BaxterCameraProcessing(object):
         s3 = rospy.Service('mycvGetAllObjectsInImage', GetAllObjectsInImage, self.srv_GetAllObjectsInImage)
 
         # services 4: get object in Baxter
-        s4 = rospy.Service('mycvGetObjectInBaxter', GetChessboardPose, self.srv_GetObjectInBaxter)
+        s4 = rospy.Service('mycvGetObjectInBaxter', GetObjectInBaxter, self.srv_GetObjectInBaxter)
         self.image_for_display_object=None
 
     def topic_receive_image_callback(self, rosImage):
@@ -278,7 +278,7 @@ class BaxterCameraProcessing(object):
 
         n=len(objInfos)
         print "\n\nGetObjectInBaxter: received ", n, " objects."
-        print objInfos
+        # print objInfos
 
         if n==0:
             return GetObjectInBaxterResponse(poses)
@@ -323,7 +323,7 @@ class BaxterCameraProcessing(object):
         if IF_PLOT:
             self.pub_image_chessboard()
 
-        return poses
+        return GetObjectInBaxterResponse(poses)
     
     def display_object_pose_in_image(self, img_for_display, object_in_image, object_in_chessboard):
         
