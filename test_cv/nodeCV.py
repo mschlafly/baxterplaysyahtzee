@@ -212,7 +212,7 @@ class BaxterCameraProcessing(object):
             rect=rects[i]
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
             # Criteria for removing wrong objects
-            if center_x<250:
+            if center_x<150 or center_x>640-300 or center_y<100 or center_y>400-100:
                 continue
             else:
                 tmp.append(rect.copy())

@@ -185,6 +185,7 @@ def main():
         move_to_homepose()
 
         dice_pose = call_feiyu_service_detect_all()
+        
         #dice_pose = call_feiyu_service_detect_one()
         #dice_pose.position.x=0.834
         #dice_pose.position.y=0.07

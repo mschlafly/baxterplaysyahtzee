@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 import rospy
 import baxter_interface
 import math
@@ -13,6 +12,21 @@ from std_msgs.msg import (UInt16,)
 from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 from std_msgs.msg import Header
 from baxterplaysyahtzee.srv import*
+from sensor_msgs.msg import JointState
+from baxter_core_msgs.srv import (
+    SolvePositionIK,
+    SolvePositionIKRequest,
+)
+
+from geometry_msgs.msg import (
+    PoseStamped,
+    Pose,
+    Point,
+    Quaternion,
+)
+from std_msgs.msg import Header
+from sensor_msgs.msg import JointState
+
 
 from baxter_core_msgs.srv import (SolvePositionIK, SolvePositionIKRequest)
 from std_srvs.srv import Trigger
@@ -279,15 +293,35 @@ class motionControls():
             )
         )
 
-
         # Set the desired pose in the service request message to pose information pulled from the object pose topic
         ikreq.pose_stamp.append(obj_pose)
 
+        if (1):
+            # The joint seed is where the IK position solver starts its optimization
+            ikreq.seed_mode = ikreq.SEED_USER
+            seed = JointState()
+            seed.name = ['right_j0', 'right_j1', 'right_j2', 'right_j3', 'right_j4', 'right_j5', 'right_j6']
+            seed.position = [0.7, 0.4, -1.7, 1.4, -1.1, -1.6, -0.4]
+            ikreq.seed_angles.append(seed)
+            # Once the primary IK task is solved, the solver will then try to bias the
+            # the joint angles toward the goal joint configuration. The null space is 
+            # the extra degrees of freedom the joints can move without affecting the
+            # primary IK task.
+            #ikreq.use_nullspace_goal.append(True)
+            # The nullspace goal can either be the full set or subset of joint angles
+            goal = JointState()
+            goal.name = ['right_j1', 'right_j2', 'right_j3']
+            goal.position = [0.1, -0.3, 0.5]
+
+            #ikreq.nullspace_goal.append(goal)
+
+            # The gain used to bias toward the nullspace goal. Must be [0.0, 1.0]
+            # If empty, the default gain of 0.4 will be used
+            #ikreq.nullspace_gain.append(0.4)
 
         try:
             rospy.wait_for_service(ns, 5.0)
             resp = iksvc(ikreq)
-
         except (rospy.ServiceException, rospy.ROSException), e:
             rospy.logerr("Service call fault: %s" % (e,))
             return (False, "MOTION CTRL - Service call to Baxter's IK solver failed.")
@@ -313,9 +347,6 @@ class motionControls():
             rospy.loginfo("Valid solution Found! Baxter begins to move!")
         else:
             rospy.loginfo("No valid solution Found!")
-
-
-
         return
 
     def svc_move_to_initpose(self,data):
