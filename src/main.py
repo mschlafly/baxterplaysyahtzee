@@ -30,6 +30,7 @@ from bs4 import BeautifulSoup as soup
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from baxterplaysyahtzee.msg import GameState, KeepDice
 
 # ros
 import rospy
@@ -66,10 +67,10 @@ from baxterplaysyahtzee.srv import *
 """
 Define
 """
-SOME_CALLBACK = "callback()"
 NODE_NAME = "yahtzee"
 DEBUG = True
-SOME_TOPIC = "/some/topic"
+GAMESTATE_TOPIC = "/statetopic"
+REROLL_TOPIC = "/reroll"
 SOME_SRV= "/some/srv"
 RATE = 10
 QUEUE_SIZE = 10
@@ -83,7 +84,7 @@ class Main():
         self.debug(self.fname(inspect.currentframe()))
         rospy.init_node(NODE_NAME)
         self.debug("started node"+NODE_NAME)
-        self.pub = rospy.Publisher(SOME_SRV, Twist, queue_size=QUEUE_SIZE)
+        self.pub = rospy.Publisher(GAMESTATE_TOPIC, GameState, queue_size=QUEUE_SIZE)
         self.rate = rospy.Rate(RATE)
 
     def initbot(self):
@@ -249,11 +250,6 @@ class Main():
 
     def decide_move(self):
         self.debug(self.fname(inspect.currentframe()))
-        """
-        ge srv
-        """
-        # update display
-        pass
     
     def pickup_dice(self):
         self.debug(self.fname(inspect.currentframe()))
@@ -277,17 +273,27 @@ class Main():
         return default
 
     def publisher(self):
+        print("publisher")
         self.debug(self.fname(inspect.currentframe()))
-        pub = rospy.Publisher('SOME_TOPIC',Twist, queue_size=QUEUE_SIZE)
-        rate = rospy.Rate(10)
-        time = 0.0
 
-        T = rospy.get_param('~T', 10)
-        twist = Twist()
+        game_state = GameState()
+        game_state.state= "Dice Read"
+        game_state.turn = 1# turn number (total=13)
+        game_state.roll = 2# roll numer (either 1,2, or 3)
+        game_state.dice1 = 4# number of dots on dice1
+        game_state.dice2 = 2# number of dots on dice2
+        game_state.dice3 = 5# number of dots on dice3
+        game_state.dice4 = 3# number of dots on dice4
+        game_state.dice5 = 2# number of dots on dice5
+        game_state. dice1color = "b" # color of dice1
+        game_state.dice2color = "bl"# color of dice2
+        game_state.dice3color = "g" # color of dice3
+        game_state.dice4color = "y" # color of dice4
+        game_state.dice5color = "r" # color of dice5
 
         while not rospy.is_shutdown():
-            pub.publish(twist)
-            rate.sleep()
+            self.pub.publish(game_state)
+            self.rate.sleep()
     """
     utils
     """
@@ -315,26 +321,21 @@ class Main():
     def fname(self, frame):
         return inspect.getframeinfo(frame).function
 
-    def callback(self, data, args):
-        return inspect.getframeinfo(frame).function
-        client = args
-        v = data
-        x = v.x
-        y = v.y
-
-        # a method
-        client.commands_from_coords(x, y)
-
-    def commands_from_coords(self, x, y):
-        return inspect.getframeinfo(frame).function
-        global servo_x, servo_y
+    def reroll_callback(self, data, args):
+        print("GOT KEEPERS")
+        k = data #KeepDice
+        k.dice1
+        k.dice2
+        k.dice3
+        k.dice4
+        k.dice5
+        print(k)
 
     def listener(self):
-        return inspect.getframeinfo(frame).function
-        rospy.Subscriber('SOME_TOPIC', Image, self.SOME_CALLBACK, (self))
+        print("listening for reroll....")
+        rospy.Subscriber(REROLL_TOPIC, KeepDice, self.reroll_callback, (self))
 
-    def loop():
-        return inspect.getframeinfo(frame).function
+    def loop(self):
         self.listener()
         try:
             self.publisher()
@@ -390,8 +391,9 @@ Init
 """
 def main():
     m = Main()
+    m.loop()
 
-    m.test_cv()
+    #m.test_cv()
     #m.test_mp()
 
 if __name__ == '__main':
