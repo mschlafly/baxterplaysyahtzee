@@ -16,6 +16,7 @@ PROJECT_PATH=os.path.join(os.path.dirname(__file__))+ "/../"
 
 # import our libraries
 from baxter_camera_config_lib import BaxterCamera_Head, BaxterCamera_LeftHand, BaxterCamera_RightHand
+from ourlib_transformations import form_T, get_Rp_from_T
 import ourlib_transformations as trans
 
 def choose_baxter_camera(STR_CAMERA_TYPE):
@@ -90,6 +91,8 @@ class ChessboardLocator(object):
             # solve PnP: transformation of chessboard wrt self.CAMERA
             objpoint = objpoint
             imgpoint = refined_corners
+            # print "\n\nobject",object
+            # print "imgpoint",imgpoint
             camera_intrinsics = self.CAMERA.intrinsic_matrix
             distortion_coeffs = self.CAMERA.distortion
 
@@ -97,8 +100,13 @@ class ChessboardLocator(object):
             err_value, R_vec, p, inliers = cv2.solvePnPRansac(
                 objpoint, imgpoint, camera_intrinsics, distortion_coeffs)
             R, _ = cv2.Rodrigues(R_vec)
+            
+            # T=form_T(R,p)
+            # T=np.linalg.inv(T)
+            # R,p=get_Rp_from_T(T)
+            # R_vec,_=cv2.Rodrigues(R)
 
-            if PRINT:    
+            if True or PRINT:    
                 print("chessboard position in camera frame is:")
                 print "  R_vec={:.2f},{:.2f},{:.2f}\n  p={:.2f},{:.2f},{:.2f}".format(
                     R_vec[0,0],R_vec[1,0],R_vec[2,0], p[0,0], p[1,0], p[2,0]

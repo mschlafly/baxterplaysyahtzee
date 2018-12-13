@@ -181,10 +181,10 @@ def find_squares(labeled_img):
 # Input a mask, output the rectangular containing the mask.
 # This also checks the property of the rectangular, to see if it's a real rect.
 def find_square(mask_object,
-        MIN_AREA=100,
-        ERROR_HOW_SQUARE=0.5, # len/width
+        MIN_AREA=50,
+        ERROR_HOW_SQUARE=0.3, # len/width
         ERROR_TOTAL_AREA=0.5, # total_area/(len*width)
-        ERROR_TOTAL_AREA2=0.5, # total_area/(the logical "and" area of square and segmentation result)
+        ERROR_TOTAL_AREA2=0.8, # total_area/(the logical "and" area of square and segmentation result)
     ):
     # output
     flag_find=False
@@ -328,7 +328,7 @@ def find_all_objects(img0,
     return res_rects, labeled_img
 
 # draw the colored_image with marked rectangulars of objects
-def find_all_objects_then_draw(rects, labeled_img, IF_PRINT=True, IMAGE_RESIZE_SCALE=0.5):
+def find_all_objects_then_draw(rects, labeled_img, IF_PRINT=True, IMAGE_RESIZE_SCALE=1.0):
     n_rects=len(rects)
     if IF_PRINT:
         print "Find ", n_rects, " rectangulars !"
@@ -430,10 +430,10 @@ def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
 # get the median color
 def get_color_median(img, mask, rect):
     # img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    minx=min(rect[:,0])
-    maxx=max(rect[:,0])
-    miny=min(rect[:,1])
-    maxy=max(rect[:,1])
+    minx=max(0,min(rect[:,0]))
+    maxx=min(img.shape[1]-1,max(rect[:,0]))
+    miny=max(0,min(rect[:,1]))
+    maxy=min(img.shape[0]-1,max(rect[:,1]))
     cb=list()
     cg=list()
     cr=list()
@@ -455,10 +455,10 @@ def get_color_median(img, mask, rect):
 
 def crop_image(img0, rect):
     img=img0.copy()
-    minx=min(rect[:,0])
-    maxx=max(rect[:,0])
-    miny=min(rect[:,1])
-    maxy=max(rect[:,1])
+    minx=max(0,min(rect[:,0]))
+    maxx=min(img.shape[1]-1,max(rect[:,0]))
+    miny=max(0,min(rect[:,1]))
+    maxy=min(img.shape[0]-1,max(rect[:,1]))
     return img[miny:maxy, minx:maxx]
 
 def create_blob_detector(blob_min_area=12, 

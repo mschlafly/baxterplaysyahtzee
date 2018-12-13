@@ -34,7 +34,7 @@ from ourlib_transformations import form_T, get_Rp_from_T
 
 
 # ---------------------- service provided by this node -----------------------
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from tf.transformations import euler_from_quaternion, quaternion_from_euler, euler_matrix
 from geometry_msgs.msg import Pose, Point
 from baxterplaysyahtzee.msg import ColorBound, ObjectInfo
 from baxterplaysyahtzee.srv import GetAllObjectsInImageResponse, GetObjectInImageResponse, \
@@ -44,7 +44,7 @@ from baxterplaysyahtzee.srv import *
 # dont forget to call: undistortPoints
 
 # ---------------------- TEST SETTINGS ------------------
-TEST_MODE=True
+TEST_MODE=False
 if TEST_MODE:
     DETECT_ONE_OBJECT=True
     if DETECT_ONE_OBJECT:
@@ -159,6 +159,7 @@ class BaxterCameraProcessing(object):
         self.chessboard_locator = ChessboardLocator(STR_CAMERA_TYPE, SQUARE_SIZE=SQUARE_SIZE)
         flag, R, p, self.image_for_display_chessboard = self.chessboard_locator.locate_chessboard(
             img, SAVE=False, SHOW=False, PRINT=False)
+        # R=np.linalg.inv(R)
         self.pub_image_chessboard()
 
         # store it 
@@ -174,9 +175,14 @@ class BaxterCameraProcessing(object):
             self.flag_calibrated=True
 
             # transformation matrix
-            
             T_cam_to_chess=form_T(R,p)
+            # T_cam_to_chess=np.linalg.inv(form_T(R,p))
+
+            print "Calibration result: self.get_T_bax_to_cam()", self.get_T_bax_to_cam()
+            print "Calibration result: T_cam_to_chess", T_cam_to_chess
             self.T_bax_to_chess=self.get_T_bax_to_cam().dot(T_cam_to_chess)
+            
+            print "Calibration result: T_bax_to_chess", self.T_bax_to_chess
 
             return CalibChessboardPoseResponse(True, pose)
 
@@ -195,7 +201,7 @@ class BaxterCameraProcessing(object):
             return
 
         rects, labeled_img=find_all_objects(img)
-
+        labeled_img = cv2.resize(labeled_img, (0,0), fx=2, fy=2)
 
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -209,7 +215,7 @@ class BaxterCameraProcessing(object):
             if center_x<250:
                 continue
             else:
-                tmp.append(rect)
+                tmp.append(rect.copy())
         rects=tmp
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -221,7 +227,7 @@ class BaxterCameraProcessing(object):
         if len(rects)!=0:
             colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=False)
             self.image_for_display_object=colored_image   
-            self.pub_image_object()   
+            self.pub_image_object()
 
             # output:
             for i in range(len(rects)):
@@ -232,13 +238,14 @@ class BaxterCameraProcessing(object):
                 objInfo=ObjectInfo()
                     
                 # dots
-                labeled_img = cv2.resize(labeled_img, (0,0), fx=2, fy=2)
                 mask=labeled_img==labeled_img[int(center_y),int(center_x)]
                 blank_image = np.zeros(mask.shape, np.uint8)
                 blank_image[mask]=1
                 mask=blank_image
-                rect_int= rect.astype(np.uint32)
-
+                rect_int= rect.astype(int)
+                # print img.shape, mask.shape, rect_int
+                # print "rect: ", rect
+                # print "rect_int: ", rect_int
                 ndots=detect_dots(img, mask, rect_int) # detect dots
                 objInfo.value=ndots
 
@@ -341,7 +348,8 @@ class BaxterCameraProcessing(object):
 
     def srv_GetObjectInBaxter(self, req):
         img=self.img.copy()
-        
+        self.image_for_display_chessboard=img.copy() 
+        self.image_for_display_object=img.copy()
         if TEST_MODE: # Extract data from the stored chessboard pos
             R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
                 self.set_up_test_mode_for_GetObjectInBaxter()
@@ -356,9 +364,10 @@ class BaxterCameraProcessing(object):
 
         # Detect objects
         flag, objInfo=self._GetObjectInImage(None)
+        print "detecting result: ", flag, objInfo
 
         if flag == False:
-            GetObjectInBaxterResponse(False, ObjectInfo())
+            GetObjectInBaxterResponse(False, objInfo    )
         else:
             IF_DISPLAY_IMAGE=True
             pose = self.calc_object_pose_in_baxter_frame(
@@ -374,7 +383,8 @@ class BaxterCameraProcessing(object):
     
     def srv_GetAllObjectsInBaxter(self, req):
         img=self.img.copy()
-                
+        self.image_for_display_chessboard=img.copy() 
+        self.image_for_display_object=img.copy()
         if TEST_MODE: # Extract data from the stored chessboard pos
             R_cam_to_chess, p_cam_to_chess, T_bax_to_cam=\
                 self.set_up_test_mode_for_GetObjectInBaxter()
@@ -406,7 +416,6 @@ class BaxterCameraProcessing(object):
                 self.pub_image_chessboard()
             return GetAllObjectsInBaxterResponse(True, objInfos)
 
-
     def calc_object_pose_in_baxter_frame(self, objInfo, poseLocator, T_bax_to_cam,
             IF_DISPLAY_IMAGE=True
         ):
@@ -418,6 +427,8 @@ class BaxterCameraProcessing(object):
         # Locate the object 3D (x,y,z) wrt camera frame and chessboard frame
         p_cam_to_obj, p_chess_to_obj = \
             poseLocator.locate_object(xi=xi, yi=yi, PRINT=False) # format: (3,1) column vector
+        print "p_cam_to_obj:\n",p_cam_to_obj
+        print "p_chess_to_obj:\n",p_chess_to_obj
 
         # Locate the objects direction
         # Input: self.object_mask
@@ -499,7 +510,6 @@ class BaxterCameraProcessing(object):
 
         return True
 
-
     def pub_image_chessboard(self):
         self.pub1.publish(
             self.bridge.cv2_to_imgmsg(self.image_for_display_chessboard, "bgr8")
@@ -512,18 +522,28 @@ class BaxterCameraProcessing(object):
 
     # ---------------------------------------------
     def get_T_bax_to_cam(self):
-        (trans, rot) = tf_listener.lookupTransform(
-            '/base_link', '/left_hand_camera', rospy.Time(0))
+        (trans, rot) = self.tf_listener.lookupTransform(
+            '/base', '/left_hand_camera', rospy.Time(0))
+        # print "quaternion from tf = ", rot
         r3=euler_from_quaternion(rot)
-        R,_=cv2.Rodrigues(r3)
+        # print "euler_matrix=",euler_matrix(r3[0],r3[1],r3[2])
+        R=euler_matrix(r3[0],r3[1],r3[2])[0:3,0:3]
+        # R,_=cv2.Rodrigues(r3)
+        # R=np.linalg.inv(R)
         T = form_T(R,trans)
         return T
 
     def get_required_poses_for_2d3d(self):
-        T_bax_to_cam=get_T_bax_to_cam()
+        T_bax_to_cam=self.get_T_bax_to_cam()
         T_cam_to_bax=np.linalg.inv(T_bax_to_cam)
+        # print "T_cam_to_bax",T_cam_to_bax
+        # print "T_bax_to_cam",T_bax_to_cam
         T_cam_to_chess = T_cam_to_bax.dot(self.T_bax_to_chess)
         R_cam_to_chess, p_cam_to_chess =get_Rp_from_T(T_cam_to_chess)
+
+        # T_bax_to_cam: correct
+        # p_cam_to_chess: wrong
+        # print R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
         return R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
 
 def Rp_to_pose(R,p):

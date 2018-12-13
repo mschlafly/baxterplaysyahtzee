@@ -55,7 +55,7 @@ class BaxterCamera_LeftHand(object):
         self.height=400
         self.width=640
 
-        BAXTER_ON_THE_RIGHT=False
+        BAXTER_ON_THE_RIGHT=True
         if BAXTER_ON_THE_RIGHT:
             # ----------------------- The baxter on the right -----------------
             self.distortion=[0.02909140543965944,-0.08374659479659467, -0.0010871751762388689, 0.002550696113092468, 0.03253240050176302]

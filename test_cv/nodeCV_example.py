@@ -5,9 +5,14 @@
 
 # rosservice call /clear
 
-# rosservice call /mycvCalibChessboardPose
 # rosservice call /mycvGetObjectInImage
+# rosservice call /mycvGetAllObjectsInImage
 
+
+# rosservice call /mycvCalibChessboardPose
+
+# rosservice call /mycvGetObjectInBaxter
+# rosservice call /mycvGetAllObjectsInBaxter
 
 
 
