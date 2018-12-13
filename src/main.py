@@ -48,12 +48,14 @@ from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 #from CalibChessboardPose.srv import Pose
 #from GetObjectInBaxter.srv import import Pose
 
-# tbd
+# 
 #from GetObjectInImage.srv import XYRadiusAngle
 #from GetAllObjectsInImage.srv import flag
+from baxterplaysyahtzee.srv import *
+from baxterplaysyahtzee.msg import *
 
-# mp tbd
-#from std_srvs.srv import Trigger
+# mp 
+from std_srvs.srv import Trigger
 from baxterplaysyahtzee.srv import *
 
 # ge
@@ -63,10 +65,13 @@ from baxterplaysyahtzee.srv import *
 """
 Define
 """
-DEBUG = False 
+SOME_CALLBACK = "callback()"
+NODE_NAME = "yahtzee"
+DEBUG = True
 SOME_TOPIC = "/some/topic"
 SOME_SRV= "/some/srv"
 RATE = 10
+QUEUE_SIZE = 10
 
 """
 Class
@@ -75,71 +80,68 @@ class Main():
     def __init__(self):
         self.debug_info = DEBUG;
         self.debug(self.fname(inspect.currentframe()))
-        rospy.init_node('yahtzee')
-
-        self.vel_pub = rospy.Publisher(SOME_SRV, Twist, queue_size=10)
+        rospy.init_node(NODE_NAME)
+        self.debug("started node"+NODE_NAME)
+        self.pub = rospy.Publisher(SOME_SRV, Twist, queue_size=QUEUE_SIZE)
         self.rate = rospy.Rate(RATE)
 
-    def debug(self, msg):
-        if(self.debug_info):
-            rospy.loginfo(msg)
-
-    def fname(self, frame):
-        return inspect.getframeinfo(frame).function
-
-    def example_service(self, x, y, theta):
+    def initbot(self):
         self.debug(self.fname(inspect.currentframe()))
-        rospy.wait_for_service(SOME_SRV)
-        try:
-            teleport_absolute = rospy.ServiceProxy('SOME_TOPIC',TeleportAbsolute)
-            teleport_absolute(x, y, theta)
 
-        except rospy.ServiceException, e:
-            print "Service call failed: %s" %e
+    """
+    cv
+    """
 
-    def initrobot(self):
-        self.debug(self.fname(inspect.currentframe()))
-    
     def calibrate(self):
         self.debug(self.fname(inspect.currentframe()))
-        """
-        CalibChessboardPose
-        geometry_msgs/Pose pose
-        """
-        pass
+        SERVICE_NAME="/mycvCalibChessboardPose"
+        print "calling service: " + SERVICE_NAME
+        val = call_service(SERVICE_NAME, CalibChessboardPose)
+        self.debug(val)
 
-    def get_visible_objects(self):
+    def visible_objects(self):
         self.debug(self.fname(inspect.currentframe()))
-        """
-        GetAllObjectsInImage.srv
-        """
+        SERVICE_NAME="/mycvGetAllObjectsInImage"
+        self.debug("calling service: " + SERVICE_NAME)
+        val = self.call_service(SERVICE_NAME, GetAllObjectsInImage)
+        self.debug(val)
 
-    def locate_object(self):
-        self.debug(self.fname(inspect.currentframe()))
-        """
-        GetObjectInBaxter.srv
-        """
+    def object_in_robot(self):
+        SERVICE_NAME="/mycvGetObjectInBaxter"
+        self.debug("calling service: " + SERVICE_NAME)
+        resp=self.call_service(SERVICE_NAME, GetObjectInBaxter)
+        if resp.flag:
+            objInfo=resp.objInfo
+            print "\n\n -----------Detect the object!------------- \n"
+            print objInfo
+        else:
+            print "Not finding anything"
 
     def object_in_image(self):
         self.debug(self.fname(inspect.currentframe()))
-        """
-        GetObjectInImage.srv
-        baxterplaysyahtzee/XYRadiusAngle xyra
-        """
-        debug(self, 
-             "======" + inspect.currentframe() + "======")
-        pass
+        SERVICE_NAME="/mycvGetObjectInImage"
+        self.debug("calling service: " + SERVICE_NAME)
+        val = self.call_service(SERVICE_NAME, GetObjectInImage)
+        self.debug(val)
 
+    """
+    mp
+    """
     def offset_move(self):
         self.debug(self.fname(inspect.currentframe()))
+        #geometry_msgs/Pose offset   # Desired offset position for the motion controller to adjust the current EE position by
         pass
 
+    """
+    flow
+    """
     def home_position(self):
         self.debug(self.fname(inspect.currentframe()))
         pass
 
     def pickup_cup(self):
         self.debug(self.fname(inspect.currentframe()))
+        # send mp location
         pass
 
     def shake_cup(self):
@@ -148,15 +150,12 @@ class Main():
 
     def pour_dice(self):
         self.debug(self.fname(inspect.currentframe()))
-        # get wrist angle
-        # set wrist angle
+        # pour_dice service
 
-        # get wrist angle
-        # set wrist angle
-
+    def place_cup(self):
+        self.debug(self.fname(inspect.currentframe()))
         # place cup outside boundary
-
-        pass
+        #
 
     def read_values(self):
         self.debug(self.fname(inspect.currentframe()))
@@ -168,10 +167,12 @@ class Main():
         """
         ge srv
         """
+        # update display
         pass
     
     def pickup_dice(self):
         self.debug(self.fname(inspect.currentframe()))
+        # send mp location
         pass
 
     def startup_display(self):
@@ -180,8 +181,6 @@ class Main():
 
     def update_display(self):
         self.debug(self.fname(inspect.currentframe()))
-        """
-        """
         pass
 
     def fetch_param(self,name,default):
@@ -192,9 +191,9 @@ class Main():
             rospy.logwarn("parameter %s not defined. Defaulting to %.3f" % (name, default))
         return default
 
-    def run(self):
+    def publisher(self):
         self.debug(self.fname(inspect.currentframe()))
-        pub = rospy.Publisher('turtle1/cmd_vel',Twist, queue_size=10)
+        pub = rospy.Publisher('SOME_TOPIC',Twist, queue_size=QUEUE_SIZE)
         rate = rospy.Rate(10)
         time = 0.0
 
@@ -204,22 +203,75 @@ class Main():
         while not rospy.is_shutdown():
             pub.publish(twist)
             rate.sleep()
+    """
+    utils
+    """
 
     def debugtool(self):
-        # inspect.getmembers(Main, predicate=inspect.ismethod)
-        pass
+        inspect.getmembers(Main, predicate=inspect.ismethod)
 
+    def call_service(self, 
+                     service_name, 
+                     service_type, 
+                     args=None):
+        rospy.wait_for_service(service_name)
+        try:
+            func = rospy.ServiceProxy(service_name, 
+                                      service_type)
+            val = func(*args) if args else func() 
+        except rospy.ServiceException, e:
+            print "Service call failed: %s" %e
+        return val
+
+    def debug(self, msg):
+        if(self.debug_info):
+            rospy.loginfo(msg)
+
+    def fname(self, frame):
+        return inspect.getframeinfo(frame).function
+
+    def callback(self, data, args):
+        return inspect.getframeinfo(frame).function
+        client = args
+        v = data
+        x = v.x
+        y = v.y
+
+        # a method
+        client.commands_from_coords(x, y)
+
+    def commands_from_coords(self, x, y):
+        return inspect.getframeinfo(frame).function
+        global servo_x, servo_y
+
+    def listener(self):
+        return inspect.getframeinfo(frame).function
+        rospy.Subscriber('SOME_TOPIC', Image, self.SOME_CALLBACK, (self))
+
+    def loop():
+        return inspect.getframeinfo(frame).function
+        self.listener()
+        try:
+            self.publisher()
+        except rospy.ROSInterruptException:
+            pass
+        rospy.spin()
 """
 Init
 """
 def main():
     m = Main()
+    # cv test
+    #m.object_in_image()
+    #m.object_in_robot()
+    #m.visible_objects()
 
 if __name__ == '__main':
     try: 
         main()
 
     except rospy.ROSInterruptException:
+            print "ROS Interrut : %s" %e
             pass
 
 main()

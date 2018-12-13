@@ -390,7 +390,7 @@ def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
     img=img0.copy()
     for i in range(2):
         if i==1:
-            print "trying HSV"
+            # print "trying HSV"
             img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
         # --------------
@@ -426,3 +426,72 @@ def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
         image_for_display_object=cv2.drawContours(img, [res_rect], 0, [0,0,1], 2)
         plt.imshow(image_for_display_object),plt.colorbar(),plt.show()
     return mask, res_rect
+
+# get the median color
+def get_color_median(img, mask, rect):
+    # img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+    minx=min(rect[:,0])
+    maxx=max(rect[:,0])
+    miny=min(rect[:,1])
+    maxy=max(rect[:,1])
+    cb=list()
+    cg=list()
+    cr=list()
+    for i in range(miny,maxy):
+        for j in range(minx,maxx):
+            # print mask[i,j]
+            if mask[i,j]==0:
+                continue
+            cb.append(img[i,j,0])
+            cg.append(img[i,j,1])
+            cr.append(img[i,j,2])
+    cr=np.array(cr)
+    cb=np.array(cb)
+    cg=np.array(cg)
+    color=[np.median(cr),np.median(cg),np.median(cb)]
+
+    # print "the color is ",color
+    return color
+
+def crop_image(img0, rect):
+    img=img0.copy()
+    minx=min(rect[:,0])
+    maxx=max(rect[:,0])
+    miny=min(rect[:,1])
+    maxy=max(rect[:,1])
+    return img[miny:maxy, minx:maxx]
+
+def create_blob_detector(blob_min_area=12, 
+                        blob_min_int=0.0, blob_max_int=1.0, blob_th_step=5):
+    params = cv2.SimpleBlobDetector_Params()
+    params.filterByArea = True
+    params.minArea = blob_min_area
+    params.maxArea = 30
+    params.filterByCircularity = False
+    params.filterByColor = False
+    params.filterByConvexity = False
+    params.filterByInertia = False
+    # blob detection only works with "uint8" images.
+    params.minThreshold = int(blob_min_int*255)
+    params.maxThreshold = int(blob_max_int*255)
+    params.thresholdStep = blob_th_step
+    ver = (cv2.__version__).split('.')
+    if int(ver[0]) < 3:
+        return cv2.SimpleBlobDetector(params)
+    else:
+        return cv2.SimpleBlobDetector_create(params) 
+
+def detect_dots(img, mask, rect):
+    imgmask=img.copy()
+    imgmask[mask==0]=0
+    small = crop_image(imgmask, rect)
+    # small = equalize_image(small, filter_size=2)
+    detector = create_blob_detector()
+    keypoints = detector.detect(small)
+
+    IF_DRAW=False
+    if IF_DRAW:
+        im_with_keypoints = cv2.drawKeypoints(small, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        print "number of dots", len(keypoints)
+    
+    return len(keypoints)

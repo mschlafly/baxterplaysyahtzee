@@ -11,7 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
-  
+
   message_generation
   message_runtime
   geometry_msgs
@@ -63,7 +63,8 @@ add_message_files(
   ColorBound.msg
   XYRadiusAngle.msg
   ObjectInfo.msg
-  
+  GameState.msg
+  KeepDice.msg
   )
 
 ## Generate services in the 'srv' folder
@@ -73,8 +74,11 @@ add_service_files(
 
   GetObjectInImage.srv
   GetAllObjectsInImage.srv
-  
+
   GetObjectInBaxter.srv
+  GetAllObjectsInBaxter.srv
+
+  CupShake.srv
 )
 
 ## Generate actions in the 'action' folder

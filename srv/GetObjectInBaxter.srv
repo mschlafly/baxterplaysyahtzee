@@ -1,2 +1,3 @@
 ---
-geometry_msgs/Pose[] poses
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo

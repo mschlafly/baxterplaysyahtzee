@@ -1,4 +1,5 @@
 ---
+bool flag
 geometry_msgs/Pose pose
 
 
