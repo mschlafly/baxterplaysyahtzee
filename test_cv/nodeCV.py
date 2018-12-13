@@ -233,13 +233,13 @@ class BaxterCameraProcessing(object):
                 objInfo=ObjectInfo()
                     
                 # dots
-                mask=labeled_img==labeled_img[int(center_y/2),int(center_x/2)]
+                labeled_img = cv2.resize(labeled_img, (0,0), fx=2, fy=2)
+                mask=labeled_img==labeled_img[int(center_y),int(center_x)]
                 blank_image = np.zeros(mask.shape, np.uint8)
-                blank_image[mask]=255
-                mask = cv2.resize(blank_image, (0,0), fx=2, fy=2)
-                mask[mask<128]=0
-                mask[mask>=128]=1
-                rect_int= rect.astype(np.uint8)
+                blank_image[mask]=1
+                mask=blank_image
+                rect_int= rect.astype(np.uint32)
+
                 ndots=detect_dots(img, mask, rect_int) # detect dots
                 objInfo.value=ndots
 

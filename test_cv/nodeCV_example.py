@@ -38,28 +38,28 @@ if __name__=="__main__":
 
 
         # ----------- Get one object's pose in Baxter frame
-        SERVICE_NAME="/mycvGetObjectInBaxter"
-        print "calling service: " + SERVICE_NAME
-        resp=call_service(SERVICE_NAME, GetObjectInBaxter)
-        if resp.flag:
-            objInfo=resp.objInfo
-            print "\n\n -----------Detect the object!------------- \n"
-            print objInfo
-        else:
-            print "Not finding anything"
-
-        # ----------- Get ALL objects' poses in Baxter frame
-        # SERVICE_NAME="/mycvGetAllObjectsInBaxter"
+        # SERVICE_NAME="/mycvGetObjectInBaxter"
         # print "calling service: " + SERVICE_NAME
-        # resp=call_service(SERVICE_NAME, GetAllObjectsInBaxter)
+        # resp=call_service(SERVICE_NAME, GetObjectInBaxter)
         # if resp.flag:
-        #     objInfos=resp.objInfos
-        #     print "Detect %d objects!\n"%(len(objInfos))
-        #     for i in range(len(objInfos)):
-        #         print "\n\n ------- Printing the %dth pose:-------"%i
-        #         print objInfos[i]
+        #     objInfo=resp.objInfo
+        #     print "\n\n -----------Detect the object!------------- \n"
+        #     print objInfo
         # else:
         #     print "Not finding anything"
+
+        # ----------- Get ALL objects' poses in Baxter frame
+        SERVICE_NAME="/mycvGetAllObjectsInBaxter"
+        print "calling service: " + SERVICE_NAME
+        resp=call_service(SERVICE_NAME, GetAllObjectsInBaxter)
+        if resp.flag:
+            objInfos=resp.objInfos
+            print "Detect %d objects!\n"%(len(objInfos))
+            for i in range(len(objInfos)):
+                print "\n\n ------- Printing the %dth pose:-------"%i
+                print objInfos[i]
+        else:
+            print "Not finding anything"
 
         # ----------------------------------------------------------
         #           You Don't need the two below
