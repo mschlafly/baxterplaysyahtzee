@@ -71,6 +71,7 @@ class headdisplay():
 
     def callback(self,message):
         # Update display with new game information
+        print "CALLBACK"
         if message.state=="Dice Read":
             self.nextmove(message)
         else:
@@ -106,6 +107,7 @@ class headdisplay():
         max_height = max(heights)
 
         new_im = Image.new('RGB', (total_width, max_height))
+        print "HELLLO"
         x_offset = 0
         for im in images:
             new_im.paste(im, (x_offset,0))
@@ -113,6 +115,8 @@ class headdisplay():
         draw = ImageDraw.Draw(new_im)
         new_im=new_im.resize((677,200), resample=0, box=None)
         img.paste(new_im,(200,350))
+
+
 
         #me
         d = ImageDraw.Draw(img)
@@ -124,6 +128,7 @@ class headdisplay():
         #time.sleep(timetosleep)
         # Call the xdisplay_image.py node to display the image on baxter's head
         run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
+        print("HERE")
 
         # If the turn is either 1 or 2, determine the 
         if (message.roll==1) or (message.roll==2):
@@ -143,6 +148,7 @@ class headdisplay():
 
             #Publish the dice that are kept and left in topic
             pub = rospy.Publisher('/reroll', KeepDice, queue_size=10)
+            print("should publish")
             di=KeepDice()
             if message.dice1==maxnum:
                 di.dice1=0
