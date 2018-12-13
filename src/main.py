@@ -17,6 +17,7 @@ import copy
 import numpy
 import random
 import operator
+import webcolors
 import argparse
 from optparse import OptionParser
 import inspect
@@ -107,13 +108,16 @@ class Main():
         self.debug(val)
 
     def object_in_robot(self):
+        self.debug(self.fname(inspect.currentframe()))
         SERVICE_NAME="/mycvGetObjectInBaxter"
         self.debug("calling service: " + SERVICE_NAME)
         resp=self.call_service(SERVICE_NAME, GetObjectInBaxter)
         if resp.flag:
             objInfo=resp.objInfo
             print "\n\n -----------Detect the object!------------- \n"
-            print objInfo
+            self.debug(type(objInfo))
+            self.debug(objInfo)
+            return objInfo
         else:
             print "Not finding anything"
 
@@ -127,10 +131,91 @@ class Main():
     """
     mp
     """
-    def offset_move(self):
+    def move_to_cup_offset(self, pose):
         self.debug(self.fname(inspect.currentframe()))
-        #geometry_msgs/Pose offset   # Desired offset position for the motion controller to adjust the current EE position by
-        pass
+        cup_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+
+        move_to_cup_offset = rospy.ServiceProxy('iktest_controller/move_to_cup_offset', OffsetMove)
+        val = move_to_cup_offset()
+        self.debug(val)
+
+    def pick_up_dice_above(self, poses):
+        self.debug(self.fname(inspect.currentframe()))
+        pick_up_dice_above = rospy.ServiceProxy('iktest_controller/pick_up_dice_above', OffsetMove)
+
+        dice_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+
+        val = pick_up_dice_above(dice_pose)
+        self.debug(val)
+
+    def pick_up_dice(self, pose):
+        self.debug(self.fname(inspect.currentframe()))
+        pick_up_dice = rospy.ServiceProxy('iktest_controller/pick_up_dice', OffsetMove)
+        dice_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+        val = pick_up_dice(dice_pose)
+        self.debug(val)
+
+    def move_to_initpose(self):
+        move_to_initpose = rospy.ServiceProxy('iktest_controller/move_to_initpose', Trigger)
+        val = move_to_initpose()
+        self.debug(val)
+
+    def move_to_homepose(self):
+        self.debug(self.fname(inspect.currentframe()))
+        move_to_homepose= rospy.ServiceProxy('iktest_controller/move_to_homepose', Trigger)
+        val = move_to_homepose()
+        self.debug(val)
+
+    def pour_dice(self, pose):
+        self.debug(self.fname(inspect.currentframe()))
+        dice_pose = Pose(
+            position = Point(
+            x = 0.776647640113,
+            y =-0.0615496888226,
+            z = -0.210376983209),
+            orientation = Quaternion(
+                x = 0.981404960951,
+                y = -0.19031770757,
+                z = 0.016510737149,
+                w = -0.0187314806041
+            )
+        )
+        pour_dice = rospy.ServiceProxy('iktest_controller/pour_dice', OffsetMove)
+        val = pour_dice(dice_pose)
+        self.debug(val)
 
     """
     flow
@@ -256,15 +341,58 @@ class Main():
         except rospy.ROSInterruptException:
             pass
         rospy.spin()
+
+    """
+    colors
+    """
+    def closest_colour(self, requested_colour):
+        min_colours = {}
+        for key, name in webcolors.css3_hex_to_names.items():
+            r_c, g_c, b_c = webcolors.hex_to_rgb(key)
+            rd = (r_c - requested_colour[0]) ** 2
+            gd = (g_c - requested_colour[1]) ** 2
+            bd = (b_c - requested_colour[2]) ** 2
+            min_colours[(rd + gd + bd)] = name
+        return min_colours[min(min_colours.keys())]
+
+    def get_colour_name(self, requested_colour):
+        try:
+            closest_name = actual_name = webcolors.rgb_to_name(requested_colour)
+        except ValueError:
+            closest_name = self.closest_colour(requested_colour)
+            actual_name = None
+        return actual_name, closest_name
+
+
+    """
+    Test
+    """
+    def test_cv(self):
+        # cv test
+        object = self.object_in_image()
+        #self.move_to_cup_offset(object.pose) # do not test
+        object = self.object_in_robot()
+        #self.move_to_cup_offset(object.pose) # do not test
+        self.visible_objects()
+        self.pick_up_dice() # ok
+
+        #actual, closest = self.closest_colour((19, 31, 55))
+        #print actual, closest
+    def test_mp(self):
+        self.pick_up_dice_above() #ok
+        self.pick_up_dice() # ok
+        self.pour_dice() # ok
+        self.move_to_homepose() # ok
+        #self.move_to_initpose() # do not test
+        #self.move_to_cup_offset() # do not test
 """
 Init
 """
 def main():
     m = Main()
-    # cv test
-    #m.object_in_image()
-    #m.object_in_robot()
-    #m.visible_objects()
+
+    m.test_cv()
+    #m.test_mp()
 
 if __name__ == '__main':
     try: 
@@ -273,5 +401,4 @@ if __name__ == '__main':
     except rospy.ROSInterruptException:
             print "ROS Interrut : %s" %e
             pass
-
 main()
