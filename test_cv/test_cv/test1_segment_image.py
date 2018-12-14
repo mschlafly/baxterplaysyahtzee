@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from lib_main import *
 
-from ourlib_cv2 import *
+from lib_cv_detection import *
 
 import os, sys
 CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"./"

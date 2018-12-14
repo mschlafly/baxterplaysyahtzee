@@ -6,7 +6,7 @@ import cv2
 import numpy
 from scipy.ndimage import label
 from matplotlib import pyplot as plt
-from ourlib_cv2 import rander_color, find_squares, find_square, refine_image_mask, ellipse2xyangle, extract_rect
+from lib_cv_detection import rander_color, find_squares, find_square, refine_image_mask, ellipse2xyangle, extract_rect
 
 import os, sys
 CURRENT_PATH=os.path.join( os.path.dirname(__file__) )

@@ -3,7 +3,7 @@
 
 import cv2
 import numpy as np
-from ourlib_cv import myTrackbar
+from lib_cv_calib import myTrackbar
 
 if __name__=="__main__":
     window_name='image'

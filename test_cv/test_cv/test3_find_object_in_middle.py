@@ -6,14 +6,14 @@ import cv2
 import numpy
 from scipy.ndimage import label
 from matplotlib import pyplot as plt
-from ourlib_cv2 import find_object_in_middle
+from lib_cv_detection import find_object_in_middle
 
 import os, sys
 CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 if CURRENT_PATH[0]=="/":
     CURRENT_PATH="."+CURRENT_PATH
 # sys.path.append(PACKAGE_PATH)
-from ourlib_cv2 import *
+from lib_cv_detection import *
 
 if __name__=="__main__":
     

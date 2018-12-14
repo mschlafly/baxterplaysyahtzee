@@ -15,7 +15,7 @@ PROJECT_PATH=os.path.join(os.path.dirname(__file__))+ "/../"
 
 # ------------------------------------------------------------------------------------
 
-from ourlib_cv import ChessboardLocator, Object3DPoseLocator
+from lib_cv_calib import ChessboardLocator, Object3DPoseLocator
 
 HEAD_CAMERA=False
 if HEAD_CAMERA:

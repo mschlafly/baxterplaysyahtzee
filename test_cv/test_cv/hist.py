@@ -59,6 +59,7 @@ if TEST_ORB:
     img2 = cv2.drawKeypoints(img, kp, None, color=(0,255,0), flags=0)
     plt.imshow(img2)
     plt.show()
+    
 if TEST_GRABCUT:
     mask = np.zeros(img.shape[:2],np.uint8)
 

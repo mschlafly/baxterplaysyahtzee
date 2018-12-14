@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import time
 import rospy
-from ourlib_cv import myTrackbar
+from lib_cv_calib import myTrackbar
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
 from baxterplaysyahtzee.msg import ColorBound 

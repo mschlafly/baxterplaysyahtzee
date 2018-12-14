@@ -21,7 +21,7 @@ from baxterplaysyahtzee.msg import ColorBound
 
 
 # ---------------------- Import from our own library -----------------------
-from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
+from lib_cv_calib import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
 
 # Set CAMERA_TOPIC: the camera topic to read video from Baxter
 USE_HEAD_CAMERA = False

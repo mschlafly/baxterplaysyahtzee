@@ -26,8 +26,8 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 # sys.path.append(PACKAGE_PATH+"")
 
 # ---------------------- Import from our own library -----------------------
-from ourlib_cv import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
-from lib_image_seg.ourlib_cv2 import refine_image_mask, find_square, extract_rect,\
+from lib_cv_calib import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
+from lib_image_seg.lib_cv_detection import refine_image_mask, find_square, extract_rect,\
     find_object_in_middle, find_all_objects, find_all_objects_then_draw, detect_dots, get_color_median
 
 from ourlib_transformations import form_T, get_Rp_from_T
