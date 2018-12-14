@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 
-
 # rosservice call /baxterplaysyahtzee/teleport_absolute 5.5400 5.5400 0.4636
 
 # rosservice call /clear
@@ -13,8 +12,6 @@
 
 # rosservice call /mycvGetObjectInBaxter
 # rosservice call /mycvGetAllObjectsInBaxter
-
-
 
 import rospy
 from baxterplaysyahtzee.srv import *
@@ -92,3 +89,5 @@ if __name__=="__main__":
 
         print "Test round over, sleep for 10 seconds."
         rospy.sleep(10)
+
+

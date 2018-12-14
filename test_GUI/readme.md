@@ -1,12 +1,4 @@
-# To read video from Baxter and do further processing,
-please do these steps first (to open the desired camera):
-    $ nmcli connection up Rethink
-    $ rosrun baxter_tools camera_control.py -l
-    $ rosrun baxter_tools camera_control.py -c right_hand_camera
-    $ rosrun baxter_tools camera_control.py -o left_hand_camera -r 640x400
-    $ rosrun baxter_tools camera_control.py -o head_camera -r 1280x800
-    $ cd test_cv
-    
+
 This is the GUI for viewing Baxter's current state, and also for easier testing IK and FK.
 
 Please do this first  
@@ -25,7 +17,7 @@ This will launch 2 nodes:
 1. GUI (BaxterGUI_rosrun_this.py), currently set to display left arm's info.
 2. keyboard input (_joint_position_keyboard.py).
 
-The keyboard details are on:
+The keyboard details are on:  
 http://sdk.rethinkrobotics.com/wiki/Joint_Position_Keyboard_Example
 
 On GUI, you can see the real-time:  
