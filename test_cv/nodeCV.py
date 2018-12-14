@@ -27,10 +27,9 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 
 # ---------------------- Import from our own library -----------------------
 from lib_cv_calib import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
-from lib_image_seg.lib_cv_detection import refine_image_mask, find_square, extract_rect,\
+from lib_cv_detection import refine_image_mask, find_square, extract_rect,\
     find_object_in_middle, find_all_objects, find_all_objects_then_draw, detect_dots, get_color_median
-
-from ourlib_transformations import form_T, get_Rp_from_T
+from lib_baxter_camera_config import form_T, get_Rp_from_T
 
 
 # ---------------------- service provided by this node -----------------------
@@ -48,9 +47,9 @@ TEST_MODE=False
 if TEST_MODE:
     DETECT_ONE_OBJECT=True
     if DETECT_ONE_OBJECT:
-        TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/imgmid3.png"
+        TEST_IMAGE_FILENAME=CURRENT_PATH+"/images"+"/imgmid3.png"
     else:
-        TEST_IMAGE_FILENAME=CURRENT_PATH+"/lib_image_seg"+"/image3.png"
+        TEST_IMAGE_FILENAME=CURRENT_PATH+"/images"+"/image3.png"
 
 # ---------------------- setup -----------------------
 

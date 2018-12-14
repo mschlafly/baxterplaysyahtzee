@@ -5,8 +5,7 @@
 from PIL import Image
 import cv2
 import numpy as np
-from lib_main import *
-
+from lib_image_seg.lib_seg import *
 from lib_cv_detection import *
 
 import os, sys

@@ -4,8 +4,8 @@
 
 import cv2
 
-from lib_image_seg.lib_main import *
-from lib_image_seg.lib_cv_detection import *
+from lib_image_seg.lib_seg import *
+from lib_cv_detection import *
 
 import os, sys
 CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
@@ -14,7 +14,7 @@ if CURRENT_PATH[0]=='/':
 
 if __name__ == '__main__':
 
-    Filename=CURRENT_PATH+"/lib_image_seg/image1"
+    Filename=CURRENT_PATH+"/images/image1"
     
     s = ""
     # s = '_'.join(sys.argv[1:])

@@ -5,6 +5,11 @@ from smooth_filter import gaussian_grid, filter_image
 from random import random
 from numpy import sqrt
 
+# print 'Correct usage: python main.py sigma neighborhood K min_comp_size input_file output_file'
+# python test1_segment_image.py 0.5 8 1000 100 # for baxter head image
+# python test1_segment_image.py 0.5 8 2000 200 # for cup
+
+
 def diff_rgb(img, x1, y1, x2, y2):
     r = (img[0][x1, y1] - img[0][x2, y2]) ** 2
     g = (img[1][x1, y1] - img[1][x2, y2]) ** 2
