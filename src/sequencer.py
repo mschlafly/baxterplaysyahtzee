@@ -40,7 +40,8 @@ def call_feiyu_service_detect_all():
 
     else:
         print "Not finding anything"
-        assert(0)
+        # assert(0)
+        return None
 
 def call_feiyu_service_detect_one():
     SERVICE_NAME="/mycvGetObjectInBaxter"
@@ -55,7 +56,8 @@ def call_feiyu_service_detect_one():
 
     else:
         print "Not finding anything"
-        assert(0)
+        return None
+        # assert(0)
 
 # -------------------------------- Added by Feiyu Ends here --------------------------------
 
@@ -182,51 +184,70 @@ def main():
         # ------- added by feiyu ---------------
         pour_dice()
 
-        move_to_homepose()
+        cnt_round=0
+        FAILURE_TIME=0
+        while FAILURE_TIME<3:
+            cnt_round+=1
+            if cnt_round>5:
+                break
+            print "---------- THE %dth ROUND ------------"%cnt_round
+            
+            move_to_homepose()
 
-        dice_pose = call_feiyu_service_detect_all()
-        
-        #dice_pose = call_feiyu_service_detect_one()
-        #dice_pose.position.x=0.834
-        #dice_pose.position.y=0.07
-        
-        def reset_dice_pose(dice_pose):
-            dice_pose.position.z = dice_pose.position.z - 0.03
-            dice_pose.orientation.x=0.5
-            dice_pose.orientation.y=0.0
-            dice_pose.orientation.z=0.0
-            dice_pose.orientation.w=-0.0
-            print "printing feiyu's returned dice-Pose",dice_pose
-            return dice_pose
-        dice_pose=reset_dice_pose(dice_pose)
+            dice_pose = call_feiyu_service_detect_all()
+            if dice_pose is None:
+                print "No dice"
+                FAILURE_TIME+=1
+                continue
+            else:
+                print "Detect the dice ... "
 
-        # --------------------------------------
+            #dice_pose = call_feiyu_service_detect_one()
+            #dice_pose.position.x=0.834
+            #dice_pose.position.y=0.07
+            
+            def reset_dice_pose(dice_pose):
+                dice_pose.orientation.x=0.5
+                dice_pose.orientation.y=0.0
+                dice_pose.orientation.z=0.0
+                dice_pose.orientation.w=-0.0
+                print "printing feiyu's returned dice-Pose",dice_pose
+                return dice_pose
+            # set quaternion    
+            dice_pose=reset_dice_pose(dice_pose)
 
-        pick_up_dice_above(dice_pose)
-        rospy.sleep(1)
-        pick_up_dice(dice_pose) #//need Offset
+            # --------------------------------------
+            OFFSET_Z=0.06
+            dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            pick_up_dice_above(dice_pose)
 
-        move_to_homepose()
+            # refine
+            dice_pose = call_feiyu_service_detect_all()
+            # dice_pose = call_feiyu_service_detect_one()
+            if dice_pose is None:
+                print "During the refine, there is no dice"
+                FAILURE_TIME+=1
+                continue
+            else:
+                print "Refine pos successful"
+                
+            dice_pose=reset_dice_pose(dice_pose)
+            dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            pick_up_dice_above(dice_pose)
 
-        dice_pose = call_feiyu_service_detect_all()
+            rospy.sleep(1)
 
-        dice_pose.position.z = dice_pose.position.z - 0.03
-        dice_pose.orientation.x=0.5
-        dice_pose.orientation.y= 0.0
-        dice_pose.orientation.z=0.0
-        dice_pose.orientation.w=-0.0
-
-        pick_up_dice_above(dice_pose)
-        rospy.sleep(1)
-        pick_up_dice(dice_pose) #//need Offset
+            dice_pose.position.z-=OFFSET_Z # restore z back
+            dice_pose.position.z-= 0
+            print "Height of dice: ", dice_pose.position.z
+            pick_up_dice(dice_pose) #//need Offset
 
 
-        #pour_dice()
+        # pour_dice()
 
-        #pick_up_dice(pick_up_cup_offset)
+        # pick_up_dice(pick_up_cup_offset)
 
-
-        #pour_dice(pick_up_cup_offset) #//need Offset
+        # pour_dice(pick_up_cup_offset) #//need Offset
 
 
         rospy.sleep(1)

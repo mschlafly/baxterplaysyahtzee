@@ -213,7 +213,7 @@ class BaxterCameraProcessing(object):
             rect=rects[i]
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
             # Criteria for removing wrong objects
-            if center_x<150 or center_x>640-150 or center_y<80 or center_y>400-80:
+            if center_x<150 or center_x>640-150 or center_y<50 or center_y>400-50:
                 continue
             else:
                 tmp.append(rect.copy())
@@ -369,7 +369,7 @@ class BaxterCameraProcessing(object):
 
         if flag == False:
             self.pub_to_screen()
-            GetObjectInBaxterResponse(False, objInfo    )
+            return GetObjectInBaxterResponse(False, objInfo    )
         else:
             IF_DISPLAY_IMAGE=True
             pose = self.calc_object_pose_in_baxter_frame(
@@ -403,6 +403,7 @@ class BaxterCameraProcessing(object):
         flag, objInfos=self._GetAllObjectsInImage(None)
 
         if flag == False:
+            self.pub_to_screen()
             return GetAllObjectsInBaxterResponse(False, list())
 
         else:
@@ -473,7 +474,7 @@ class BaxterCameraProcessing(object):
 
         # Add text to img_for_display
         FONT = cv2.FONT_HERSHEY_SIMPLEX
-        FONTSIZE = 0.7
+        FONTSIZE = 1.0
         sss = ["pos", "x=", "y=","dice="]
         ppp = [xi, yi]
         for i in range(-1, 3):
@@ -484,7 +485,7 @@ class BaxterCameraProcessing(object):
                 s = str(dice_value)
             else:
                 s = ""
-            TEST_ROWS = int(yi+i*20)
+            TEST_ROWS = int(yi+i*30)
             TEST_COLS = int(xi)
             COLOR = 255
             # print sss[i+1]+s, "TEST_COLS=", TEST_COLS, "TEST_ROWS", TEST_ROWS, FONT,\

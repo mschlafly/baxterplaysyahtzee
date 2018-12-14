@@ -294,7 +294,7 @@ def find_all_objects(img0,
     labeled_img=color_seg(img,neighbor = 8,
         sigma = 0.5,
         K = 800.0,
-        min_size = 100)
+        min_size = 200)
     
 
     # Find the squares(object)
@@ -386,7 +386,7 @@ def refine_image_mask(img0, rect, disextend=20):
 
 # This function uses the middle of the image as the rectangular (assume object in the middle), 
 #   and then calles function "refine_image_mask()" to obtain the object pos
-def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=4, disextend=50):
+def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
     img=img0.copy()
     for i in range(2):
         if i==1:
