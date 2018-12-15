@@ -479,44 +479,29 @@ class motionControls():
 
     def svc_pour_dice(self,data):
 
-        #
+        cup_ready_before= Pose(
+            position = Point(
+            x = 0.71648935751,
+            y = 0.319167260011,
+            z = 0.0428410189474
+            ),
+            orientation = Quaternion(
+            x = 0.0602146389381,
+            y = 0.720798148774,
+            z = -0.102458211566,
+            w = 0.68288105909
+        ))
 
-        if 1:
-            None
-            cup_ready_before= Pose(
-                position = Point(
-                x = 0.71648935751,
-                y = 0.319167260011,
-                z = 0.0428410189474
-                ),
-                orientation = Quaternion(
-                x = 0.0602146389381,
-                y = 0.720798148774,
-                z = -0.102458211566,
-                w = 0.68288105909
-            ))
+        self.move_to_obj(cup_ready_before)
+        rospy.sleep(1)
 
-            # cup_ready_before.position.z-=0.05
+        cup_down_before = copy.copy(cup_ready_before)
+        cup_down_before.position.z -= 0.15
 
-            self.move_to_obj(cup_ready_before)
-            rospy.sleep(1)
-
-            cup_down_before = copy.copy(cup_ready_before)
-            cup_down_before.position.z -= 0.15
-
-            self.move_to_obj(cup_down_before)
-            cup_down = copy.copy(cup_down_before)
-            cup_down.position.x += 0.12
-            self.move_to_obj(cup_down)
-        else:
-            self.move_to_obj(self.cup_ready_to_grip)
-            cup_down = Pose()
-            cup_down = Pose(
-                    position = copy.copy(self.cup_ready_to_grip.position),
-                    orientation = copy.copy(self.cup_ready_to_grip.orientation))
-
-            cup_down.position.z = self.cup_ready_to_grip.position.z - 0.15
-            self.move_to_obj(cup_down)
+        self.move_to_obj(cup_down_before)
+        cup_down = copy.copy(cup_down_before)
+        cup_down.position.x += 0.12
+        self.move_to_obj(cup_down)
 
         rospy.sleep(1)
 
@@ -538,10 +523,6 @@ class motionControls():
         self.open_grip()
 
         rospy.sleep(1)
-
-
-        # rospy.sleep(1)
-        # self.move_to_obj(self.cup_ready_to_grip)
 
         pour_dice.position.x -= 0.12
         self.move_to_obj(pour_dice)

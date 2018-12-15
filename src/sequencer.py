@@ -11,7 +11,7 @@ from baxterplaysyahtzee.srv import OffsetMove
 from baxterplaysyahtzee.srv import *
 from baxterplaysyahtzee.msg import *
 
-# -------------------------------- Added by Feiyu --------------------------------
+# -------------------------------- Calling Services of Computer Vision --------------------------------
 global objInfos
 
 # a template for calling service
@@ -25,7 +25,7 @@ def call_service(service_name, service_type, args=None):
         print "The error is: ", e
         sys.exit()
 
-def call_feiyu_service_detect_all():
+def call_cv_service_detect_all_dices():
     global objInfos
     SERVICE_NAME="/mycvGetAllObjectsInBaxter"
     print "calling service: " + SERVICE_NAME
@@ -45,7 +45,7 @@ def call_feiyu_service_detect_all():
         # assert(0)
         return None
 
-def call_feiyu_service_detect_one():
+def call_cv_service_detect_one_dice():
     SERVICE_NAME="/mycvGetObjectInBaxter"
     print "calling service: " + SERVICE_NAME
     resp=call_service(SERVICE_NAME, GetObjectInBaxter)
@@ -61,7 +61,7 @@ def call_feiyu_service_detect_one():
         return None
         # assert(0)
 
-# -------------------------------- Added by Feiyu Ends here --------------------------------
+# -------------------------------- Main --------------------------------
 
 
 def main():
@@ -172,33 +172,25 @@ def main():
     # Main process loop
     while (True):
 
-
-        # pick_up_dice_above(pick_up_dice_offset)
+        # Step 1: pour dices out of the cup
         open_grip()
-
-        #move_to_initpose()
-
         move_to_homepose()
-
-
         rospy.sleep(1)
-
-        #move_to_cup_offset(pick_up_cup_offset) # //need Offset
-
-        # ------- added by feiyu ---------------
         pour_dice()
 
+        # Step 2: Start loop of picking up dices
         cnt_round=0
         FAILURE_TIME=0
         while FAILURE_TIME<10:
             cnt_round+=1
             if cnt_round>5:
                 break
+
             print "---------- THE %dth ROUND ------------"%cnt_round
 
             move_to_homepose()
 
-            dice_pose = call_feiyu_service_detect_all()
+            dice_pose = call_cv_service_detect_all_dices()
             if dice_pose is None:
                 print "No dice"
                 FAILURE_TIME+=1
@@ -206,46 +198,34 @@ def main():
             else:
                 print "Detect the dice ... "
 
-            #dice_pose = call_feiyu_service_detect_one()
-            #dice_pose.position.x=0.834
-            #dice_pose.position.y=0.07
-
-            def reset_dice_pose(dice_pose):
+            def set_dice_orientation(dice_pose):
                 dice_pose.orientation.x=0.5
                 dice_pose.orientation.y=0.0
                 dice_pose.orientation.z=0.0
                 dice_pose.orientation.w=-0.0
-                print "printing feiyu's returned dice-Pose",dice_pose
+                print "The dice pos detected by camera is:\n",dice_pose
                 return dice_pose
-            # set quaternion
-            dice_pose=reset_dice_pose(dice_pose)
+
+            dice_pose=set_dice_orientation(dice_pose) # set quaternion
 
             # --------------------------------------
             OFFSET_Z=0.06
             dice_pose.position.z = dice_pose.position.z +OFFSET_Z
             pick_up_dice_above(dice_pose)
 
-            # refine
-            dice_pose = call_feiyu_service_detect_all()
-            # dice_pose = call_feiyu_service_detect_one()
+            # Refine
+            dice_pose = call_cv_service_detect_all_dices()
+            # dice_pose = call_cv_service_detect_one_dice()
             if dice_pose is None:
-                print "During the refine, there is no dice"
+                print "During refining the dice pos, no dice is found."
                 FAILURE_TIME+=1
                 continue
             else:
-                print "Refine pos successful"
+                print "Refine dice pos successful"
 
-            dice_pose=reset_dice_pose(dice_pose)
-            dice_pose.position.z = dice_pose.position.z +OFFSET_Z
-            pick_up_dice_above(dice_pose)
 
-            rospy.sleep(1)
 
-            # set offset of dice position in z direction
-            dice_pose.position.z = -0.197681420332
-            print "Height of dice: ", dice_pose.position.z
-
-            # --------------
+            # -------------- Publish dice info to the topic
             pretend.state="Dice Read"
             pretend.turn=1
             pretend.roll=cnt_round
@@ -283,19 +263,21 @@ def main():
                 pretend.dice1color=objInfos[nthobj].color
             # --------------
 
+
+            # Gripper goes to the pos which is OFFSET_Z above the dice
+            dice_pose=set_dice_orientation(dice_pose)
+            dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            pick_up_dice_above(dice_pose)
+            rospy.sleep(1)
+
+            # Gripper goes to grab the dice
+            dice_pose.position.z = dice_pose.position.z -OFFSET_Z
+            print "Height of dice: ", dice_pose.position.z
             pick_up_dice(dice_pose) #//need Offset
 
 
-        # pour_dice()
-        # pick_up_dice(pick_up_cup_offset)
-        # pour_dice(pick_up_cup_offset) #//need Offset
-
-
         rospy.sleep(1)
-        # pick_up_dice()
-
         rospy.loginfo("Sequence complete.")
-
         break
 
     return
