@@ -98,7 +98,7 @@ class BaxterCameraProcessing(object):
         self.sub = rospy.Subscriber(CAMERA_TOPIC, Image, self.topic_receive_image_callback)
         self.pub1 = rospy.Publisher("image_with_chessboard",Image, queue_size=10)
         self.pub2 = rospy.Publisher("image_with_object",Image, queue_size=10)
-        self.pub3 = rospy.Publisher("/robot/xdisplay",Image, queue_size=10)
+        self.pub3 = rospy.Publisher("/mycvdisplay",Image, queue_size=10)
 
      
         # services 1: calib chessboard (return: Pose)
@@ -197,7 +197,9 @@ class BaxterCameraProcessing(object):
             rect=rects[i]
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
             # Criteria for removing wrong objects
-            if center_x<150 or center_x>640-150 or center_y<50 or center_y>400-50 or radius_x>100:
+            if center_x<150 or center_x>640-150 or center_y<50 or center_y>400-50 or radius_x>200:
+                continue
+            elif min(rect[:,1])<50:
                 continue
             else:
                 tmp.append(rect.copy())
@@ -213,7 +215,7 @@ class BaxterCameraProcessing(object):
         if len(rects)!=0:
             colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=False)
             self.image_for_display_object=colored_image   
-
+            self.pub_image_object()
             # output:
             for i in range(len(rects)):
                 rect=rects[i]

@@ -90,7 +90,6 @@ class headdisplay():
             # Call the xdisplay_image.py node to display the image on baxter's head
             run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
     def nextmove(self,message):
-        # If the turn is either 1 or 2, determine the next roll and display dice
         #Display the dice 
         img = Image.new('RGB', (1024, 600), color = (229, 0, 11))
         font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 90, encoding="unic")
