@@ -54,10 +54,11 @@ Among them, **sequence.py** is the main node that executes the steps in our work
 # 3. Description of Nodes
 
 ## 3.1 Main node: ./src/sequence.py
+This is our main node that sets up the workflow. Our control method is mainly to use several ros services to finish each step seperately. 
 
-This is our main node that sets up the workflow, e.g. first pour dice, then detect dice, then pick up dice, etc.
+e.g. first pour dice, then detect dice, then pick up dice, etc. It calles the services of motions to move the Baxter's arm, and calles the services of visions to detect the dices on table. Once the dice is detected, it will send the location data to iktest node by using the service provided in that node, then the function of that service 'pick_up_dice' will be excuted with the location of dices provided.
 
-It calles the services of motions to move the Baxter's arm, and calles the services of visions to detect the dices on table.
+This method is convenient to make changes to the order of baxter's motion. Only changing the order of calling different services can reconstruct the whole trajectory of the baxter movement.
 
 ## 3.2 Node for IK and Motion: ./src/iktest.py
 
@@ -71,6 +72,7 @@ rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_ho
 rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)  
 rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)  
 ``` 
+
 
 ## 3.3 Node for Computer Vision: ./src/cv/nodeCV.py
 
