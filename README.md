@@ -64,16 +64,15 @@ This method is convenient to make changes to the order of baxter's motion. Only 
 
 This node provides the services for IK and Baxter's Motion, which are:
 
-``` 
-rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above): Given the data of the message type  OffsetMove (including the Pose type of message), the function svc_pick_up_dice_above will be activated to move the baxter arm to the location above the certain dice to ready for next detection. 
+**rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)**: Given the data of the message type  OffsetMove (including the Pose type of message), the function svc_pick_up_dice_above will be activated to move the baxter arm to the location above the certain dice to ready for next detection.
 
-rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice): After the arm move to the location above a certain dice, the sequency.py node will update the accurate location of this dice by redetecting and call this service with that updated location data. With the accurate location, the baxter arm will move down to pick the dice up.
+**rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)**: After the arm move to the location above a certain dice, the sequency.py node will update the accurate location of this dice by redetecting and call this service with that updated location data. With the accurate location, the baxter arm will move down to pick the dice up.  
 
-rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)  
-rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)  
-rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)  
-rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)  
-``` 
+**rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)**: This service will be called once the baxter is required to move to the home position, which is set fixed to have a nice viwe of the workspace to detect the dices.
+
+**rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)**  
+**rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)**  
+
 
 
 ## 3.3 Node for Computer Vision: ./src/cv/nodeCV.py
