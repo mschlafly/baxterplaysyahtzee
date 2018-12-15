@@ -1,32 +1,63 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
-This package enables baxter to play yahtzee. This includes picking up the cup, pouring the dice, reading the dice, picking up the dice, and putting the dice back in the cup.
 
+## Purpose
+The purpose of our project was to create a demonstration showing Baxter playing
+a game of Yahtzee against a human opponent. Our goal was to incorporate
+different elements from our coursework in ME 495 into our final product.
+
+Our original plan for our demonstration consisted of six main components listed as follows:
+
+### Plan
+0. Dice start in the cup
+1. Baxter picks up cup
+2. Baxter shakes cup
+3. Baxter pours the dice out of the cup
+4. Baxter read values displayed on dice
+5. Yahtzee game engine accepts input, and outputs a "decision"
+6. Baxter picks up a subset of the dice based on game engine output
+
+
+In our actual demonstration, the playing dice are to start in a cup at the edge of Baxter's "playing space" on a table. The cup will always start at a known location
+near Baxter's left arm. Baxter will pick up the cup filled with dice, and then
+dump them onto the table. While shaking the cup was part of our original proposal, we realized that it was unnecessary and that turning the wrist joint at the end of the left arm would be sufficient enough to "roll" the dice. We created a physical boundary around Baxter's playing
+space on the table in order to confine the dice to an area with somewhat
+consistent lighting and in reach of Baxter's arm.
+We have a computer vision algorithm running on a node that detects the positions of the dice , as well as their values, using the feed from Baxter's head camera. Baxter then hones in on a single dice and uses its arm camera to calculate a finer position for that die within the work space. We were not able to get a full version of our Yahtzee game engine integrated with the rest of our system, but in theory, a running total would be kept of the values of the rolled dice and then sent to the game engine node. The corresponding "best move" for the game would be found by the game engine based upon this score. Certain dice would then be picked up and placed back in the cup at the edge of the workspace. An implementation of the "best move" would have Baxter rolling a subset of the dice to maximize its score. In our demo, we decided to have Baxter pick up the dice and place them back into the cup at the edge of the workspace after each roll to represent completion of its turn. Further adjustments were made to our repository after demo day to increase our system's robustness.
+
+
+## Services
+
+### Services from Computer Vision Part
+**/mycvGetObjectInImage**: Detect the dice in the middle of the image, return pos in image.
+
+**/mycvGetAllObjectsInImage**: Detect all dices in image, return pos in image
+
+**/mycvCalibChessboardPose**: Calibrate the pose of table's surface. If there is a chessboard in image, detect its pose wrt camera, and then get and save its pose wrt baxter's base.
+
+**/mycvGetObjectInBaxter**: Call /mycvGetObjectInImage, and then transform pixel pos to world pos.
+
+**/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
+
+## Running the package
 To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
 
-The launch file launched 4 nodes: 
+The launch file launches 4 nodes:
 headdisplay.py
-The primary node is sequence.py
+gripper_control.py
+iktest.py
+sequence.py
 
-
-## Plan
-0. Dice in Cup
-1. Pick up Cup
-2. Shake Cup
-3. Pour Dice
-4. Read Values
-5. Decide Move
-6. Pick up Subset of Dice
 
 ## Setup
 
 ### ROS
 ```
-# start roscore in a terminal 
+# start roscore in a terminal
 roscore
 
-# in another terminal 
+# in another terminal
 cd baxterws
 source devel/setup.sh
 catkin_make
@@ -65,7 +96,7 @@ rosrun baxter_examples joint_trajectory_client.py -l left
 roslaunch baxter_gazebo baxter_world.launch
 rosrun baxter_tools enable_robot.py -e
 rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
-rosrun baxter_interface joint_trajectory_action_server.py 
+rosrun baxter_interface joint_trajectory_action_server.py
 ```
 ##### Reset World
 ```
@@ -81,7 +112,7 @@ gedit baxter.sh
 ```
 baxter.sh
 
-Robot 
+Robot
 ```
 # Specify Baxter's hostname
 baxter_hostname="baxter.local"
@@ -157,7 +188,7 @@ $ cd camera_calibration
 $ ./calibrate_camerap.py
 $ ./undistort_all_images.py
 ```
-#### UI 
+#### UI
 
 ```
 src/rqt_mypkg/resource/MyPlugin.ui # UI description
@@ -175,7 +206,17 @@ python game.py
 ## Package
 
 ## Nodes
-iktest.py
+- What did you want it to do?
+- What does it do?
+- What would it do with more time?
+- Libraries used
+- Inputs/Outputs
+- Publishers
+- Subscribers
+- Services Provided or Called
+- Any interesting issues or bugs encountered/addressed
+
+<describe nodes here>
 
 ## Services
 iktest.py
@@ -241,15 +282,89 @@ bool success                # Indicate successful run of triggered service
 string message              # Informational, e.g. for error messages
 ```
 
+
+## Topics
+```
+GAMESTATE_TOPIC = "/statetopic"
+REROLL_TOPIC = "/reroll"
+```
+
 ## Publishers
 ```
+
 ```
 
 ## Subscribers
 ```
+headdisplay.py to /statetopic
 ```
 
 ## Message Types
+ColorBound.msg  
 ```
+float32 low_bound0
+float32 low_bound1
+float32 low_bound2
+float32 high_bound0
+float32 high_bound1
+float32 high_bound2
 ```
-ObjectInfo[]
+GameState.msg  
+```
+string state # state of the system in format for head display (e.g."Rolling Dice"). If the state is "Dice Read", headdisplay.py will display values and determine next move.
+int32 turn # turn number (total=13)
+int32 roll # roll numer (either 1,2, or 3)
+int32 dice1 # number of dots on dice1
+int32 dice2 # number of dots on dice2
+int32 dice3 # number of dots on dice3
+int32 dice4 # number of dots on dice4
+int32 dice5 # number of dots on dice5
+string dice1color # color of dice1
+string dice2color # color of dice2
+string dice3color # color of dice3
+string dice4color # color of dice4
+string dice5color # color of dice5
+
+```
+KeepDice.msg  
+```
+int32 dice1 # booleans for whether to keep (0) for reshake (1) dice
+int32 dice2 #
+int32 dice3 #
+int32 dice4 #
+int32 dice5 #
+```
+ObjectInfo.msg  
+```
+int32 index
+float32 xi
+float32 yi
+float32 radius_x
+float32 radius_y
+float32 radius_mean
+float32 angle
+
+geometry_msgs/Pose pose
+
+int32 value
+string color
+```
+
+XYRadiusAngle.msg
+```
+float32 center_x
+float32 center_y
+float32 radius_x
+float32 radius_y
+float32 angle
+```
+
+## Notes from planning stage
+### 2. Get the Pose of Table Surface
+
+We used a chessboard to do this. Given the chessboard corners' pos in image, and their real pos in chessboard frame, we solve **PnP** to get the transformation from **camera frame** to **chessboard frame**. By left multiplying another matrix, we get the transformation from **Baxter base frame** to **chessboard frame**.
+
+### 3. Locate Object Pos in Baxter Frame
+@                                                      @                                                      @                                                      @                                                      @                                                      :$
+    1. The detected square region in image is not the accurate countour of the real dice.
+    2. The sensor data of Baxter's camera pos might not be so accurate.
