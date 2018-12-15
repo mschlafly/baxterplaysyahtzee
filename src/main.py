@@ -402,7 +402,6 @@ class Main():
 
        #check self.reroll_callback for response
 
-
 """
 Init
 """
