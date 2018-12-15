@@ -26,15 +26,6 @@ space on the table in order to confine the dice to an area with somewhat
 consistent lighting and in reach of Baxter's arm.
 We have a computer vision algorithm running on a node that detects the positions of the dice , as well as their values, using the feed from Baxter's head camera. Baxter then hones in on a single dice and uses its arm camera to calculate a finer position for that die within the work space. We were not able to get a full version of our Yahtzee game engine integrated with the rest of our system, but in theory, a running total would be kept of the values of the rolled dice and then sent to the game engine node. The corresponding "best move" for the game would be found by the game engine based upon this score. Certain dice would then be picked up and placed back in the cup at the edge of the workspace. An implementation of the "best move" would have Baxter rolling a subset of the dice to maximize its score. In our demo, we decided to have Baxter pick up the dice and place them back into the cup at the edge of the workspace after each roll to represent completion of its turn. Further adjustments were made to our repository after demo day to increase our system's robustness.
 
-### 2. Get the Pose of Table Surface
-
-We used a chessboard to do this. Given the chessboard corners' pos in image, and their real pos in chessboard frame, we solve **PnP** to get the transformation from **camera frame** to **chessboard frame**. By left multiplying another matrix, we get the transformation from **Baxter base frame** to **chessboard frame**.
-
-### 3. Locate Object Pos in Baxter Frame
-@                                                      @                                                      @                                                      @                                                      @                                                      :$
-    1. The detected square region in image is not the accurate countour of the real dice.
-    2. The sensor data of Baxter's camera pos might not be so accurate.
-
 
 ## Services
 
@@ -367,3 +358,13 @@ float32 radius_x
 float32 radius_y
 float32 angle
 ```
+
+## Notes from planning stage
+### 2. Get the Pose of Table Surface
+
+We used a chessboard to do this. Given the chessboard corners' pos in image, and their real pos in chessboard frame, we solve **PnP** to get the transformation from **camera frame** to **chessboard frame**. By left multiplying another matrix, we get the transformation from **Baxter base frame** to **chessboard frame**.
+
+### 3. Locate Object Pos in Baxter Frame
+@                                                      @                                                      @                                                      @                                                      @                                                      :$
+    1. The detected square region in image is not the accurate countour of the real dice.
+    2. The sensor data of Baxter's camera pos might not be so accurate.
