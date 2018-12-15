@@ -311,44 +311,6 @@ python src/joint_trajectory_client.py -l left
 rosrun baxter_examples joint_trajectory_client.py -l left
 ```
 
-#### Baxter's Simulator
-```
-roslaunch baxter_gazebo baxter_world.launch
-rosrun baxter_tools enable_robot.py -e
-rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
-rosrun baxter_interface joint_trajectory_action_server.py
-```
-
-Reset World
-```
-Ctrl+r
-```
-
-#### Connection to Baxter via Ethernet
-
-```
-cd ~/baxterws/
-gedit baxter.sh
-```
-
-Setting baxter.sh:
-```
-# Specify Baxter's hostname
-#baxter_hostname="baxter.local"
-baxter_hostname="localhost"
-
-# Set *Either* your computers ip address or hostname. Please note if using
-# your_hostname that this must be resolvable to Baxter.
-#your_ip="10.42.0.1"
-your_hostname="my_computer.local"
-```
-
-```
-cd ~/baxterws/
-source devel/setup.sh
-source baxter.sh sim
-```
-
 #### UI
 
 ```
