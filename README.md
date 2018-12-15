@@ -42,13 +42,13 @@ Then, put chessboard on the table and under the camera, and call this service to
 Finally, launch the package using:
 > $ roslaunch baxterplaysyahtzee yahtzee_baxter.launch
 
-The launch file launches 4 nodes:
-headdisplay.py
-gripper_control.py
-iktest.py
-sequence.py
-
-Among them, **sequence.py** is the main node that executes the steps in our workflow.
+The launch file launches 4 nodes:  
+headdisplay.py  
+gripper_control.py  
+iktest.py  
+sequence.py  
+  
+Among them, **sequence.py** is the main node that executes the steps in our workflow. 
 
 
 # 3. Description of Nodes
@@ -86,11 +86,15 @@ This node provides the following 5 services:
 
 **/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
 
-## 3.4 Head Display: ./src/headdisplay.py
 
-## 3.5 The Future Main Node
+## 3.4 The Future Main Node
 
 We are writing a new main node that integrates the motion, vision, dice game engine, and head display. This hasn't been completed.
+
+## 3.5 Head Display: ./src/headdisplay.py
+
+This nodes receives the topic called "/statetopic" from the future main node, draws them onto an image, and then publishes the image onto Baxter's head display. 
+
 
 # 4. Topics / Messages Definition
 
