@@ -7,7 +7,7 @@ The purpose of our project was to create a demonstration showing Baxter playing
 a game of Yahtzee against a human opponent. Our goal was to incorporate
 different elements from our coursework in ME 495 into our final product.
 
-Our demonstration consists of six main components listed as follows:
+Our original plan for our demonstration consisted of six main components listed as follows:
 
 ## Plan
 0. Dice start in the cup
@@ -19,24 +19,16 @@ Our demonstration consists of six main components listed as follows:
 6. Baxter picks up a subset of the dice based on game engine output
 
 
-The playing dice are to start in a cup at the edge of Baxter's "playing space"
-on a table. For our demonstration, the cup will always start at a known location
+In our actual demonstration, the playing dice are to start in a cup at the edge of Baxter's "playing space" on a table. The cup will always start at a known location
 near Baxter's left arm. Baxter will pick up the cup filled with dice, and then
-dump them onto the table. We created a physical boundary around Baxter's playing
+dump them onto the table. While shaking the cup was part of our original proposal, we realized that it was unnecessary and that turning the wrist joint at the end of the left arm would be sufficient as a "roll". We created a physical boundary around Baxter's playing
 space on the table in order to confine the dice to an area with somewhat
-consistent lighting, and in full view of Baxter's head camera.
+consistent lighting and in full view of Baxter's head camera.
 We have a computer vision algorithm running on a node that detects dice from
 Baxter's camera feed and then stores the value of each of these dice.
 The values of the dice are then added up and sent to another node running a
-Yahtzee game engine variant. A corresponding "best move" will be found based upon
-the tallied score from the dice. An implementation of the "best move" will have
-Baxter picking up a subset of the rolled dice and then re-rolling them in order
-to achieve a higher score.
-
-
-
-
-
+Yahtzee game engine. We were not able to get a full version of our Yahtzee game engine integrated with the rest of our system, but in theory, a corresponding "best move" for the game will be found based upon the tallied score from the dice. An implementation of the "best move" would have Baxter picking up a subset of the rolled dice and then re-rolling those dice in order
+to achieve a higher score. In our demo, we decided to have Baxter pick up the dice and place them back into the cup at the edge of the workspace to represent a completion of a turn.
 
 
 ## Running the package
