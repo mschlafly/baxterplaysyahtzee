@@ -35,9 +35,37 @@ to achieve a higher score.
 
 
 
+# Components
+
+## Computer vision
+### 1. Camera Calibration
+
+We only used Baxter's left hand camera. It's camera info is already there in the topic, so no need for calibration.
+
+But we did calibrate its head camera using Python. See /camera_calibration.
+
+### 2. Get the Pose of Table Surface
+
+We used a chessboard to do this. Given the chessboard corners' pos in image, and their real pos in chessboard frame, we solve **PnP** to get the transformation from **camera frame** to **chessboard frame**. By left multiplying another matrix, we get the transformation from **Baxter base frame** to **chessboard frame**.
+
+### 3. Locate Object Pos in Baxter Frame
+@                                                      @                                                      @                                                      @                                                      @                                                      :$
+    1. The detected square region in image is not the accurate countour of the real dice.
+    2. The sensor data of Baxter's camera pos might not be so accurate.
 
 
+## Services
 
+### Services from Computer Vision Part
+**/mycvGetObjectInImage**: Detect the dice in the middle of the image, return pos in image.
+
+**/mycvGetAllObjectsInImage**: Detect all dices in image, return pos in image
+
+**/mycvCalibChessboardPose**: Calibrate the pose of table's surface. If there is a chessboard in image, detect its pose wrt camera, and then get and save its pose wrt baxter's base.
+
+**/mycvGetObjectInBaxter**: Call /mycvGetObjectInImage, and then transform pixel pos to world pos.
+
+**/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
 
 ## Running the package
 To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
