@@ -1,6 +1,8 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
+# Video of our Project
+[video](https://github.com/mschlafly/baxterplaysyahtzee)
 
 ## Purpose
 The purpose of our project was to create a demonstration showing Baxter playing
