@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 '''
-Five services provided by nodeCV.py:
+5 services provided by nodeCV.py:
 
 rosservice call /mycvGetObjectInImage
 rosservice call /mycvGetAllObjectsInImage
@@ -31,7 +31,7 @@ if __name__=="__main__":
 
     while not rospy.is_shutdown():
 
-        # ----------- Test service of Chessboard
+        # ----------- Calib Chessboard
         # SERVICE_NAME="/mycvCalibChessboardPose"
         # print "calling service: " + SERVICE_NAME
         # call_service(SERVICE_NAME, CalibChessboardPose)
