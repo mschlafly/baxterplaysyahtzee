@@ -52,141 +52,56 @@ sequence.py
 Among them, **sequence.py** is the main node that executes the steps in our workflow.
 
 
-##### Computer Vision
+# 3. Description of Nodes
 
-Services from Computer Vision Part：
-**/mycvGetObjectInImage**: Detect the dice in the middle of the image, return pos in image.
+## 3.1 Main node: ./src/sequence.py
 
-**/mycvGetAllObjectsInImage**: Detect all dices in image, return pos in image
+This is our main node that sets up the workflow, e.g. first pour dice, then detect dice, then pick up dice, etc.
 
-**/mycvCalibChessboardPose**: Calibrate the pose of table's surface. If there is a chessboard in image, detect its pose wrt camera, and then get and save its pose wrt baxter's base.
+It calles the services of motions to move the Baxter's arm, and calles the services of visions to detect the dices on table.
+
+## 3.2 Node for IK and Motion: ./src/iktest.py
+
+This node provides the services for IK and Baxter's Motion, which are:
+
+'''
+rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)  
+rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)  
+rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)  
+rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)  
+rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)  
+rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)  
+'''
+
+## 3.3 Node for Computer Vision: ./src/cv/nodeCV.py
+
+This node provides the following 5 services:
+
+**/mycvGetObjectInImage**: Detect the dice in the middle of the image, return pos in image. (By GrabCut.)
+
+**/mycvGetAllObjectsInImage**: Detect all dices in image, return pos in image. (By another [Graph-based segmentation algorithm](http://cs.brown.edu/people/pfelzens/segment/) and detecting squares).
+
+**/mycvCalibChessboardPose**: Calibrate the pose of table's surface. If there is a chessboard in image, detect its pose wrt camera, and then obtain and save its pose wrt baxter's base.
 
 **/mycvGetObjectInBaxter**: Call /mycvGetObjectInImage, and then transform pixel pos to world pos.
 
 **/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
 
-#### UI
+## 3.4 Head Display
 
-```
-src/rqt_mypkg/resource/MyPlugin.ui # UI description
-/src/rqt_mypkg/src/rqt_mypkg # plugin source
+## 3.5 The Future Main Node
 
-rqt --standalone rqt_mypkg
-```
+We are writing a new main node that integrates the motion, vision, dice game engine, and head display. This hasn't been completed.
 
-#### Game
-```
-cd baxterplays/yahtzee/src
-python game.py
-```
+# 4. Topics / Messages Definition
 
-## Package
-
-## Nodes
-- What did you want it to do?
-- What does it do?
-- What would it do with more time?
-- Libraries used
-- Inputs/Outputs
-- Publishers
-- Subscribers
-- Services Provided or Called
-- Any interesting issues or bugs encountered/addressed
-
-<describe nodes here>
-
-## Services
-iktest.py
-rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)
-rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)
-rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)
-rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)
-rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)
-rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)
-
-### Service Messages
-srv/
-
-#### CalibChessboardPose.srv
-
-```
----
-bool flag # return status
-geometry_msgs/Pose pose # pose information for chessboard
-```
-
-#### CupShake.srv
-```
----
-bool succes  # return success
-```
-
-#### GetAllObjectsInBaxter.srv
-```
----
-bool flag # return flag
-baxterplaysyahtzee/ObjectInfo[] objInfos # array of objects
-```
-
-#### GetAllObjectsInImage.srv
-```
----
-bool flag
-baxterplaysyahtzee/ObjectInfo objInfo
-~
-```
-
-#### GetObjectInBaxter.srv
-```
----
-bool flag
-baxterplaysyahtzee/ObjectInfo objInfo
-~
-```
-
-#### GetObjectInImage.srv
-```
----
-bool flag
-baxterplaysyahtzee/ObjectInfo objInfo
-```
-
-#### OffsetMove.srv
-```
-geometry_msgs/Pose pose   # Desired offset position for the motion controller to adjust the current EE position by
----
-bool success                # Indicate successful run of triggered service
-string message              # Informational, e.g. for error messages
-```
+## 4.1 GameState.msg  
 
 
-## Topics
-```
-GAMESTATE_TOPIC = "/statetopic"
-REROLL_TOPIC = "/reroll"
-```
+This message contains the current state of our game. It's for the topic "/statetopic", which was intended to be published from the main node to the "headdisplay.py", so that the state info can be shown on the Baxter's head display. 
 
-## Publishers
-```
+The definition of this message is:
 
-```
-
-## Subscribers
-```
-headdisplay.py to /statetopic
-```
-
-## Message Types
-ColorBound.msg  
-```
-float32 low_bound0
-float32 low_bound1
-float32 low_bound2
-float32 high_bound0
-float32 high_bound1
-float32 high_bound2
-```
-GameState.msg  
 ```
 string state # state of the system in format for head display (e.g."Rolling Dice"). If the state is "Dice Read", headdisplay.py will display values and determine next move.
 int32 turn # turn number (total=13)
@@ -203,65 +118,150 @@ string dice4color # color of dice4
 string dice5color # color of dice5
 
 ```
-KeepDice.msg  
+
+## 4.2 KeepDice.msg  
+
+Booleans for whether to keep (0) for reshake (1) dice
+ 
+``` 
+int32 dice1  
+int32 dice2  
+int32 dice3  
+int32 dice4  
+int32 dice5  
 ```
-int32 dice1 # booleans for whether to keep (0) for reshake (1) dice
-int32 dice2 #
-int32 dice3 #
-int32 dice4 #
-int32 dice5 #
+
+## 4.3 ObjectInfo.msg
+
+After "nodeCV.py" detects dices in the image and locate their positions, it stores the dices' info in this data type.
+
 ```
-ObjectInfo.msg  
-```
-int32 index
-float32 xi
+int32 index # The ith dice detected in the image
+
+float32 xi # pos in image
 float32 yi
 float32 radius_x
 float32 radius_y
 float32 radius_mean
 float32 angle
 
-geometry_msgs/Pose pose
+geometry_msgs/Pose pose # pos in world
 
-int32 value
+int32 value # number of dots
 string color
 ```
 
-# Algorithms
-## Algorithms for Computer Vision
+## 4.1 ColorBound.msg  
 
-### 1. Camera Calibration
+This is for the node of "src/cv/useful_nodes_and_funcs/use_track_bar_to_select_color.py". This node reads in Baxter's video, and then creates a trackbar for setting the HSV/RGB threshold for color thresholding the image. (This is not used in our final implementation).
+
+```
+float32 low_bound0
+float32 low_bound1
+float32 low_bound2
+float32 high_bound0
+float32 high_bound1
+float32 high_bound2
+```
+
+# 5 Service Definitions
+
+#### 5.1 CalibChessboardPose.srv
+
+```
+---
+bool flag # return status
+geometry_msgs/Pose pose # pose information for chessboard
+```
+
+#### 5.2 CupShake.srv
+```
+---
+bool succes  # return success
+```
+
+#### 5.3 GetAllObjectsInBaxter.srv
+```
+---
+bool flag # return flag
+baxterplaysyahtzee/ObjectInfo[] objInfos # array of objects
+```
+
+#### 5.4 GetAllObjectsInImage.srv
+```
+---
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo
+~
+```
+
+#### 5.5 GetObjectInBaxter.srv
+```
+---
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo
+~
+```
+
+#### 5.6 GetObjectInImage.srv
+```
+---
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo
+```
+
+#### 5.7 OffsetMove.srv
+```
+geometry_msgs/Pose pose   # Desired offset position for the motion controller to adjust the current EE position by
+---
+bool success                # Indicate successful run of triggered service
+string message              # Informational, e.g. for error messages
+```
+
+
+# 6. Scripts that Hasn't Been Integrated into Main Node
+
+## 6.1 Game Engine: ./src/game.py
+
+This is python script that runs the simulation and game engine for the Yahtzee Game.
+
+
+# 7 Algorithms
+
+## 7.1 Algorithms for Computer Vision
+
+### 7.1.1 Camera Calibration
 
 We only used Baxter's left hand camera. It's camera info is already there in the topic, so no need for calibration.
 
 But we did calibrate its head camera using Python. See /camera_calibration.
 
-### 2. Get the Pose of Table Surface
+### 7.1.2 Get the Pose of Table Surface
 
 We used a chessboard to do this. Given the chessboard corners' pos in image, and their real pos in chessboard frame, we solve **PnP** to get the transformation from **camera frame** to **chessboard frame**. By left multiplying another matrix, we get the transformation from **Baxter base frame** to **chessboard frame**.
 
-### 3. Locate Object Pos in Baxter Frame
+### 7.1.3 Locate Object Pos in Baxter Frame
 Suppose we get the object pos in image. We know the object is on the **table surface (left side of equations)**, and it's also on a **beam (right side of equatiosn)** shooted from camera's focal point. We solve the equations (X1=X2, Y1=Y2, 0=Z2) to get X1, Y1. These are the object's pos in Chessboard frame. Transform it to the Baxter's frame.
 
-### 4. Detect All Dices in Image
+### 7.1.4 Detect All Dices in Image
 
 We used Graph Based Image Segmentation ([paper](http://cs.brown.edu/people/pfelzens/segment/), [code](https://github.com/luisgabriel/image-segmentation)) and square detection to find all dices. If the dice's color and the table's color are enough distinguishable, this can work well.
 
 We resize the image to 320x200 and then calls this algorithm. It takes 4s to compute.
 
-### 5. Detect One Dice in Image
+### 7.1.5 Detect One Dice in Image
 
 If we know there is a dice in the middle of the image, we first define a potential region it might be in, and then use Grabcut to segment it out.
 
-### 6. Dice Value
+### 7.1.6 Dice Value
 The number of dots on the dice surface is the dice value. We use opencv Blob Detection to detect number of dots. 
 
 This algorithm usually works bad. The dots in in dice are small and unclear.
 
-### 7. Dice Color
+### 7.1.7 Dice Color
 Currently we get the dice rgb/hsv color by the dice region's median value. (Though not implemented) We can then use kNN and a small training set to determine the dice color.
 
-### 8. Problems
+### 7.1.8 Problems
 
 The current performance of our computer vision code doesn't perform as robust as expected. 
 
@@ -270,11 +270,12 @@ For detecting dice, sometimes not all dices are detected. In an ideal condition,
 For locating dice, there are about 3cm error when the Baxter's hand is 20 cm above the table. It comes from two folds:  
     1. The detected square region in image is not the accurate countour of the real dice.  
     2. The sensor data of Baxter's camera pos might not be so accurate.
-    
 
-# 6. Other Notes for Setup or Testing Baxter
 
-### ROS
+------------------------------------------- Notes for Setting or Testing Baxter ---------------------------------
+# 7. Notes for Setting or Testing Baxter 
+
+#### Before Running ROS Node
 ```
 # start roscore in a terminal
 roscore
@@ -287,16 +288,8 @@ catkin_make
 #type roscd and baxterplays then hit tab to ensure ros recognizes the workspace
 
 ```
-### Baxter
 
-
-#### Installation
-
-##### Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
-
-##### Make sure to source your environment with source devel/setup.bash
-
-#### Servers
+#### Useful Servers for Testing Baxter's Motion
 ```
 rosrun baxter_interface joint_trajectory_action_server.py
 rosrun baxter_interface gripper_action_server.py
@@ -313,38 +306,28 @@ python src/joint_trajectory_client.py -l left
 # or
 rosrun baxter_examples joint_trajectory_client.py -l left
 ```
-#### Simulator
+
+#### Baxter's Simulator
 ```
 roslaunch baxter_gazebo baxter_world.launch
 rosrun baxter_tools enable_robot.py -e
 rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
 rosrun baxter_interface joint_trajectory_action_server.py
 ```
-##### Reset World
+
+Reset World
 ```
 Ctrl+r
 ```
 
-#### Robot
-##### Connect via Ethernet
+#### Connection to Baxter via Ethernet
 
 ```
 cd ~/baxterws/
 gedit baxter.sh
 ```
-baxter.sh
 
-Robot
-```
-# Specify Baxter's hostname
-baxter_hostname="baxter.local"
-
-# Set *Either* your computers ip address or hostname. Please note if using
-# your_hostname that this must be resolvable to Baxter.
-your_ip="10.42.0.1"
-```
-
-Simulator
+Setting baxter.sh:
 ```
 # Specify Baxter's hostname
 #baxter_hostname="baxter.local"
@@ -362,7 +345,11 @@ source devel/setup.sh
 source baxter.sh sim
 ```
 
-##### Trajectory
-http://sdk.rethinkrobotics.com/wiki/Baxter_PyKDL
+#### UI
 
-"A class is provided in this package, baxter_kinematics, which reads from the parameter server of the robot you are connected to pulling the URDF. It then parses that URDF into the expected Orocos kinematic description, a kdl tree. It then, based on the limb specified creates a kinematic chain (base -> gripper frames) on which we will conduct our analysis."
+```
+src/rqt_mypkg/resource/MyPlugin.ui # UI description
+/src/rqt_mypkg/src/rqt_mypkg # plugin source
+
+rqt --standalone rqt_mypkg
+```
