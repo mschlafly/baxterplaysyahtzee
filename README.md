@@ -51,100 +51,6 @@ sequence.py
 
 Among them, **sequence.py** is the main node that executes the steps in our workflow.
 
-## Setup
-
-### ROS
-```
-# start roscore in a terminal
-roscore
-
-# in another terminal
-cd baxterws
-source devel/setup.sh
-catkin_make
-
-#type roscd and baxterplays then hit tab to ensure ros recognizes the workspace
-
-```
-### Baxter
-
-
-#### Installation
-
-##### Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
-
-##### Make sure to source your environment with source devel/setup.bash
-
-#### Servers
-```
-rosrun baxter_interface joint_trajectory_action_server.py
-rosrun baxter_interface gripper_action_server.py
-```
-
-demo trajectory
-```
-rosrun baxterplaysyahtzee joint_trajectory_client.py -l left
-
-# or
-cd src/
-python src/joint_trajectory_client.py -l left
-
-# or
-rosrun baxter_examples joint_trajectory_client.py -l left
-```
-#### Simulator
-```
-roslaunch baxter_gazebo baxter_world.launch
-rosrun baxter_tools enable_robot.py -e
-rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
-rosrun baxter_interface joint_trajectory_action_server.py
-```
-##### Reset World
-```
-Ctrl+r
-```
-
-#### Robot
-##### Connect via Ethernet
-
-```
-cd ~/baxterws/
-gedit baxter.sh
-```
-baxter.sh
-
-Robot
-```
-# Specify Baxter's hostname
-baxter_hostname="baxter.local"
-
-# Set *Either* your computers ip address or hostname. Please note if using
-# your_hostname that this must be resolvable to Baxter.
-your_ip="10.42.0.1"
-```
-
-Simulator
-```
-# Specify Baxter's hostname
-#baxter_hostname="baxter.local"
-baxter_hostname="localhost"
-
-# Set *Either* your computers ip address or hostname. Please note if using
-# your_hostname that this must be resolvable to Baxter.
-#your_ip="10.42.0.1"
-your_hostname="my_computer.local"
-```
-
-```
-cd ~/baxterws/
-source devel/setup.sh
-source baxter.sh sim
-```
-
-##### Trajectory
-http://sdk.rethinkrobotics.com/wiki/Baxter_PyKDL
-
-"A class is provided in this package, baxter_kinematics, which reads from the parameter server of the robot you are connected to pulling the URDF. It then parses that URDF into the expected Orocos kinematic description, a kdl tree. It then, based on the limb specified creates a kinematic chain (base -> gripper frames) on which we will conduct our analysis."
 
 ##### Computer Vision
 
@@ -364,3 +270,99 @@ For detecting dice, sometimes not all dices are detected. In an ideal condition,
 For locating dice, there are about 3cm error when the Baxter's hand is 20 cm above the table. It comes from two folds:  
     1. The detected square region in image is not the accurate countour of the real dice.  
     2. The sensor data of Baxter's camera pos might not be so accurate.
+    
+
+# 6. Other Notes for Setup or Testing Baxter
+
+### ROS
+```
+# start roscore in a terminal
+roscore
+
+# in another terminal
+cd baxterws
+source devel/setup.sh
+catkin_make
+
+#type roscd and baxterplays then hit tab to ensure ros recognizes the workspace
+
+```
+### Baxter
+
+
+#### Installation
+
+##### Follow 5.1 Instructions for Building Baxter Software on ROS Melodic in "Baxter and Sawyer Introduction and Resources"
+
+##### Make sure to source your environment with source devel/setup.bash
+
+#### Servers
+```
+rosrun baxter_interface joint_trajectory_action_server.py
+rosrun baxter_interface gripper_action_server.py
+```
+
+demo trajectory
+```
+rosrun baxterplaysyahtzee joint_trajectory_client.py -l left
+
+# or
+cd src/
+python src/joint_trajectory_client.py -l left
+
+# or
+rosrun baxter_examples joint_trajectory_client.py -l left
+```
+#### Simulator
+```
+roslaunch baxter_gazebo baxter_world.launch
+rosrun baxter_tools enable_robot.py -e
+rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
+rosrun baxter_interface joint_trajectory_action_server.py
+```
+##### Reset World
+```
+Ctrl+r
+```
+
+#### Robot
+##### Connect via Ethernet
+
+```
+cd ~/baxterws/
+gedit baxter.sh
+```
+baxter.sh
+
+Robot
+```
+# Specify Baxter's hostname
+baxter_hostname="baxter.local"
+
+# Set *Either* your computers ip address or hostname. Please note if using
+# your_hostname that this must be resolvable to Baxter.
+your_ip="10.42.0.1"
+```
+
+Simulator
+```
+# Specify Baxter's hostname
+#baxter_hostname="baxter.local"
+baxter_hostname="localhost"
+
+# Set *Either* your computers ip address or hostname. Please note if using
+# your_hostname that this must be resolvable to Baxter.
+#your_ip="10.42.0.1"
+your_hostname="my_computer.local"
+```
+
+```
+cd ~/baxterws/
+source devel/setup.sh
+source baxter.sh sim
+```
+
+##### Trajectory
+http://sdk.rethinkrobotics.com/wiki/Baxter_PyKDL
+
+"A class is provided in this package, baxter_kinematics, which reads from the parameter server of the robot you are connected to pulling the URDF. It then parses that URDF into the expected Orocos kinematic description, a kdl tree. It then, based on the limb specified creates a kinematic chain (base -> gripper frames) on which we will conduct our analysis."
