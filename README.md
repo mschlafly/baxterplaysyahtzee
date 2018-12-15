@@ -1,8 +1,7 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
-# 0. Video of our Project
-[video](https://www.youtube.com/watch?v=vOceYSICtQc)
+Video of our Project: [video](https://www.youtube.com/watch?v=vOceYSICtQc)
 
 # 1. Introduction
 
