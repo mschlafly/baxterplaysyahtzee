@@ -39,18 +39,10 @@ to achieve a higher score.
 
 
 
-
-
-
-This package enables baxter to play yahtzee. This includes picking up the cup, pouring the dice, reading the dice, picking up the dice, and putting the dice back in the cup.
-
+## Running the package
 To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
 
-<<<<<<< HEAD
-The launch file launched 4 nodes:
-=======
-The launch file launches 4 nodes: 
->>>>>>> 04f9eab2308c8ed9136701284d803686212f911f
+The launch file launches 4 nodes:
 headdisplay.py
 gripper_control.py
 iktest.py
@@ -214,7 +206,7 @@ python game.py
 
 ## Nodes
 - What did you want it to do?
-- What does it do? 
+- What does it do?
 - What would it do with more time?
 - Libraries used
 - Inputs/Outputs
