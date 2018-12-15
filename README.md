@@ -1,17 +1,21 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
-# Video of our Project
+# 0. Video of our Project
 [video](https://www.youtube.com/watch?v=vOceYSICtQc)
 
-## Purpose
+# 1. Introduction
+
+## 1.1 Purpose of Project
+
 The purpose of our project was to create a demonstration showing Baxter playing
 a game of Yahtzee against a human opponent. Our goal was to incorporate
 different elements from our coursework in ME 495 into our final product.
 
+## 1.2 Workflow of Baxter Playing Yahtzee
+
 Our original plan for our demonstration consisted of six main components listed as follows:
 
-### Plan
 0. Dice start in the cup
 1. Baxter picks up cup
 2. Baxter shakes cup
@@ -20,7 +24,7 @@ Our original plan for our demonstration consisted of six main components listed 
 5. Yahtzee game engine accepts input, and outputs a "decision"
 6. Baxter picks up a subset of the dice based on game engine output
 
-
+## 1.3 Actual Implementation
 In our actual demonstration, the playing dice are to start in a cup at the edge of Baxter's "playing space" on a table. The cup will always start at a known location
 near Baxter's left arm. Baxter will pick up the cup filled with dice, and then
 dump them onto the table. While shaking the cup was part of our original proposal, we realized that it was unnecessary and that turning the wrist joint at the end of the left arm would be sufficient enough to "roll" the dice. We created a physical boundary around Baxter's playing
@@ -28,22 +32,16 @@ space on the table in order to confine the dice to an area with somewhat
 consistent lighting and in reach of Baxter's arm.
 We have a computer vision algorithm running on a node that detects the positions of the dice , as well as their values, using the feed from Baxter's head camera. Baxter then hones in on a single dice and uses its arm camera to calculate a finer position for that die within the work space. We were not able to get a full version of our Yahtzee game engine integrated with the rest of our system, but in theory, a running total would be kept of the values of the rolled dice and then sent to the game engine node. The corresponding "best move" for the game would be found by the game engine based upon this score. Certain dice would then be picked up and placed back in the cup at the edge of the workspace. An implementation of the "best move" would have Baxter rolling a subset of the dice to maximize its score. In our demo, we decided to have Baxter pick up the dice and place them back into the cup at the edge of the workspace after each roll to represent completion of its turn. Further adjustments were made to our repository after demo day to increase our system's robustness.
 
+# 2. How to Run This Package
 
-## Services
+First, run the node of computer vision:
+> $ rosrun baxterplaysyahtzee nodeCV.py
 
-### Services from Computer Vision Part
-**/mycvGetObjectInImage**: Detect the dice in the middle of the image, return pos in image.
+Then, put chessboard on the table and under the camera, and call this service to get the pose of table surface:
+> $ rosservice call /mycvCalibChessboard
 
-**/mycvGetAllObjectsInImage**: Detect all dices in image, return pos in image
-
-**/mycvCalibChessboardPose**: Calibrate the pose of table's surface. If there is a chessboard in image, detect its pose wrt camera, and then get and save its pose wrt baxter's base.
-
-**/mycvGetObjectInBaxter**: Call /mycvGetObjectInImage, and then transform pixel pos to world pos.
-
-**/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
-
-## Running the package
-To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
+Finally, launch the package using:
+> $ roslaunch baxterplaysyahtzee yahtzee_baxter.launch
 
 The launch file launches 4 nodes:
 headdisplay.py
@@ -51,6 +49,7 @@ gripper_control.py
 iktest.py
 sequence.py
 
+Among them, **sequence.py** is the main node that executes the steps in our workflow.
 
 ## Setup
 
@@ -148,48 +147,18 @@ http://sdk.rethinkrobotics.com/wiki/Baxter_PyKDL
 "A class is provided in this package, baxter_kinematics, which reads from the parameter server of the robot you are connected to pulling the URDF. It then parses that URDF into the expected Orocos kinematic description, a kdl tree. It then, based on the limb specified creates a kinematic chain (base -> gripper frames) on which we will conduct our analysis."
 
 ##### Computer Vision
-```
-roscore
-rosrun usb_cam usb_cam_node _video_device:=/dev/video0 _pixel_format:=yuyv _camera_name:=tracker_camera
-rosrun baxterplaysyahtzee cv.py
-# or
-python cv.py
-```
 
-``` Feiyu's part:
+Services from Computer Vision Part：
+**/mycvGetObjectInImage**: Detect the dice in the middle of the image, return pos in image.
 
-# To test the functions for detecting chessboard or locate object:
-    $ python test_cv/detect_chessboard.py
-    $ python test_cv/locate_object_3d_pose.py
+**/mycvGetAllObjectsInImage**: Detect all dices in image, return pos in image
 
-# To test a proper color threshold using trackbar on an example image:
-    $ python test_cv/use_track_bar_to_select_color.py
+**/mycvCalibChessboardPose**: Calibrate the pose of table's surface. If there is a chessboard in image, detect its pose wrt camera, and then get and save its pose wrt baxter's base.
 
-# To read video from Baxter and do further processing,
-please do these steps first (to open the desired camera):
-    $ nmcli connection up Rethink
-    $ rosrun baxter_tools camera_control.py -l
-    $ rosrun baxter_tools camera_control.py -c right_hand_camera
-    $ rosrun baxter_tools camera_control.py -o left_hand_camera -r 640x400
-    $ rosrun baxter_tools camera_control.py -o head_camera -r 1280x800
-    $ cd test_cv
+**/mycvGetObjectInBaxter**: Call /mycvGetObjectInImage, and then transform pixel pos to world pos.
 
-# To simple test if you can read Baxter's video
-    $ rosrun baxterplaysyahtzee read_and_save_video_from_baxter.py
+**/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
 
-# To locate both the chessboard and object in Baxter's video, run these 2 scripts:
-    (A demo I shoot is here: VideoDemo/1201_locate_object.mp4)
-    $ rosrun baxterplaysyahtzee read_video_and_use_trackbar.py
-    $ rosrun baxterplaysyahtzee read_video_and_locate_object.py
-
-```
-
-##### Camera Calibration
-```
-$ cd camera_calibration
-$ ./calibrate_camerap.py
-$ ./undistort_all_images.py
-```
 #### UI
 
 ```
@@ -352,21 +321,46 @@ int32 value
 string color
 ```
 
-XYRadiusAngle.msg
-```
-float32 center_x
-float32 center_y
-float32 radius_x
-float32 radius_y
-float32 angle
-```
+# Algorithms
+## Algorithms for Computer Vision
 
-## Notes from planning stage
+### 1. Camera Calibration
+
+We only used Baxter's left hand camera. It's camera info is already there in the topic, so no need for calibration.
+
+But we did calibrate its head camera using Python. See /camera_calibration.
+
 ### 2. Get the Pose of Table Surface
 
 We used a chessboard to do this. Given the chessboard corners' pos in image, and their real pos in chessboard frame, we solve **PnP** to get the transformation from **camera frame** to **chessboard frame**. By left multiplying another matrix, we get the transformation from **Baxter base frame** to **chessboard frame**.
 
 ### 3. Locate Object Pos in Baxter Frame
-@                                                      @                                                      @                                                      @                                                      @                                                      :$
-    1. The detected square region in image is not the accurate countour of the real dice.
+Suppose we get the object pos in image. We know the object is on the **table surface (left side of equations)**, and it's also on a **beam (right side of equatiosn)** shooted from camera's focal point. We solve the equations (X1=X2, Y1=Y2, 0=Z2) to get X1, Y1. These are the object's pos in Chessboard frame. Transform it to the Baxter's frame.
+
+### 4. Detect All Dices in Image
+
+We used Graph Based Image Segmentation ([paper](http://cs.brown.edu/people/pfelzens/segment/), [code](https://github.com/luisgabriel/image-segmentation)) and square detection to find all dices. If the dice's color and the table's color are enough distinguishable, this can work well.
+
+We resize the image to 320x200 and then calls this algorithm. It takes 4s to compute.
+
+### 5. Detect One Dice in Image
+
+If we know there is a dice in the middle of the image, we first define a potential region it might be in, and then use Grabcut to segment it out.
+
+### 6. Dice Value
+The number of dots on the dice surface is the dice value. We use opencv Blob Detection to detect number of dots. 
+
+This algorithm usually works bad. The dots in in dice are small and unclear.
+
+### 7. Dice Color
+Currently we get the dice rgb/hsv color by the dice region's median value. (Though not implemented) We can then use kNN and a small training set to determine the dice color.
+
+### 8. Problems
+
+The current performance of our computer vision code doesn't perform as robust as expected. 
+
+For detecting dice, sometimes not all dices are detected. In an ideal condition, with sufficient lighting and uniform table color, the algorithm should work well. However, images from Baxter are dark, and there are also shadows.
+
+For locating dice, there are about 3cm error when the Baxter's hand is 20 cm above the table. It comes from two folds:  
+    1. The detected square region in image is not the accurate countour of the real dice.  
     2. The sensor data of Baxter's camera pos might not be so accurate.
