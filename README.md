@@ -1,32 +1,64 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
+
+## Purpose
+The purpose of our project was to create a demonstration showing Baxter playing
+a game of Yahtzee against a human opponent. Our goal was to incorporate
+different elements from our coursework in ME 495 into our final product.
+
+Our demonstration consists of six main components listed as follows:
+
+## Plan
+0. Dice start in the cup
+1. Baxter picks up cup
+2. Baxter shakes cup
+3. Baxter pours the dice out of the cup
+4. Baxter read values displayed on dice
+5. Yahtzee game engine accepts input, and outputs a "decision"
+6. Baxter picks up a subset of the dice based on game engine output
+
+
+The playing dice are to start in a cup at the edge of Baxter's "playing space"
+on a table. For our demonstration, the cup will always start at a known location
+near Baxter's left arm. Baxter will pick up the cup filled with dice, and then
+dump them onto the table. We created a physical boundary around Baxter's playing
+space on the table in order to confine the dice to an area with somewhat
+consistent lighting, and in full view of Baxter's head camera.
+We have a computer vision algorithm running on a node that detects dice from
+Baxter's camera feed and then stores the value of each of these dice.
+The values of the dice are then added up and sent to another node running a
+Yahtzee game engine variant. A corresponding "best move" will be found based upon
+the tallied score from the dice. An implementation of the "best move" will have
+Baxter picking up a subset of the rolled dice and then re-rolling them in order
+to achieve a higher score.
+
+
+
+
+
+
+
+
+
+
 This package enables baxter to play yahtzee. This includes picking up the cup, pouring the dice, reading the dice, picking up the dice, and putting the dice back in the cup.
 
 To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
 
-The launch file launched 4 nodes: 
+The launch file launched 4 nodes:
 headdisplay.py
 The primary node is sequence.py
 
-
-## Plan
-0. Dice in Cup
-1. Pick up Cup
-2. Shake Cup
-3. Pour Dice
-4. Read Values
-5. Decide Move
-6. Pick up Subset of Dice
 
 ## Setup
 
 ### ROS
 ```
-# start roscore in a terminal 
+# start roscore in a terminal
 roscore
 
-# in another terminal 
+# in another terminal
 cd baxterws
 source devel/setup.sh
 catkin_make
@@ -65,7 +97,7 @@ rosrun baxter_examples joint_trajectory_client.py -l left
 roslaunch baxter_gazebo baxter_world.launch
 rosrun baxter_tools enable_robot.py -e
 rosrun baxter_examples xdisplay_image.py -f jarvis.jpg
-rosrun baxter_interface joint_trajectory_action_server.py 
+rosrun baxter_interface joint_trajectory_action_server.py
 ```
 ##### Reset World
 ```
@@ -81,7 +113,7 @@ gedit baxter.sh
 ```
 baxter.sh
 
-Robot 
+Robot
 ```
 # Specify Baxter's hostname
 baxter_hostname="baxter.local"
@@ -157,7 +189,7 @@ $ cd camera_calibration
 $ ./calibrate_camerap.py
 $ ./undistort_all_images.py
 ```
-#### UI 
+#### UI
 
 ```
 src/rqt_mypkg/resource/MyPlugin.ui # UI description
