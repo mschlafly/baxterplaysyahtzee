@@ -74,7 +74,12 @@ This node also provides the services for IK and Baxter's Motion, which are:
 
 **rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)**: This service is called inside the service function svc_pour_dice, it aims at driving one single joint of the baxter to pour the dices from the cup. This service avoids using the built-in service IK and simplifies the task by using the joint_trajectory motion control.
 
-## 3.3 Node for IK and Motion: ./src/iktest.py
+## 3.3 Node for IK and Motion: ./src/gripper_control.py
+This node provides services to control the motion of gripper.
+**rospy.Service('gripper_controller/close_grip', Trigger, self.srv_close_grip)**: This service is called to close the gripper when needed.
+
+**rospy.Service('gripper_controller/open_grip', Trigger, self.srv_open_grip)**:
+This service is called to open the gripper when needed.
 
 ## 3.4 Node for Computer Vision: ./src/cv/nodeCV.py
 
