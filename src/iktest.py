@@ -88,16 +88,17 @@ class motionControls():
 
 
 
+
         self.home_pose = Pose(
             position = Point(
-            x =  0.791631676282,
-            y = 0.0889369404762,
-            z = -0.0245516063639),
+            x =  0.766847553055,
+            y = 0.0541551104704,
+            z = 0.00258211258664),
             orientation = Quaternion(
-            x = 0.0528354322773,
-            y = 0.998207795751,
-            z = 0.0126737622251,
-            w =  -0.0250796600484
+            x = 0.0197325070376,
+            y = 0.987951412485,
+            z = 0.025747994009,
+            w =  0.151326387451
                 )
         )
 
@@ -345,7 +346,7 @@ class motionControls():
             limb = baxter_interface.Limb(self.limb)
             limb.move_to_joint_positions(limb_joints)
             rospy.loginfo("Valid solution Found! Baxter begins to move!")
-               
+
         else:
             rospy.loginfo("No valid solution Found!")
 
@@ -525,13 +526,13 @@ class motionControls():
 
         # rospy.sleep(1)
         # self.move_to_obj(self.cup_ready_to_grip)
-                
+
         cup_down.position.x-=0.08
         self.move_to_obj(cup_down)
 
         cup_down.position.z+=0.08
         self.move_to_obj(cup_down)
-        
+
         rospy.sleep(1)
         return(True,'Pour finished')
 

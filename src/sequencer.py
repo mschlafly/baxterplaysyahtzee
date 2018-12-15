@@ -195,7 +195,7 @@ def main():
             if cnt_round>5:
                 break
             print "---------- THE %dth ROUND ------------"%cnt_round
-            
+
             move_to_homepose()
 
             dice_pose = call_feiyu_service_detect_all()
@@ -209,7 +209,7 @@ def main():
             #dice_pose = call_feiyu_service_detect_one()
             #dice_pose.position.x=0.834
             #dice_pose.position.y=0.07
-            
+
             def reset_dice_pose(dice_pose):
                 dice_pose.orientation.x=0.5
                 dice_pose.orientation.y=0.0
@@ -217,7 +217,7 @@ def main():
                 dice_pose.orientation.w=-0.0
                 print "printing feiyu's returned dice-Pose",dice_pose
                 return dice_pose
-            # set quaternion    
+            # set quaternion
             dice_pose=reset_dice_pose(dice_pose)
 
             # --------------------------------------
@@ -234,7 +234,7 @@ def main():
                 continue
             else:
                 print "Refine pos successful"
-                
+
             dice_pose=reset_dice_pose(dice_pose)
             dice_pose.position.z = dice_pose.position.z +OFFSET_Z
             pick_up_dice_above(dice_pose)
@@ -242,7 +242,7 @@ def main():
             rospy.sleep(1)
 
             dice_pose.position.z-=OFFSET_Z # restore z back
-            dice_pose.position.z-= 0.02
+            dice_pose.position.z = -0.189655249947
             print "Height of dice: ", dice_pose.position.z
 
             # --------------
@@ -259,7 +259,7 @@ def main():
             pretend.dice3color='r'
             pretend.dice4color='bl'
             pretend.dice5color='y'
-            
+
             nobj=len(objInfos)
             nthobj=0
             if nobj>nthobj:

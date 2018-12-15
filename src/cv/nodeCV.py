@@ -98,7 +98,7 @@ class BaxterCameraProcessing(object):
         self.sub = rospy.Subscriber(CAMERA_TOPIC, Image, self.topic_receive_image_callback)
         self.pub1 = rospy.Publisher("image_with_chessboard",Image, queue_size=10)
         self.pub2 = rospy.Publisher("image_with_object",Image, queue_size=10)
-        self.pub3 = rospy.Publisher("/robot/xdisplay",Image, queue_size=10)
+        self.pub3 = rospy.Publisher("/mycvdisplay",Image, queue_size=10)
 
      
         # services 1: calib chessboard (return: Pose)
