@@ -46,9 +46,15 @@ This package enables baxter to play yahtzee. This includes picking up the cup, p
 
 To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
 
+<<<<<<< HEAD
 The launch file launched 4 nodes:
+=======
+The launch file launches 4 nodes: 
+>>>>>>> 04f9eab2308c8ed9136701284d803686212f911f
 headdisplay.py
-The primary node is sequence.py
+gripper_control.py
+iktest.py
+sequence.py
 
 
 ## Setup
