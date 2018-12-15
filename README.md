@@ -86,7 +86,7 @@ This node provides the following 5 services:
 
 **/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
 
-## 3.4 Head Display
+## 3.4 Head Display: ./src/headdisplay.py
 
 ## 3.5 The Future Main Node
 
@@ -96,8 +96,7 @@ We are writing a new main node that integrates the motion, vision, dice game eng
 
 ## 4.1 GameState.msg  
 
-
-This message contains the current state of our game. It's for the topic "/statetopic", which was intended to be published from the main node to the "headdisplay.py", so that the state info can be shown on the Baxter's head display. 
+This message defines the current state of our game. It's for the topic "/statetopic", which was intended to be published from the main node to the "headdisplay.py", so that the state info can be shown on the Baxter's head display. 
 
 The definition of this message is:
 
@@ -228,6 +227,8 @@ This is python script that runs the simulation and game engine for the Yahtzee G
 # 7 Algorithms
 
 ## 7.1 Algorithms for Computer Vision
+
+All scripts for computer vision is in ".src/cv/"
 
 ### 7.1.1 Camera Calibration
 
