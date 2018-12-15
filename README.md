@@ -166,7 +166,17 @@ python game.py
 ## Package
 
 ## Nodes
-iktest.py
+- What did you want it to do?
+- What does it do? 
+- What would it do with more time?
+- Libraries used
+- Inputs/Outputs
+- Publishers
+- Subscribers
+- Services Provided or Called
+- Any interesting issues or bugs encountered/addressed
+
+<describe nodes here>
 
 ## Services
 iktest.py
@@ -232,15 +242,79 @@ bool success                # Indicate successful run of triggered service
 string message              # Informational, e.g. for error messages
 ```
 
+
+## Topics
+```
+GAMESTATE_TOPIC = "/statetopic"
+REROLL_TOPIC = "/reroll"
+```
+
 ## Publishers
 ```
+
 ```
 
 ## Subscribers
 ```
+headdisplay.py to /statetopic
 ```
 
 ## Message Types
+ColorBound.msg  
 ```
+float32 low_bound0
+float32 low_bound1
+float32 low_bound2
+float32 high_bound0
+float32 high_bound1
+float32 high_bound2
 ```
-ObjectInfo[]
+GameState.msg  
+```
+string state # state of the system in format for head display (e.g."Rolling Dice"). If the state is "Dice Read", headdisplay.py will display values and determine next move.
+int32 turn # turn number (total=13)
+int32 roll # roll numer (either 1,2, or 3)
+int32 dice1 # number of dots on dice1
+int32 dice2 # number of dots on dice2
+int32 dice3 # number of dots on dice3
+int32 dice4 # number of dots on dice4
+int32 dice5 # number of dots on dice5
+string dice1color # color of dice1
+string dice2color # color of dice2
+string dice3color # color of dice3
+string dice4color # color of dice4
+string dice5color # color of dice5
+
+```
+KeepDice.msg  
+```
+int32 dice1 # booleans for whether to keep (0) for reshake (1) dice
+int32 dice2 #
+int32 dice3 #
+int32 dice4 #
+int32 dice5 #
+```
+ObjectInfo.msg  
+```
+int32 index
+float32 xi
+float32 yi
+float32 radius_x
+float32 radius_y
+float32 radius_mean
+float32 angle
+
+geometry_msgs/Pose pose
+
+int32 value
+string color
+```
+
+XYRadiusAngle.msg
+```
+float32 center_x
+float32 center_y
+float32 radius_x
+float32 radius_y
+float32 angle
+```
