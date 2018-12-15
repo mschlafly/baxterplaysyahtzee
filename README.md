@@ -47,35 +47,36 @@ headdisplay.py
 gripper_control.py  
 iktest.py  
 sequence.py  
-  
-Among them, **sequence.py** is the main node that executes the steps in our workflow. 
+
+Among them, **sequence.py** is the main node that executes the steps in our workflow.
 
 
 # 3. Description of Nodes
 
 ## 3.1 Main node: ./src/sequence.py
-This is our main node that sets up the workflow. Our control method is mainly to use several ros services to finish each step seperately. 
+This is our main node that sets up the workflow. Our control method is mainly to use several ros services to finish each step seperately.
 
 e.g. first pour dice, then detect dice, then pick up dice, etc. It calles the services of motions to move the Baxter's arm, and calles the services of visions to detect the dices on table. Once the dice is detected, it will send the location data to iktest node by using the service provided in that node, then the function of that service 'pick_up_dice' will be excuted with the location of dices provided.
 
 This method is convenient to make changes to the order of baxter's motion. Only changing the order of calling different services can reconstruct the whole trajectory of the baxter movement.
 
 ## 3.2 Node for IK and Motion: ./src/iktest.py
-
-This node provides the services for IK and Baxter's Motion, which are:
+This node includes the motion planning for baxter, which mainly uses the built-in IK service. With that service we defined a function 'move_to_obj()' that takes one input pose data and then will drive the gripper move to that position.
+This node also provides the services for IK and Baxter's Motion, which are:
 
 **rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)**: Given the data of the message type  OffsetMove (including the Pose type of message), the function svc_pick_up_dice_above will be activated to move the baxter arm to the location above the certain dice to ready for next detection.
 
-**rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)**: After the arm move to the location above a certain dice, the sequency.py node will update the accurate location of this dice by redetecting and call this service with that updated location data. With the accurate location, the baxter arm will move down to pick the dice up.  
+**rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)**: After the arm move to the location above a certain dice, the sequency.py node will update the accurate location of this dice by redetecting and call this service with that updated location data. With the accurate location, the baxter arm will move down to pick the dice up.
 
 **rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)**: This service will be called once the baxter is required to move to the home position, which is set fixed to have a nice viwe of the workspace to detect the dices.
 
-**rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)**  
-**rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)**  
+**rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)**: This service provides the motion control for the whole 'pour dice ' motion. It takes no input and will be activated by the calling in sequency.py node. The message type is Trigger, so there is no location data inside it. Once this service is called, it will follow a fixed trajectory from picking up the cup to putting it back to the original location.
 
+**rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)**: This service is called inside the service function svc_pour_dice, it aims at driving one single joint of the baxter to pour the dices from the cup. This service avoids using the built-in service IK and simplifies the task by using the joint_trajectory motion control.
 
+## 3.3 Node for IK and Motion: ./src/iktest.py
 
-## 3.3 Node for Computer Vision: ./src/cv/nodeCV.py
+## 3.4 Node for Computer Vision: ./src/cv/nodeCV.py
 
 This node provides the following 5 services:
 
@@ -90,20 +91,20 @@ This node provides the following 5 services:
 **/mycvGetAllObjectsInBaxter**: Call /mycvGetAllObjectsInImage, and then transform all objects' pixel pos to world pos.
 
 
-## 3.4 The Future Main Node
+## 3.5 The Future Main Node
 
 We are writing a new main node that integrates the motion, vision, dice game engine, and head display. This hasn't been completed.
 
-## 3.5 Head Display: ./src/headdisplay.py
+## 3.6 Head Display: ./src/headdisplay.py
 
-This nodes receives the topic called "/statetopic" from the future main node, draws them onto an image, and then publishes the image onto Baxter's head display. 
+This nodes receives the topic called "/statetopic" from the future main node, draws them onto an image, and then publishes the image onto Baxter's head display.
 
 
 # 4. Topics / Messages Definition
 
 ## 4.1 GameState.msg  
 
-This message defines the current state of our game. It's for the topic "/statetopic", which was intended to be published from the main node to the "headdisplay.py", so that the state info can be shown on the Baxter's head display. 
+This message defines the current state of our game. It's for the topic "/statetopic", which was intended to be published from the main node to the "headdisplay.py", so that the state info can be shown on the Baxter's head display.
 
 The definition of this message is:
 
@@ -127,8 +128,8 @@ string dice5color # color of dice5
 ## 4.2 KeepDice.msg  
 
 Booleans for whether to keep (0) for reshake (1) dice
- 
-``` 
+
+```
 int32 dice1  
 int32 dice2  
 int32 dice3  
@@ -261,7 +262,7 @@ We resize the image to 320x200 and then calls this algorithm. It takes 4s to com
 If we know there is a dice in the middle of the image, we first define a potential region it might be in, and then use Grabcut to segment it out.
 
 ### 7.1.6 Dice Value
-The number of dots on the dice surface is the dice value. We use opencv Blob Detection to detect number of dots. 
+The number of dots on the dice surface is the dice value. We use opencv Blob Detection to detect number of dots.
 
 This algorithm usually works bad. The dots in in dice are small and unclear.
 
@@ -270,7 +271,7 @@ Currently we get the dice rgb/hsv color by the dice region's median value. (Thou
 
 ### 7.1.8 Problems
 
-The current performance of our computer vision code doesn't perform as robust as expected. 
+The current performance of our computer vision code doesn't perform as robust as expected.
 
 For detecting dice, sometimes not all dices are detected. In an ideal condition, with sufficient lighting and uniform table color, the algorithm should work well. However, images from Baxter are dark, and there are also shadows.
 
@@ -280,7 +281,7 @@ For locating dice, there are about 3cm error when the Baxter's hand is 20 cm abo
 
 
 ------------------------------------------- Notes for Setting or Testing Baxter ---------------------------------
-# 8. Notes for Setting or Testing Baxter 
+# 8. Notes for Setting or Testing Baxter
 
 #### Before Running ROS Node
 ```
