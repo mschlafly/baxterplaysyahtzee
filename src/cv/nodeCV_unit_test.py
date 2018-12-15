@@ -1,17 +1,15 @@
 #!/usr/bin/env python2
 
-# rosservice call /baxterplaysyahtzee/teleport_absolute 5.5400 5.5400 0.4636
+'''
+Five services provided by nodeCV.py:
 
-# rosservice call /clear
+rosservice call /mycvGetObjectInImage
+rosservice call /mycvGetAllObjectsInImage
+rosservice call /mycvCalibChessboardPose
+rosservice call /mycvGetObjectInBaxter
+rosservice call /mycvGetAllObjectsInBaxter
 
-# rosservice call /mycvGetObjectInImage
-# rosservice call /mycvGetAllObjectsInImage
-
-
-# rosservice call /mycvCalibChessboardPose
-
-# rosservice call /mycvGetObjectInBaxter
-# rosservice call /mycvGetAllObjectsInBaxter
+'''
 
 import rospy
 from baxterplaysyahtzee.srv import *
@@ -84,7 +82,6 @@ if __name__=="__main__":
         #     print objInfos
         # else:
         #     print "no detect object"
-
         # ----------------------------------------------------------
 
         print "Test round over, sleep for 10 seconds."

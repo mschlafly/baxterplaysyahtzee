@@ -221,7 +221,7 @@ class motionControls():
 
         print("Moving the last joint by pi/2 radians to pour the dice out...")
         pouring_angles = current_joint_angles
-        pouring_angles['left_w2'] = 4*math.pi/7
+        pouring_angles['left_w2'] = 6*math.pi/7
 
 
         left_arm.move_to_joint_positions(pouring_angles,timeout=15)

@@ -1,16 +1,40 @@
 import numpy as np
+from tf.transformations import euler_from_quaternion, quaternion_from_euler, euler_matrix
+from geometry_msgs.msg import Pose, Point
+import cv2
 
 # transformations
 def form_T(R,p):
     T=np.identity(4)
     T[0:3,0:3]=R
-    T[0:3,3:4]=p[0:3,0:1]
+    try:
+        T[0:3,3:4]=p[0:3,0:1]
+    except:
+        T[0,3]=p[0]
+        T[1,3]=p[1]
+        T[2,3]=p[2]
     return T
 
 def get_Rp_from_T(T):
     R=T[0:3,0:3]
     p=T[0:3,3:4]
     return (R,p)   
+
+
+def Rp_to_pose(R,p):
+    pose=Pose()
+
+    R_vec, _ = cv2.Rodrigues(R)
+    q=quaternion_from_euler(R_vec[0],R_vec[1],R_vec[2])    
+    pose.orientation.w=q[0]
+    pose.orientation.x=q[1]
+    pose.orientation.y=q[2]
+    pose.orientation.z=q[3]
+
+    pose.position.x=p[0]
+    pose.position.y=p[1]
+    pose.position.z=p[2]
+    return pose
 
 
 # Baxter's camera
@@ -70,7 +94,9 @@ class BaxterCamera_LeftHand(object):
             self.distortion=[0.0184964633113, -0.0560618936713, 0.000269508536766, 0.000436460185745, 0.0147597067544]
             self.distortion=np.array(self.distortion)    
 
-            self.intrinsic_matrix_array_form= [405.329601488, 0.0, 656.494624497, 0.0, 405.329601488, 425.656789027, 0.0, 0.0, 1.0]
+            self.intrinsic_matrix_array_form= [405.329601488, 0.0, 656.494624497/2,
+                    0.0, 405.329601488, 425.656789027/2,
+                    0.0, 0.0, 1.0]
             self.intrinsic_matrix=np.reshape(self.intrinsic_matrix_array_form, (3,3))
 
   

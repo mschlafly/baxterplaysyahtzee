@@ -193,7 +193,7 @@ def find_square(mask_object,
 
     # start
     mask_object=mask_object.astype(np.uint8)*255
-    kernel = np.ones((5,5),np.uint8)
+    kernel = np.ones((10,10),np.uint8)
     mask_object = cv2.erode(mask_object, kernel, iterations = 1)
     mask_object = cv2.dilate(mask_object, kernel, iterations = 1)
 
@@ -277,10 +277,12 @@ def find_square(mask_object,
 def find_all_objects(img0,
         FLAG_DRAW_SQURAE_TO_IMAGE=False,
         IMAGE_RESIZE_SCALE=0.5,
+        CHANGE_TO_HSV=False
     ):
 
     img=img0.copy()
-
+    if CHANGE_TO_HSV:
+        img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     # --------------------------------------------------
     img = cv2.resize(img, (0,0), fx=IMAGE_RESIZE_SCALE, fy=IMAGE_RESIZE_SCALE)
 
@@ -293,7 +295,7 @@ def find_all_objects(img0,
     # print "start segmenting image"
     labeled_img=color_seg(img,neighbor = 8,
         sigma = 0.5,
-        K = 800.0,
+        K = 1200.0,
         min_size = 200)
     
 
@@ -469,12 +471,12 @@ def crop_image(img0, rect):
     return img[miny:maxy, minx:maxx]
 
 def create_blob_detector(blob_min_area=12, 
-                        blob_min_int=0.0, blob_max_int=1.0, blob_th_step=5):
+                        blob_min_int=0.0, blob_max_int=1.0, blob_th_step=10):
     params = cv2.SimpleBlobDetector_Params()
     params.filterByArea = True
     params.minArea = blob_min_area
     params.maxArea = 30
-    params.filterByCircularity = False
+    params.filterByCircularity = True
     params.filterByColor = False
     params.filterByConvexity = False
     params.filterByInertia = False
@@ -502,3 +504,7 @@ def detect_dots(img, mask, rect):
         print "number of dots", len(keypoints)
     
     return len(keypoints)
+
+def classify_dice_color(color):
+    # NOT IMPLEMENTED
+    return str(color)

@@ -12,6 +12,7 @@ from baxterplaysyahtzee.srv import *
 from baxterplaysyahtzee.msg import *
 
 # -------------------------------- Added by Feiyu --------------------------------
+global objInfos
 
 # a template for calling service
 def call_service(service_name, service_type, args=None):
@@ -25,6 +26,7 @@ def call_service(service_name, service_type, args=None):
         sys.exit()
 
 def call_feiyu_service_detect_all():
+    global objInfos
     SERVICE_NAME="/mycvGetAllObjectsInBaxter"
     print "calling service: " + SERVICE_NAME
     resp=call_service(SERVICE_NAME, GetAllObjectsInBaxter)
@@ -63,7 +65,7 @@ def call_feiyu_service_detect_one():
 
 
 def main():
-
+    global objInfos
     rospy.init_node('sequencer')
 
     move_to_initpose = rospy.ServiceProxy('iktest_controller/move_to_initpose', Trigger)
@@ -150,6 +152,8 @@ def main():
     )
 
 
+    pub = rospy.Publisher('/statetopic', GameState, queue_size=10)
+    pretend=GameState()
 
     '''
         baxCtrl = _init_baxter.BaxterCtrls()
@@ -186,7 +190,7 @@ def main():
 
         cnt_round=0
         FAILURE_TIME=0
-        while FAILURE_TIME<3:
+        while FAILURE_TIME<10:
             cnt_round+=1
             if cnt_round>5:
                 break
@@ -238,15 +242,52 @@ def main():
             rospy.sleep(1)
 
             dice_pose.position.z-=OFFSET_Z # restore z back
-            dice_pose.position.z-= 0
+            dice_pose.position.z-= 0.02
             print "Height of dice: ", dice_pose.position.z
+
+            # --------------
+            pretend.state="Dice Read"
+            pretend.turn=1
+            pretend.roll=cnt_round
+            pretend.dice1=1
+            pretend.dice2=2
+            pretend.dice3=3
+            pretend.dice4=4
+            pretend.dice5=5
+            pretend.dice1color='b'
+            pretend.dice2color='b'
+            pretend.dice3color='r'
+            pretend.dice4color='bl'
+            pretend.dice5color='y'
+            
+            nobj=len(objInfos)
+            nthobj=0
+            if nobj>nthobj:
+                pretend.dice1=objInfos[nthobj].value
+                pretend.dice1color=objInfos[nthobj].color
+            nthobj=1
+            if nobj>nthobj:
+                pretend.dice1=objInfos[nthobj].value
+                pretend.dice1color=objInfos[nthobj].color
+            nthobj=2
+            if nobj>nthobj:
+                pretend.dice1=objInfos[nthobj].value
+                pretend.dice1color=objInfos[nthobj].color
+            nthobj=3
+            if nobj>nthobj:
+                pretend.dice1=objInfos[nthobj].value
+                pretend.dice1color=objInfos[nthobj].color
+            nthobj=4
+            if nobj>nthobj:
+                pretend.dice1=objInfos[nthobj].value
+                pretend.dice1color=objInfos[nthobj].color
+            # --------------
+
             pick_up_dice(dice_pose) #//need Offset
 
 
         # pour_dice()
-
         # pick_up_dice(pick_up_cup_offset)
-
         # pour_dice(pick_up_cup_offset) #//need Offset
 
 

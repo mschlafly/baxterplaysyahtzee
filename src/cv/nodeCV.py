@@ -27,10 +27,9 @@ CURRENT_PATH=os.path.join( os.path.dirname(__file__) )+"/"
 
 # ---------------------- Import from our own library -----------------------
 from lib_cv_calib import ChessboardLocator, Object3DPoseLocator, find_object, myTrackbar
-from lib_cv_detection import refine_image_mask, find_square, extract_rect,\
-    find_object_in_middle, find_all_objects, find_all_objects_then_draw, detect_dots, get_color_median
-from lib_baxter_camera_config import form_T, get_Rp_from_T
-
+from lib_cv_detection import refine_image_mask, find_square, extract_rect, rander_color, equalize_image,\
+    find_object_in_middle, find_all_objects, find_all_objects_then_draw, detect_dots, get_color_median, classify_dice_color
+from lib_baxter_camera_config import form_T, get_Rp_from_T, Rp_to_pose
 
 # ---------------------- service provided by this node -----------------------
 from tf.transformations import euler_from_quaternion, quaternion_from_euler, euler_matrix
@@ -72,25 +71,10 @@ IMAGE_FILENAME_FOR_SAVING = 'leftcamera_detection_result'
 # SQUARE_SIZE=0.1379/7 # This is the real square size of the chessboard 
 SQUARE_SIZE=0.137/4 # This is the real square size of the chessboard 
 
-# Low bound and up bound for color thresholding
-global COLOR_LB, COLOR_UB
-COLOR_LB=(36, 45, 0)
-COLOR_UB=(79, 255, 255)
 
 NODE_NAME="nodeCV"
 def set_str_error(str_error):
     return "\nError from " +NODE_NAME+": "+str_error+""
-
-# -------------------
-
-def color_to_string(rgbcolor):
-    # we need some algorithm here
-    return str(rgbcolor)
-
-# -------------------
-
-
-# -------------------
 
 
 class BaxterCameraProcessing(object):
@@ -186,7 +170,6 @@ class BaxterCameraProcessing(object):
 
             return CalibChessboardPoseResponse(True, pose)
 
-    # tested, OK!!! 
     def srv_GetAllObjectsInImage(self, req):
         flag, objInfos=self._GetAllObjectsInImage(req)
         return GetAllObjectsInImageResponse(flag, objInfos)
@@ -194,25 +177,27 @@ class BaxterCameraProcessing(object):
     def _GetAllObjectsInImage(self, req):
         print("inside the srv_GetAllObjectsInImage")
         img=self.img.copy()
+        img = equalize_image(img, 10)
+        
         rows,cols=img.shape[:2]
 
         if not self.check_if_image_is_valid():
             rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
             return
 
-        rects, labeled_img=find_all_objects(img)
+        rects, labeled_img=find_all_objects(img, CHANGE_TO_HSV=True)
         labeled_img = cv2.resize(labeled_img, (0,0), fx=2, fy=2)
 
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # !!!!!!!!!!!!!!!! TUNE THIS PARAMETERS !!!!!!!!!!!!!!!!!!!!!!
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        # -------Remove wrong ones ---
+        # ------- Remove wrong ones ---
         tmp=list()
         for i in range(len(rects)):
             rect=rects[i]
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
             # Criteria for removing wrong objects
-            if center_x<150 or center_x>640-150 or center_y<50 or center_y>400-50:
+            if center_x<150 or center_x>640-150 or center_y<50 or center_y>400-50 or radius_x>100:
                 continue
             else:
                 tmp.append(rect.copy())
@@ -223,11 +208,11 @@ class BaxterCameraProcessing(object):
 
         # Plot all rects, and output to objInfos
         objInfos=list()
-
+        # self.pub_image_object()
+        
         if len(rects)!=0:
             colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=False)
             self.image_for_display_object=colored_image   
-            self.pub_image_object()
 
             # output:
             for i in range(len(rects)):
@@ -251,7 +236,7 @@ class BaxterCameraProcessing(object):
 
                 # color
                 rgbcolor=get_color_median(img, mask, rect_int)
-                objInfo.color=color_to_string(rgbcolor)
+                objInfo.color=classify_dice_color(rgbcolor)
 
                 # xyz pose
                 objInfo.index=i
@@ -264,10 +249,10 @@ class BaxterCameraProcessing(object):
             objInfos.sort(key=lambda x: x.radius_mean, reverse=True)
             return True, objInfos
         else:
+            self.image_for_display_object=rander_color(labeled_img)   
             return False, objInfos
 
 
-    # tested, OK!!! 
     def srv_GetObjectInImage(self, req):
         flag, objInfo = self._GetObjectInImage(req)
         return GetObjectInImageResponse(flag, objInfo)
@@ -283,7 +268,7 @@ class BaxterCameraProcessing(object):
 
         # Display image      
         if rect is not None:  
-            self.image_for_display_object=cv2.drawContours(img, [rect], 0, [0,1,1], 2)
+            self.image_for_display_chessboard=cv2.drawContours(img, [rect], 0, [0,1,1], 2)
             self.pub_image_object()
 
             # output:
@@ -293,7 +278,7 @@ class BaxterCameraProcessing(object):
             ndots=detect_dots(img, mask, rect) # detect dots
             rgbcolor=get_color_median(img, mask, rect)
             objInfo.value=ndots
-            objInfo.color=color_to_string(rgbcolor)
+            objInfo.color=classify_dice_color(rgbcolor)
 
             # save vars
             self.object_mask=mask
@@ -561,25 +546,6 @@ class BaxterCameraProcessing(object):
         # print R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
         return R_cam_to_chess, p_cam_to_chess, T_bax_to_cam
 
-def Rp_to_pose(R,p):
-    pose=Pose()
-
-    R_vec, _ = cv2.Rodrigues(R)
-    q=quaternion_from_euler(R_vec[0],R_vec[1],R_vec[2])    
-    pose.orientation.w=q[0]
-    pose.orientation.x=q[1]
-    pose.orientation.y=q[2]
-    pose.orientation.z=q[3]
-
-    pose.position.x=p[0]
-    pose.position.y=p[1]
-    pose.position.z=p[2]
-    return pose
-
-# def callback_ColorBound(msg):
-#     global COLOR_LB, COLOR_UB
-#     COLOR_LB=(msg.low_bound0,msg.low_bound1,msg.low_bound2)
-#     COLOR_UB=(msg.high_bound0, msg.high_bound1, msg.high_bound2)
 
 if __name__ == '__main__':
     rospy.init_node('nodeCV')
