@@ -48,49 +48,6 @@ class gripperControls():
         return (True, "GRIP - Gripper Closed.")
 
 
-    def srv_opening_sequence(self, data):
-        '''
-        Baxter should start near the lid of the object-to-be-opened before triggering this subsequence.
-        '''
-
-        # Resetting 'left_w2' and 'left_gripper' position
-        self.left_gripper.open()
-        self.left_arm.move_to_joint_positions({self.left_wrist: 3})
-        rospy.sleep(1)
-
-        # Basic opening sequence
-        self.left_gripper.close()
-        rospy.sleep(1)
-        self.left_arm.move_to_joint_positions({self.left_wrist: -3})
-        rospy.sleep(1)
-
-        # Gripper is now holding something - DO NOT issue an "open_grip" command without considering the ramifications!
-
-        return (True, "GRIP - Opening Sequence Complete.")
-
-
-    def srv_closing_sequence(self, data):
-        '''
-        Baxter should start this subsequence while grasping the lid of the object-to-be-closed and while positioned
-        over the object.
-        '''
-
-        # Resetting 'left_w2' and 'left_gripper' position
-        self.left_arm.move_to_joint_positions({self.left_wrist: -3})
-        rospy.sleep(1)
-
-        # Basic closing sequence
-        self.left_gripper.close()
-        rospy.sleep(1)
-        self.left_arm.move_to_joint_positions({self.left_wrist: 3})
-        rospy.sleep(1)
-        self.left_gripper.open()
-        rospy.sleep(1)
-
-        # Gripper should now have released object - now free to issue other commands to Baxter.
-
-        return (True, "GRIP - Closing Sequence Complete.")
-
 # ========== #
 
 
@@ -109,7 +66,7 @@ def main():
 
 
 if __name__ == '__main__':
-    print(2)
+    print('Has provided services for gripper_control')
     try:
         main()
     except rospy.ROSInterruptException:
