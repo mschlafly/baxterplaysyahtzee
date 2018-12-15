@@ -62,7 +62,7 @@ class motionControls():
             position = Point(
             x =  0,
             y =  0,
-            z = 0.1),
+            z = 0), # feiyu set this to zero, modfiy later
             orientation = Quaternion())
 
         self.cup_above_offset = Pose(
@@ -221,7 +221,7 @@ class motionControls():
 
         print("Moving the last joint by pi/2 radians to pour the dice out...")
         pouring_angles = current_joint_angles
-        pouring_angles['left_w2'] = 4*math.pi/7
+        pouring_angles['left_w2'] = 6*math.pi/7
 
 
         left_arm.move_to_joint_positions(pouring_angles,timeout=15)
@@ -296,7 +296,7 @@ class motionControls():
         # Set the desired pose in the service request message to pose information pulled from the object pose topic
         ikreq.pose_stamp.append(obj_pose)
 
-        if (1):
+        if (0):
             # The joint seed is where the IK position solver starts its optimization
             ikreq.seed_mode = ikreq.SEED_USER
             seed = JointState()
@@ -330,32 +330,34 @@ class motionControls():
         resp_seeds = struct.unpack('<%dB' % len(resp.result_type),
                                    resp.result_type)
 
-        while(True):
-            if (resp_seeds[0] != resp.RESULT_INVALID):
-                seed_str = {
-                ikreq.SEED_USER: 'User Provided Seed',
-                ikreq.SEED_CURRENT: 'Current Joint Angles',
-                ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
-                }.get(resp_seeds[0], 'None')
-                print("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
-                (seed_str,))
-                # Format solution into Limb API-compatible dictionary
-                limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-                limb = baxter_interface.Limb(self.limb)
-                limb.move_to_joint_positions(limb_joints)
-                rospy.loginfo("Valid solution Found! Baxter begins to move!")
-                return
-            else:
-                rospy.loginfo("No valid solution Found!")
+        if (resp_seeds[0] != resp.RESULT_INVALID):
+            seed_str = {
+            ikreq.SEED_USER: 'User Provided Seed',
+            ikreq.SEED_CURRENT: 'Current Joint Angles',
+            ikreq.SEED_NS_MAP: 'Nullspace Setpoints',
+            }.get(resp_seeds[0], 'None')
+            print("SUCCESS - Valid Joint Solution Found from Seed Type: %s" %
+            (seed_str,))
+            # Format solution into Limb API-compatible dictionary
+            limb_joints = dict(zip(resp.joints[0].name, resp.joints[0].position))
 
-                # New Addition
-                rospy.loginfo("Attemping a new solution...")
-                limb = baxter_interface.Limb(self.limb)
-                current_joint_angles = limb.joint_angles()
-                current_joint_angles['left_s1'] =  current_joint_angles['left_s1'] + 0.1
+            limb = baxter_interface.Limb(self.limb)
+            limb.move_to_joint_positions(limb_joints)
+            rospy.loginfo("Valid solution Found! Baxter begins to move!")
+               
+        else:
+            rospy.loginfo("No valid solution Found!")
 
-                limb.move_to_joint_positions(current_joint_angles)
+            # # New Addition
+            # rospy.loginfo("Attemping a new solution...")
+            # limb = baxter_interface.Limb(self.limb)
+            # current_joint_angles = limb.joint_angles()
+            # current_joint_angles['left_s1'] =  current_joint_angles['left_s1'] + 0.01
+            # current_joint_angles['left_s0'] =  current_joint_angles['left_s0'] + 0.01
+
+            # limb.move_to_joint_positions(current_joint_angles)
+        return
 
 
 
@@ -461,20 +463,56 @@ class motionControls():
 
     def svc_pour_dice(self,data):
 
-        self.move_to_obj(self.cup_ready_to_grip)
-        cup_down = Pose()
-        cup_down = Pose(
-                position = copy.copy(self.cup_ready_to_grip.position),
-                orientation = copy.copy(self.cup_ready_to_grip.orientation))
+        #
+        if 1:
+            None
+            cup_ready_before= Pose(
+                position = Point(
+                x = 0.8639658962576,
+                y = 0.288214295747,
+                z =  0.0819743789111
+                ),
+                orientation = Quaternion(
+                x = 0.697345324287,
+                y = -0.0729093965645,
+                z = 0.711741333725,
+                w = 0.0426379227384
+            ))
+            cup_ready_before.position.x-=0.10
+            # cup_ready_before.position.z-=0.05
 
-        cup_down.position.z = self.cup_ready_to_grip.position.z - 0.15
+            self.move_to_obj(cup_ready_before)
+            rospy.sleep(1)
 
-        self.move_to_obj(cup_down)
+            cup_down = Pose()
+            cup_down.position.x=0.858921758373+0.03
+            cup_down.position.y=0.308899673064
+            cup_down.position.z=-0.0973331457931
+            cup_down.orientation.x=0.714418984242
+            cup_down.orientation.y=0.00195054565134
+            cup_down.orientation.z=0.699712976158
+            cup_down.orientation.w=-0.00186046268979
+
+            cup_down.position.x-=0.08
+            self.move_to_obj(cup_down)
+            cup_down.position.x+=0.08
+            self.move_to_obj(cup_down)
+        else:
+            self.move_to_obj(self.cup_ready_to_grip)
+            cup_down = Pose()
+            cup_down = Pose(
+                    position = copy.copy(self.cup_ready_to_grip.position),
+                    orientation = copy.copy(self.cup_ready_to_grip.orientation))
+
+            cup_down.position.z = self.cup_ready_to_grip.position.z - 0.15
+            self.move_to_obj(cup_down)
+
         rospy.sleep(1)
 
         self.close_grip()
         rospy.sleep(1)
 
+        print "Lift the grip"
         self.move_to_obj(self.cup_ready_to_grip)
 
         self.pour_the_cup()
@@ -483,8 +521,17 @@ class motionControls():
         self.move_to_obj(cup_down)
         rospy.sleep(1)
         self.open_grip()
-        rospy.sleep(1)
-        self.move_to_obj(self.cup_ready_to_grip)
+
+
+        # rospy.sleep(1)
+        # self.move_to_obj(self.cup_ready_to_grip)
+                
+        cup_down.position.x-=0.08
+        self.move_to_obj(cup_down)
+
+        cup_down.position.z+=0.08
+        self.move_to_obj(cup_down)
+        
         rospy.sleep(1)
         return(True,'Pour finished')
 
