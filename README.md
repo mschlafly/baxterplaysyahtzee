@@ -63,14 +63,14 @@ It calles the services of motions to move the Baxter's arm, and calles the servi
 
 This node provides the services for IK and Baxter's Motion, which are:
 
-'''
+``` 
 rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)  
 rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)  
 rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)  
 rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)  
 rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)  
 rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)  
-'''
+``` 
 
 ## 3.3 Node for Computer Vision: ./src/cv/nodeCV.py
 
