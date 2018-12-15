@@ -273,7 +273,7 @@ For locating dice, there are about 3cm error when the Baxter's hand is 20 cm abo
 
 
 ------------------------------------------- Notes for Setting or Testing Baxter ---------------------------------
-# 7. Notes for Setting or Testing Baxter 
+# 8. Notes for Setting or Testing Baxter 
 
 #### Before Running ROS Node
 ```
