@@ -1,6 +1,15 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
+This package enables baxter to play yahtzee. This includes picking up the cup, pouring the dice, reading the dice, picking up the dice, and putting the dice back in the cup.
+
+To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
+
+The launch file launched 4 nodes: 
+headdisplay.py
+The primary node is sequence.py
+
+
 ## Plan
 0. Dice in Cup
 1. Pick up Cup
@@ -163,3 +172,84 @@ cd baxterplays/yahtzee/src
 python game.py
 ```
 
+## Package
+
+## Nodes
+iktest.py
+
+## Services
+iktest.py
+rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)
+rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)
+rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)
+rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)
+rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)
+rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)
+
+### Service Messages
+srv/
+
+#### CalibChessboardPose.srv
+
+```
+---
+bool flag # return status
+geometry_msgs/Pose pose # pose information for chessboard
+```
+
+#### CupShake.srv
+```
+---
+bool succes  # return success
+```
+
+#### GetAllObjectsInBaxter.srv
+```
+---
+bool flag # return flag
+baxterplaysyahtzee/ObjectInfo[] objInfos # array of objects
+```
+
+#### GetAllObjectsInImage.srv
+```
+---
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo
+~
+```
+
+#### GetObjectInBaxter.srv
+```
+---
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo
+~
+```
+
+#### GetObjectInImage.srv
+```
+---
+bool flag
+baxterplaysyahtzee/ObjectInfo objInfo
+```
+
+#### OffsetMove.srv
+```
+geometry_msgs/Pose pose   # Desired offset position for the motion controller to adjust the current EE position by
+---
+bool success                # Indicate successful run of triggered service
+string message              # Informational, e.g. for error messages
+```
+
+## Publishers
+```
+```
+
+## Subscribers
+```
+```
+
+## Message Types
+```
+```
+ObjectInfo[]

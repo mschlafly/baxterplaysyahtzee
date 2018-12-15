@@ -88,7 +88,7 @@ class motionControls():
 
 
 
-
+        '''
         self.home_pose = Pose(
             position = Point(
             x =  0.766847553055,
@@ -101,19 +101,34 @@ class motionControls():
             w =  0.151326387451
                 )
         )
+        '''
+
+
+        self.home_pose = Pose(
+            position = Point(
+            x =  0.759933783577 - 0.03,
+            y = 0.0352817974998,
+            z = -0.00811818441266 + 0.015),
+            orientation = Quaternion(
+            x = 0.0996597531812,
+            y = 0.992987939333,
+            z = -0.0174706103672,
+            w =  0.0611364351959
+                )
+        )
 
 
         self.cup_above = Pose(
             position = Point(
-            x = 0.809871607686,
-            y = 0.291500747638,
-            z =-0.0298257041711
+            x = 0.838527299025 - 0.1 + 0.013,
+            y = 0.304700678395 + 0.01,
+            z = -0.0115082860402
             ),
             orientation = Quaternion(
-            x = 0.998710442347,
-            y = -0.0472537801641,
-            z =-0.0165893925935,
-            w =-0.00832614319472
+            x = 0.998839206921,
+            y = -0.0457860406655,
+            z = 0.0059744733888,
+            w = -0.0137179760005
                 )
         )
 
@@ -465,38 +480,33 @@ class motionControls():
     def svc_pour_dice(self,data):
 
         #
+
         if 1:
             None
             cup_ready_before= Pose(
                 position = Point(
-                x = 0.8639658962576,
-                y = 0.288214295747,
-                z =  0.0819743789111
+                x = 0.71648935751,
+                y = 0.319167260011,
+                z = 0.0428410189474
                 ),
                 orientation = Quaternion(
-                x = 0.697345324287,
-                y = -0.0729093965645,
-                z = 0.711741333725,
-                w = 0.0426379227384
+                x = 0.0602146389381,
+                y = 0.720798148774,
+                z = -0.102458211566,
+                w = 0.68288105909
             ))
-            cup_ready_before.position.x-=0.10
+
             # cup_ready_before.position.z-=0.05
 
             self.move_to_obj(cup_ready_before)
             rospy.sleep(1)
 
-            cup_down = Pose()
-            cup_down.position.x=0.858921758373+0.03
-            cup_down.position.y=0.308899673064
-            cup_down.position.z=-0.0973331457931
-            cup_down.orientation.x=0.714418984242
-            cup_down.orientation.y=0.00195054565134
-            cup_down.orientation.z=0.699712976158
-            cup_down.orientation.w=-0.00186046268979
+            cup_down_before = copy.copy(cup_ready_before)
+            cup_down_before.position.z -= 0.15
 
-            cup_down.position.x-=0.08
-            self.move_to_obj(cup_down)
-            cup_down.position.x+=0.08
+            self.move_to_obj(cup_down_before)
+            cup_down = copy.copy(cup_down_before)
+            cup_down.position.x += 0.12
             self.move_to_obj(cup_down)
         else:
             self.move_to_obj(self.cup_ready_to_grip)
@@ -514,24 +524,29 @@ class motionControls():
         rospy.sleep(1)
 
         print "Lift the grip"
-        self.move_to_obj(self.cup_ready_to_grip)
+        pour_dice = copy.copy(cup_down)
+        pour_dice.position.z += 0.08
+        self.move_to_obj(pour_dice)
 
         self.pour_the_cup()
 
+        pour_dice.position.z -= 0.08
+
         rospy.sleep(1)
-        self.move_to_obj(cup_down)
+        self.move_to_obj(pour_dice)
         rospy.sleep(1)
         self.open_grip()
+
+        rospy.sleep(1)
 
 
         # rospy.sleep(1)
         # self.move_to_obj(self.cup_ready_to_grip)
 
-        cup_down.position.x-=0.08
-        self.move_to_obj(cup_down)
-
-        cup_down.position.z+=0.08
-        self.move_to_obj(cup_down)
+        pour_dice.position.x -= 0.12
+        self.move_to_obj(pour_dice)
+        pour_dice.position.z += 0.15
+        self.move_to_obj(pour_dice)
 
         rospy.sleep(1)
         return(True,'Pour finished')

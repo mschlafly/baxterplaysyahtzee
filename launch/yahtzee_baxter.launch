@@ -1,6 +1,7 @@
 <launch>
-  <!-- roslaunch baxter_gazebo baxter_world.launch -->
-  <node name="yahtzee_baxter_sim" pkg="baxterplaysyahtzee" type="yahtzee_baxter_sim.py" />
-  <node name="joint_trajectory_server" pkg="baxter_interface" type="joint_trajectory_server.py" />
-  <rosparam param="source_list">["baxterplaysyahtzee/robot/joint_states"]</rosparam>
+  <!-- roslaunch baxterplaysyahtzee yahtzee_baxter.launch -->
+  <node name="my_node2" pkg="baxterplaysyahtzee" type="headdisplay.py" /> 
+  <node name="my_node3" pkg="baxterplaysyahtzee" type="gripper_control.py" /> 
+  <node name="my_node4" pkg="baxterplaysyahtzee" type="iktest.py" /> 
+  <node name="my_node5" pkg="baxterplaysyahtzee" type="sequence.py"/>
 </launch>

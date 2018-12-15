@@ -241,8 +241,8 @@ def main():
 
             rospy.sleep(1)
 
-            dice_pose.position.z-=OFFSET_Z # restore z back
-            dice_pose.position.z = -0.189655249947
+            # set offset of dice position in z direction
+            dice_pose.position.z = -0.197681420332
             print "Height of dice: ", dice_pose.position.z
 
             # --------------
