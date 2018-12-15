@@ -46,14 +46,14 @@ The launch file launches 4 nodes:
 headdisplay.py  
 gripper_control.py  
 iktest.py  
-sequence.py  
+sequencer.py  
 
-Among them, **sequence.py** is the main node that executes the steps in our workflow.
+Among them, **sequencer.py** is the main node that executes the steps in our workflow.
 
 
 # 3. Description of Nodes
 
-## 3.1 Main node: ./src/sequence.py
+## 3.1 Main node: ./src/sequencer.py
 This is our main node that sets up the workflow. Our control method is mainly to use several ros services to finish each step seperately.
 
 e.g. first pour dice, then detect dice, then pick up dice, etc. It calles the services of motions to move the Baxter's arm, and calles the services of visions to detect the dices on table. Once the dice is detected, it will send the location data to iktest node by using the service provided in that node, then the function of that service 'pick_up_dice' will be excuted with the location of dices provided.
