@@ -9,7 +9,7 @@ different elements from our coursework in ME 495 into our final product.
 
 Our original plan for our demonstration consisted of six main components listed as follows:
 
-## Plan
+### Plan
 0. Dice start in the cup
 1. Baxter picks up cup
 2. Baxter shakes cup
