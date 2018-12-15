@@ -90,9 +90,7 @@ class headdisplay():
             # Call the xdisplay_image.py node to display the image on baxter's head
             run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
     def nextmove(self,message):
-<<<<<<< HEAD
         # If the turn is either 1 or 2, determine the next roll and display dice
-=======
         #Display the dice 
         img = Image.new('RGB', (1024, 600), color = (229, 0, 11))
         font = ImageFont.truetype("/usr/share/fonts/truetype/freefont/FreeSansBold.ttf", 90, encoding="unic")
@@ -112,7 +110,6 @@ class headdisplay():
         max_height = max(heights)
 
         new_im = Image.new('RGB', (total_width, max_height))
-        print "HELLLO"
         x_offset = 0
         for im in images:
             new_im.paste(im, (x_offset,0))
@@ -133,10 +130,9 @@ class headdisplay():
         #time.sleep(timetosleep)
         # Call the xdisplay_image.py node to display the image on baxter's head
         run=os.system("rosrun baxterplaysyahtzee xdisplay_image.py -f "+dir_path+'/headdisplay.png')
-        print("HERE")
+
 
         # If the turn is either 1 or 2, determine the 
->>>>>>> c5d8b6b5874d35abc33cace223588e63f7e04228
         if (message.roll==1) or (message.roll==2):
 
             # Determine the number with the most dice
@@ -155,7 +151,7 @@ class headdisplay():
 
             #Publish the dice that are kept and left in topic
             pub = rospy.Publisher('/reroll', KeepDice, queue_size=10)
-            print("should publish")
+
             di=KeepDice()
             if message.dice1==maxnum:
                 di.dice1=0

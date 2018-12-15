@@ -1,6 +1,15 @@
 # baxterplaysyahtzee
 # ME495 Final Project: Baxter Robot Plays Yahtzee
 
+This package enables baxter to play yahtzee. This includes picking up the cup, pouring the dice, reading the dice, picking up the dice, and putting the dice back in the cup.
+
+To run this package, first calibrate the camera using rosrun baxterplaysyahtzee nodeCV.py. Then launch the package using roslaunch baxterplaysyahtzee yahtzee_baxter.launch
+
+The launch file launched 4 nodes: 
+headdisplay.py
+The primary node is sequence.py
+
+
 ## Plan
 0. Dice in Cup
 1. Pick up Cup
