@@ -282,7 +282,11 @@ For detecting dice, sometimes not all dices are detected. In an ideal condition,
 
 For locating dice, there are about 3cm error when the Baxter's hand is 20 cm above the table. It comes from two folds:  
     1. The detected square region in image is not the accurate countour of the real dice.  
-    2. The sensor data of Baxter's camera pos might not be so accurate.
+    2. The pose of Baxter's camera frame might not be so accurate.
+
+Besides, I forgot 2 important things before the demo day:  
+1. I should have increased the camera exposure time, so that the image can be brighter. This can greatly improve the detection accuracy. Besides, We team have dicussed about adding lights, but forgot it at last. 
+2. I forgot to undistort the dice's 2d pos in image before tranferring it to 3d. This will increase a little bit error.
 
 
 ------------------------------------------- Notes for Setting or Testing Baxter ---------------------------------
