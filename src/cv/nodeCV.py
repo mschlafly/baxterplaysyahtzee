@@ -42,7 +42,7 @@ from baxterplaysyahtzee.srv import *
 # dont forget to call: undistortPoints
 
 # ---------------------- TEST SETTINGS ------------------
-TEST_MODE=False
+TEST_MODE=True
 if TEST_MODE:
     DETECT_ONE_OBJECT=True
     if DETECT_ONE_OBJECT:
@@ -98,9 +98,10 @@ class BaxterCameraProcessing(object):
         self.sub = rospy.Subscriber(CAMERA_TOPIC, Image, self.topic_receive_image_callback)
         self.pub1 = rospy.Publisher("image_with_chessboard",Image, queue_size=10)
         self.pub2 = rospy.Publisher("image_with_object",Image, queue_size=10)
-        self.pub3 = rospy.Publisher("/mycvdisplay",Image, queue_size=10)
+        self.pub3 = rospy.Publisher("/robot/xdisplay",Image, queue_size=10)
+        # self.pub3 = rospy.Publisher("/mycvdisplay",Image, queue_size=10)
 
-     
+    
         # services 1: calib chessboard (return: Pose)
         s1 = rospy.Service('mycvCalibChessboardPose', CalibChessboardPose, self.srv_CalibChessboardPose)
         self.R_cam_to_chess=None
@@ -177,7 +178,7 @@ class BaxterCameraProcessing(object):
     def _GetAllObjectsInImage(self, req):
         print("inside the srv_GetAllObjectsInImage")
         img=self.img.copy()
-        img = equalize_image(img, 10)
+        img = equalize_image(img, 0)
         
         rows,cols=img.shape[:2]
 
@@ -185,8 +186,8 @@ class BaxterCameraProcessing(object):
             rospy.loginfo(set_str_error("srv_GetAllObjectsInImage failed."))
             return
 
-        rects, labeled_img=find_all_objects(img, CHANGE_TO_HSV=True)
-        labeled_img = cv2.resize(labeled_img, (0,0), fx=2, fy=2)
+        rects, labeled_img=find_all_objects(img, CHANGE_TO_HSV=False, IMAGE_RESIZE_SCALE=0.25,
+                                    K=10000, sigma=0)
 
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # !!!!!!!!!!!!!!!! TUNE THIS PARAMETERS !!!!!!!!!!!!!!!!!!!!!!
@@ -196,7 +197,7 @@ class BaxterCameraProcessing(object):
         for i in range(len(rects)):
             rect=rects[i]
             (center_x, center_y, radius_x, radius_y, angle)  = extract_rect(rect)
-            # Criteria for removing wrong objects
+            # Criteria for removing wrong objects around the border
             if center_x<150 or center_x>640-150 or center_y<50 or center_y>400-50 or radius_x>200:
                 continue
             elif min(rect[:,1])<50:
@@ -213,7 +214,8 @@ class BaxterCameraProcessing(object):
         # self.pub_image_object()
         
         if len(rects)!=0:
-            colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=False)
+            colored_image = find_all_objects_then_draw(rects, None, img)
+            # colored_image = find_all_objects_then_draw(rects, labeled_img)
             self.image_for_display_object=colored_image   
             self.pub_image_object()
             # output:
@@ -223,21 +225,15 @@ class BaxterCameraProcessing(object):
             
                 # ---------------------- Output -----------------
                 objInfo=ObjectInfo()
-                    
-                # dots
+
+                # detect dots
                 mask=labeled_img==labeled_img[int(center_y),int(center_x)]
-                blank_image = np.zeros(mask.shape, np.uint8)
-                blank_image[mask]=1
-                mask=blank_image
-                rect_int= rect.astype(int)
-                # print img.shape, mask.shape, rect_int
-                # print "rect: ", rect
-                # print "rect_int: ", rect_int
-                ndots=detect_dots(img, mask, rect_int) # detect dots
+                ndots=detect_dots(img, mask, rect, IF_DRAW=False)
+                print ndots
                 objInfo.value=ndots
 
                 # color
-                rgbcolor=get_color_median(img, mask, rect_int)
+                rgbcolor=get_color_median(img, mask, rect)
                 objInfo.color=classify_dice_color(rgbcolor)
 
                 # xyz pose
@@ -279,6 +275,7 @@ class BaxterCameraProcessing(object):
             # color and dots
             ndots=detect_dots(img, mask, rect) # detect dots
             rgbcolor=get_color_median(img, mask, rect)
+
             objInfo.value=ndots
             objInfo.color=classify_dice_color(rgbcolor)
 

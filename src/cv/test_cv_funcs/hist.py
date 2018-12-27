@@ -44,7 +44,6 @@ if TEST_PLOT_HIST:
         plt.plot(histr,color = col)
         plt.xlim([0,256])
     plt.show()
-
 if TEST_ORB:
     # Initiate STAR detector
     orb = cv2.ORB_create()

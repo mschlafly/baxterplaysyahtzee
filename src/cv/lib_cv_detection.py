@@ -8,6 +8,7 @@ from lib_image_seg.lib_seg import *
 from random import random
 import numpy
 from matplotlib import pyplot as plt
+from datetime import datetime
 
 
 # def labeled_img = color_seg(img0):
@@ -73,7 +74,6 @@ def get_labeled_image(forest, width, height):
                 label_dict[comp]=cnt
                 cnt+=1
             labeled_img[x, y] = label_dict[comp]
-    print "label_dict, total labels = ", cnt
     return labeled_img
 
 def equalize_image(img, filter_size=5):
@@ -81,9 +81,9 @@ def equalize_image(img, filter_size=5):
     img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
     # convert the YUV image back to RGB format
     img_output = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
-    
-    kernel = np.ones((filter_size,filter_size),np.float32)/(filter_size*filter_size)
-    img_output = cv2.filter2D(img_output,-1,kernel)
+    if filter_size>0:
+        kernel = np.ones((filter_size,filter_size),np.float32)/(filter_size*filter_size)
+        img_output = cv2.filter2D(img_output,-1,kernel)
 
     return img_output
 
@@ -182,9 +182,10 @@ def find_squares(labeled_img):
 # This also checks the property of the rectangular, to see if it's a real rect.
 def find_square(mask_object,
         MIN_AREA=80,
-        ERROR_HOW_SQUARE=0.3, # len/width
+        ERROR_HOW_SQUARE=0.5, # len/width
         ERROR_TOTAL_AREA=0.5, # total_area/(len*width)
-        ERROR_TOTAL_AREA2=0.8, # total_area/(the logical "and" area of square and segmentation result)
+        ERROR_TOTAL_AREA2=1.0, # total_area/(the logical "and" area of square and segmentation result)
+
     ):  #!!!!!!!!!!!!!!!!!
     # output
     flag_find=False
@@ -193,9 +194,9 @@ def find_square(mask_object,
 
     # start
     mask_object=mask_object.astype(np.uint8)*255
-    kernel = np.ones((10,10),np.uint8)
+    kernel = np.ones((2,2),np.uint8)
     mask_object = cv2.erode(mask_object, kernel, iterations = 1)
-    mask_object = cv2.dilate(mask_object, kernel, iterations = 1)
+    # mask_object = cv2.dilate(mask_object, kernel, iterations = 1)
 
     rows, cols=mask_object.shape[0:2]
     yx = numpy.dstack(numpy.nonzero(mask_object)).astype(numpy.int64)
@@ -238,14 +239,14 @@ def find_square(mask_object,
             # print "rect=",rect
             # print "ellipse=",ellipse
 
-        # C0: length == width
+        # C0: simple check total area
         if 1:
-            if abs(radius_x / radius_y -1 )>=ERROR_HOW_SQUARE:
+            if abs(rect_area / (float(len(xy))+0.0001)-1) >= ERROR_TOTAL_AREA:
                 break
 
-        # C1: simple check total area
+        # C1: length == width
         if 1:
-            if abs(rect_area / float(len(xy))-1) >= ERROR_TOTAL_AREA:
+            if abs(radius_x / (radius_y+0.0001) -1 )>=ERROR_HOW_SQUARE:
                 break
         
         # C2: get the square and then check the area again
@@ -259,7 +260,7 @@ def find_square(mask_object,
             same_area = sum(sum( tmp ))
             tmp = np.logical_xor(mask_object, mask_square )
             not_same_area=sum(sum( tmp ))
-            score_of_square = (same_area-not_same_area)/rect_area
+            score_of_square = (same_area-not_same_area)/(rect_area+0.0001)
             # print "score_of_square",score_of_square
 
             if abs(score_of_square - 1) >= ERROR_TOTAL_AREA2:
@@ -275,77 +276,65 @@ def find_square(mask_object,
 
 # This calls: equalize_image, color_seg, find_squares, to find all the squares(objects)
 def find_all_objects(img0,
-        FLAG_DRAW_SQURAE_TO_IMAGE=False,
-        IMAGE_RESIZE_SCALE=0.5,
-        CHANGE_TO_HSV=False
+        IMAGE_RESIZE_SCALE=1,
+        CHANGE_TO_HSV=False,
+        K=800,
+        sigma=0.5
     ):
-
     img=img0.copy()
+
+    # --------------------------------------------------    
+    # preprocess image
+    if CHANGE_TO_HSV != 1:
+        img = cv2.resize(img, (0,0), fx=IMAGE_RESIZE_SCALE, fy=IMAGE_RESIZE_SCALE, 
+            interpolation = cv2.INTER_NEAREST)
+    
+    # img=equalize_image(img)
     if CHANGE_TO_HSV:
         img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    # --------------------------------------------------
-    img = cv2.resize(img, (0,0), fx=IMAGE_RESIZE_SCALE, fy=IMAGE_RESIZE_SCALE)
-
     height, width, depth = img.shape
 
-    # pre processing
-    img=equalize_image(img)
 
     # Segment image, and then label them
     # print "start segmenting image"
-    labeled_img=color_seg(img,neighbor = 8,
-        sigma = 0.5,
-        K = 1200.0,
+    labeled_img=color_seg(img, neighbor = 4,
+        sigma = sigma,
+        K = K,
         min_size = 200)
     
-
     # Find the squares(object)
     res_rects = find_squares(labeled_img)
 
-    # draw
-    if FLAG_DRAW_SQURAE_TO_IMAGE:
-
-        n_rects=len(res_rects)
-        print "Find ", n_rects, " rectangulars !"
-
-        colored_image= rander_color(labeled_img)
-        cv2.imshow("colored label image", colored_image)
-        cv2.waitKey(10)
-
-        for i in range(n_rects):
-
-            rect=res_rects[i]
-            (x, y, radius_x, radius_y, angle)=extract_rect(rect)
-
-            color=[0,0,255]
-            cv2.drawContours(img, [rect], 0, color, 2)
-            print "x={%.2f}, y={%.2f}, angle={%.2f}\n"%(x, y, angle)
-
-        cv2.imshow("img with objects marked in rects", img)
-        cv2.waitKey()
-        cv2.destroyAllWindows()
-
     # Restore the scale of the rects
-    res_rects = [rect/IMAGE_RESIZE_SCALE for rect in res_rects]
+    if CHANGE_TO_HSV != 1:
+        res_rects = [rect/IMAGE_RESIZE_SCALE for rect in res_rects]
+        labeled_img = cv2.resize(labeled_img, (0,0), 
+                fx=1/IMAGE_RESIZE_SCALE, fy=1/IMAGE_RESIZE_SCALE,
+                interpolation = cv2.INTER_NEAREST)
     return res_rects, labeled_img
+
     '''
     Test case {
-        rects, labeled_img = find_all_objects(img, FLAG_DRAW_SQURAE_TO_IMAGE=False, IMAGE_RESIZE_SCALE=0.5)
-        colored_image = find_all_objects_then_draw(rects, labeled_img, IF_PRINT=True)
-        cv2.imshow("colored image", colored_image), cv2.waitKey(), cv2.destroyAllWindows()
+        // add later
     }
     '''
 
 # draw the colored_image with marked rectangulars of objects
-def find_all_objects_then_draw(rects, labeled_img, IF_PRINT=True, IMAGE_RESIZE_SCALE=1.0):
+def find_all_objects_then_draw(rects, labeled_img, original_image=None, IF_PRINT=False):
+
+    # choose an image to draw
+    if original_image is not None:
+        colored_image = original_image
+    else:
+        colored_image= rander_color(labeled_img)
+    colored_image=colored_image.copy()
+
+    # plot rectangulars onto the image
     n_rects=len(rects)
     if IF_PRINT:
         print "Find ", n_rects, " rectangulars !"
-    colored_image= rander_color(labeled_img)
-    # cv2.imshow("colored label image", colored_image)
-    # cv2.waitKey(1000)
     for i in range(n_rects):
-        rect=rects[i]*IMAGE_RESIZE_SCALE
+        rect=rects[i]
         rect=rect.astype(int)
         (x, y, radius_x, radius_y, angle)=extract_rect(rect)
         # print (x, y, radius_x, radius_y, angle)
@@ -438,6 +427,7 @@ def find_object_in_middle(img0, ratio_RADIUS_TO_CHECK=3, disextend=50):
 
 # get the median color
 def get_color_median(img, mask, rect):
+    rect= rect.astype(int)
     # img=cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
     minx=max(0,min(rect[:,0]))
     maxx=min(img.shape[1]-1,max(rect[:,0]))
@@ -470,12 +460,12 @@ def crop_image(img0, rect):
     maxy=min(img.shape[0]-1,max(rect[:,1]))
     return img[miny:maxy, minx:maxx]
 
-def create_blob_detector(blob_min_area=12, 
-                        blob_min_int=0.0, blob_max_int=1.0, blob_th_step=10):
+def create_blob_detector(blob_min_area=20, 
+                        blob_min_int=0.0, blob_max_int=1.0, blob_th_step=3):
     params = cv2.SimpleBlobDetector_Params()
     params.filterByArea = True
     params.minArea = blob_min_area
-    params.maxArea = 30
+    params.maxArea = 400
     params.filterByCircularity = True
     params.filterByColor = False
     params.filterByConvexity = False
@@ -490,21 +480,52 @@ def create_blob_detector(blob_min_area=12,
     else:
         return cv2.SimpleBlobDetector_create(params) 
 
-def detect_dots(img, mask, rect):
-    imgmask=img.copy()
-    imgmask[mask==0]=0
-    small = crop_image(imgmask, rect)
-    # small = equalize_image(small, filter_size=2)
+def detect_dots(img0, mask, rect, IF_DRAW=False):
+    
+    # check input
+    img=img0.copy()
+    rect= rect.astype(int)
+    
+    # crop image
+    img[~mask]=0    
+    img_small = crop_image(img, rect)
+    
+    # detect squares using both HSV and RGB image
     detector = create_blob_detector()
-    keypoints = detector.detect(small)
-
-    IF_DRAW=False
+    list_keypoints=list()
+    list_images=list()
+    for i in range(2):
+        small = img_small.copy()
+        if i==0:
+            small = cv2.cvtColor(small, cv2.COLOR_RGB2HSV)
+        small = equalize_image(small, filter_size=0)    
+        keypoints = detector.detect(small)
+        list_keypoints.append(keypoints)
+        list_images.append(small)
+    if len(list_keypoints[0])>len(list_keypoints[1]):
+        keypoints=list_keypoints[0]
+        small=list_images[0]
+    else:
+        keypoints=list_keypoints[1]
+        small=list_images[1]
+    
     if IF_DRAW:
         im_with_keypoints = cv2.drawKeypoints(small, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        plt.imshow(im_with_keypoints)
+        plt.plot()
         print "number of dots", len(keypoints)
-    
     return len(keypoints)
+
 
 def classify_dice_color(color):
     # NOT IMPLEMENTED
     return str(color)
+
+# ----------------------------- input / output ----------------------
+def imshow(img):
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+def getstrtime():
+    # datetime.now() returns this: 2018-12-26 16:42:08.031502
+    strtime=str(datetime.now()).split(".")[0]
+    return strtime # 2018-12-26 16:42:08
