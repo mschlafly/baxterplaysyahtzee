@@ -7,7 +7,7 @@ import tf
 import struct
 import copy
 
-from baxter_core_msgs.msg import EndpointState
+from baxter_core_msgs.msg import EndpointState,EndEffectorState
 from std_msgs.msg import (UInt16,)
 from geometry_msgs.msg import (Point, Pose, PoseStamped, Quaternion)
 from std_msgs.msg import Header
@@ -40,13 +40,12 @@ class motionControls():
         # Publishers and Subscribers
         '''
         rospy.Subscriber('/robot/limb/left/endpoint_state', EndpointState, self.set_left_ee_position)
-        rospy.Subscriber('/robot/limb/right/endpoint_state', EndpointState, self.set_right_ee_position)
         '''
+        rospy.Subscriber('/robot/end_effector/left_gripper/state', EndEffectorState, self.set_gripper_state)
 
         # rospy.Service('iktest_controller/move_to_cup_offset', OffsetMove, self.svc_move_to_cup_offset)
         rospy.Service('iktest_controller/pick_up_dice_above', OffsetMove, self.svc_pick_up_dice_above)
         rospy.Service('iktest_controller/pick_up_dice', OffsetMove, self.svc_pick_up_dice)
-        rospy.Service('iktest_controller/move_to_initpose', Trigger, self.svc_move_to_initpose)
         rospy.Service('iktest_controller/move_to_homepose', Trigger, self.svc_move_to_homepose)
         rospy.Service('iktest_controller/pour_dice', Trigger, self.svc_pour_dice)
         rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)
@@ -103,6 +102,13 @@ class motionControls():
         z = 0.711741333725,
         w = 0.0426379227384
             ))
+
+        self.iksuccess = 1
+
+    def set_gripper_state(self,data):
+        self.gripping = data.gripping
+
+        return
 
 
     def svc_handle_pour_the_cup(self,data):
@@ -237,8 +243,10 @@ class motionControls():
             limb = baxter_interface.Limb(self.limb)
             limb.move_to_joint_positions(limb_joints)
             rospy.loginfo("Valid solution Found! Baxter begins to move!")
+            self.iksuccess = 1
 
         else:
+            self.iksuccess = 0
             rospy.loginfo("No valid solution Found!")
 
             # # New Addition
@@ -275,7 +283,9 @@ class motionControls():
     def svc_pick_up_dice_above(self,data):
         print "IM HERE"
 
-        self.dice_above = self.add_offset(data,self.dice_above_offset)
+        self.dice_above = Pose()
+        self.dice_above.position = copy.copy(data.pose.position)
+        self.dice_above.orientation = copy.copy(data.pose.orientation)
 
 
         self.move_to_obj(self.dice_above)
@@ -299,8 +309,17 @@ class motionControls():
             w = 0)
             )
 
-
+        adjust_pose = copy.copy(goal)
         self.move_to_obj(goal)
+
+        while self.iksuccess != 1:
+
+            rospy.loginfo('begin to adjust position to find ik solution')
+
+            adjust_pose.position.z += 0.02
+            self.move_to_obj(adjust_pose)
+            rospy.loginfo('try to move to goal position again')
+            self.move_to_obj(goal)
 
         rospy.sleep(1)
 
@@ -308,17 +327,28 @@ class motionControls():
 
         rospy.sleep(1)
 
-        self.move_to_obj(self.dice_above)
+        if self.gripping != 1:
+            rospy.loginfo('fail to catch the dice')
 
-        self.move_to_obj(self.cup_above)
+            self.open_grip()
 
-        self.open_grip()
+            self.move_to_obj(self.dice_above)
 
-        rospy.loginfo("Have picked up the dice!.")
+            return (False,'Fail to pick the dice up, ready to try again')
+        else:
+            rospy.sleep(1)
 
-        rospy.sleep(1)
+            self.move_to_obj(self.dice_above)
 
-        return (True,'Dice has been picked up')
+            self.move_to_obj(self.cup_above)
+
+            self.open_grip()
+
+            rospy.loginfo("Have picked up the dice!.")
+
+            rospy.sleep(1)
+
+            return (True,'Dice has been picked up')
         # self.raise_cup()
 
 
@@ -386,6 +416,7 @@ def main():
 
     # Class initialization
     iktest_control = motionControls()
+    rospy.loginfo('service is available!')
 
 
     while not rospy.is_shutdown():

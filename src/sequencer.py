@@ -113,7 +113,7 @@ def main():
         FAILURE_TIME=0
         while FAILURE_TIME<10:
             cnt_round+=1
-            if cnt_round>5:
+            if cnt_round>15:
                 break
 
             print "---------- THE %dth ROUND ------------"%cnt_round
@@ -129,6 +129,7 @@ def main():
                 print "Detect the dice ... "
 
             def set_dice_orientation(dice_pose):
+                dice_pose.position.z = -0.207973876142
                 dice_pose.orientation.x=0.5
                 dice_pose.orientation.y=0.0
                 dice_pose.orientation.z=0.0
@@ -136,11 +137,18 @@ def main():
                 print "The dice pos detected by camera is:\n",dice_pose
                 return dice_pose
 
+            def set_dice_above(dice_pose):
+                dice_pose.position.z += 0.1
+                print "The above position for the dice is:\n",dice_pose
+                return dice_pose
+
+
             dice_pose=set_dice_orientation(dice_pose) # set quaternion
 
             # --------------------------------------
-            OFFSET_Z=0.06
-            dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            #OFFSET_Z=0.06
+            #dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            dice_pose = set_dice_above(dice_pose)
             pick_up_dice_above(dice_pose)
 
             # Refine
@@ -154,7 +162,7 @@ def main():
                 print "Refine dice pos successful"
 
 
-
+            '''
             # -------------- Publish dice info to the topic
             pretend.state="Dice Read"
             pretend.turn=1
@@ -192,16 +200,17 @@ def main():
                 pretend.dice1=objInfos[nthobj].value
                 pretend.dice1color=objInfos[nthobj].color
             # --------------
-
+            '''
 
             # Gripper goes to the pos which is OFFSET_Z above the dice
             dice_pose=set_dice_orientation(dice_pose)
-            dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            #dice_pose.position.z = dice_pose.position.z +OFFSET_Z
+            dice_pose = set_dice_above(dice_pose)
             pick_up_dice_above(dice_pose)
             rospy.sleep(1)
 
             # Gripper goes to grab the dice
-            dice_pose.position.z = dice_pose.position.z -OFFSET_Z
+            dice_pose.position.z = dice_pose.position.z - 0.1
             print "Height of dice: ", dice_pose.position.z
             pick_up_dice(dice_pose) #//need Offset
 
