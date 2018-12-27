@@ -74,6 +74,12 @@ This node also provides the services for IK and Baxter's Motion, which are:
 
 **rospy.Service('iktest_controller/pour_the_cup', CupShake, self.svc_handle_pour_the_cup)**: This service is called inside the service function svc_pour_dice, it aims at driving one single joint of the baxter to pour the dices from the cup. This service avoids using the built-in service IK and simplifies the task by using the joint_trajectory motion control.
 
+### 3.2.1 Problems and solutions of ik:
+1. The crtical problem of the built in ik service is that sometimes it has no solution to reach the cnofiguartion to pick up the dice given the location of dice. To solve this, we play a little trick during the process of ik: When the ik has no solution, we move the end-effector to a new adjust position by adding a small offset to pervious ones, and than try again to find the solution. If the service still cannot find solution, the gripper will keep adjusting it position untill the solution is found.
+
+2. Another problem is that sometimes due to the inaccurate detection or sliding between dice and gripper, the gripper may not always grip the dice well. To detect if it is holding the dice, we check if there exists any force when the gripper is closed. If there is, the gripper will excute the next step to drop off the dice and if there is not, it will move back to the previous position to try to pick the dice up again.
+
+
 ## 3.3 Node for IK and Motion: ./src/gripper_control.py
 This node provides services to control the motion of gripper.
 **rospy.Service('gripper_controller/close_grip', Trigger, self.srv_close_grip)**: This service is called to close the gripper when needed.
