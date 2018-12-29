@@ -61,7 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   ColorBound.msg
-  XYRadiusAngle.msg
+  # XYRadiusAngle.msg
   ObjectInfo.msg
   GameState.msg
   KeepDice.msg
