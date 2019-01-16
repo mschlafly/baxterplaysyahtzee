@@ -21,20 +21,6 @@ def get_Rp_from_T(T):
     return (R,p)   
 
 
-def Rp_to_pose(R,p):
-    pose=Pose()
-
-    R_vec, _ = cv2.Rodrigues(R)
-    q=quaternion_from_euler(R_vec[0],R_vec[1],R_vec[2])    
-    pose.orientation.w=q[0]
-    pose.orientation.x=q[1]
-    pose.orientation.y=q[2]
-    pose.orientation.z=q[3]
-
-    pose.position.x=p[0]
-    pose.position.y=p[1]
-    pose.position.z=p[2]
-    return pose
 
 
 # Baxter's camera
