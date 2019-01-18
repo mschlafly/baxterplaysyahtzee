@@ -6,6 +6,9 @@ Video: see **video_demo_of_GUI.mp4** inside this folder.
 Image:  
 ![](screenshot_of_GUI.png)
 
+## 0. Reference  
+The file "_joint_trajectory_client.py" and "_joint_position_keyboard.py" are copied from Baxter's official tutorial.  
+
 ## 1. Test the GUI by python
 You can test and view the GUI by:  
 $ python BaxterGUI_python_this.py   

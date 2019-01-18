@@ -1,4 +1,5 @@
 build/*
+**/.ipynb*
 
 **.pyc
 **/calib_*.jpg
